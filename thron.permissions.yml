@@ -1,0 +1,12 @@
+administer thron configuration:
+  title: 'Administer THRON configuration'
+  description: 'Administer THRON configuration.'
+  restrict access: TRUE
+
+thron search media:
+  title: 'Access THRON search media'
+  description: 'This allows a user to use the Searching Thron DAM plugin on Media browser'
+
+thron upload media:
+  title: 'Access THRON upload media'
+  description: 'This allows user to use th Upload Thron DAM plugin on Media browser'

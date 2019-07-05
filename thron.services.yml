@@ -1,0 +1,38 @@
+services:
+  cache.thron:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin }
+    factory: cache_factory:get
+    arguments: ['thron']
+  logger.channel.thron:
+    parent: logger.channel_base
+    arguments: ['thron']
+  thron_api:
+    class: 'Drupal\thron\THRONApi'
+    arguments:
+      - '@config.factory'
+      - '@entity_type.manager'
+      - '@logger.channel.thron'
+      - '@state'
+      - '@date.formatter'
+      - '@language_manager'
+      - '@cache.thron'
+      - '@datetime.time'
+      - '@current_user'
+  thron.route_subscriber:
+    class: Drupal\thron\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  thron.media_access_checker:
+    class: Drupal\thron\Access\MediaThronAccessCheck
+    tags:
+      - { name: access_check, applies_to: _thron_media_access }
+  thron.media_add_access_checker:
+    class: Drupal\thron\Access\MediaThronAddAccessCheck
+    arguments: ['@entity.manager']
+    tags:
+      - { name: access_check, applies_to: _thron_media_add_access }
+  thron.lazy_builders:
+    class: Drupal\thron\LazyBuilders
+    arguments: ['@thron_api', '@renderer']

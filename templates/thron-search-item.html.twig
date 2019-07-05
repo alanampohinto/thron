@@ -1,0 +1,24 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the THRON search result item.
+ *
+ * Available variables:
+ * - thumbnail_uri: Link to the thumbnail of the THRON asset.
+ * - name: Name of the THRON asset.
+ * - type: Type of the THRON asset.
+ * - owner: Owner of the THRON asset.
+ * - created: Creation date of the THRON asset.
+ */
+#}
+<img src="{{ thumbnail_uri }}" alt="{{ name }}"/>
+<div class="more-info">
+    {% if created %}
+        <div class="created">{{ 'Created'|t }}: {{ created }}</div>
+    {% endif %}
+    <small class="type">
+      {% if type %}({{ type }}{% if extension %} / {{ extension }}{% endif %}){% endif %}
+      {{ 'Owner'|t }}: {{ owner }}
+    </small>
+    <h5 class="name">{{ name }}</h5>
+</div>

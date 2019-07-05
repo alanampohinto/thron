@@ -1,0 +1,17 @@
+
+.js input.form-autocomplete-thron {
+  background-image: url("../images/throbber-inactive.png");
+  background-position: 100% center; /* LTR */
+  background-repeat: no-repeat;
+}
+.js[dir="rtl"] input.form-autocomplete-thron {
+  background-position: 0 center;
+}
+.js input.form-autocomplete-thron.ui-autocomplete-loading {
+  background-image: url("../images/loading-thron.gif");
+  background-size: 13px;
+  background-position: 99.5% center; /* LTR */
+}
+.js[dir="rtl"] input.form-autocomplete-thron.ui-autocomplete-loading {
+  background-position: 0 center;
+}

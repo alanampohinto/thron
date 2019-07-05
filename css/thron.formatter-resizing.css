@@ -1,0 +1,95 @@
+
+.form-item-attributes-data-entity-embed-display-settings-media-info-error {
+  color: red;
+  padding: 1rem 0;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-responsive-width,
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-responsive-height {
+  display: inline-block;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-responsive-width:after {
+  content: '%';
+  display: inline-block;
+}
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-responsive-height {
+  margin-left: 2rem !important;
+}
+
+/*.form-item-attributes-data-entity-embed-display-settings-embed-imageset-info {
+  color: red;
+}*/
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-width {
+  float: left;
+  margin-right: .5rem !important;
+}
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-height {
+  float: right;
+  margin-left: .5rem !important;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-width,
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-height {
+  width: 45%;
+  padding-right: 20px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-width:after,
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-height:after {
+  content: 'px';
+  display: inline-block;
+  position: absolute; bottom: 3px; right: 0;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-link {
+  clear: both;
+  position: relative;
+  height: 20px;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-link:before,
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-link:after {
+  content: '';
+  height: 5px; 
+  width: 30%;
+  border-left: 1px solid black;
+  border-bottom: 1px solid black;
+  display: block; 
+  opacity: .1;
+  position: absolute;
+  top: 5px; left: 10%;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-link:after {
+  left: auto;
+  right: 10%;
+  border-left: 0px none;
+  border-right: 1px solid black;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-link input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  
+  display: block;
+  background: url('../images/chain.png') no-repeat center center;
+  opacity: .5;
+  cursor: pointer;
+  width: 20px; height: 20px;
+  position: absolute;
+  top: 0; left: 50%; margin-left: -10px;
+  outline: none;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-link.link-on input[type="checkbox"] {
+  opacity: 1;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-link.link-on:before,
+.form-item-attributes-data-entity-embed-display-settings-embed-resizing-fixed-link.link-on:after {
+  opacity: .5;
+}

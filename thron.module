@@ -1,0 +1,270 @@
+<?php
+
+/**
+ * @file
+ * Provides THRON integration.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+use Drupal\views\ViewExecutable;
+use Drupal\views\Plugin\views\cache\CachePluginBase;
+use Drupal\thron\THRONApi;
+use Drupal\Core\Template\Attribute;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Component\Render\FormattableMarkup;
+
+
+/**
+ * Max age in seconds for cache items.
+ */
+define('THRON_CACHE_MAX_AGE', 120); // seconds = 2 minutes
+
+/**
+ * Max age in seconds for login tokens cache.
+ */
+define('THRON_LOGIN_CACHE_MAX_AGE', 3600); // seconds = 1 hour;
+
+/**
+ * Implements hook_help().
+ *
+ * @param $route_name
+ * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+ *
+ * @return string
+ */
+function thron_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.thron':
+      $output = '';
+      $output .= '<h3>' . t('THRON') . '</h3>';
+      $output .= '<p>' . t('The Intelligent DAM.') . '</p>';
+      return $output;
+
+    case 'thron.configuration_form':
+      $output = '';
+      $output .= ' ' . t('Contact THRON to receive the integration details.', []) . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ *
+ * @param $existing
+ * @param $type
+ * @param $theme
+ * @param $path
+ *
+ * @return array
+ */
+function thron_theme($existing, $type, $theme, $path) {
+  return [
+    'thron_search_item' => [
+      'variables' => [
+        'thumbnail_uri' => '',
+        'name' => t('N/A'),
+        'owner' => t('N/A'),
+        'type' => '',
+        'extension' => '',
+        'created' => NULL,
+      ],
+    ],
+    'thron_content_embedded' => [
+      'variables' => [
+        'contentType' => NULL,
+        'view_mode' => 'full',
+        'divId' => '',
+        'metadata' => [],
+        'wrapper_attributes' => NULL,
+        'inner_attributes' => NULL,
+      ],
+    ],
+    'thron_content_html5' => [
+      'variables' => [
+        'contentType' => NULL,
+        'view_mode' => 'full',
+        'metadata' => [],
+        'wrapper_attributes' => NULL,
+        'inner_attributes' => NULL,
+      ],
+    ],
+    'thron_select_sortable_widget' => [ 'render element' => 'element' ],
+    'thron_input_with_hidden_helper' => [ 'render element' => 'element' ],
+  ];
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Runs the Media updates from the THRON DAM via THRONApi
+ */
+function thron_cron() {
+  $configs = \Drupal::config('thron.settings');
+  if ($configs->get('app_key') && $configs->get('app_id') && $configs->get('client_id')) {
+    $last_update = \Drupal::state()->get(THRONApi::THRON_LAST_UPDATE_STATE_KEY, strtotime("-2 months"));
+    if (($last_update + \Drupal::config('default')->get('cache_lifetime')) < \Drupal::time()->getRequestTime()) {
+      try {
+        $ret = \Drupal::service('thron_api')->updateMedia($last_update);
+        \Drupal::logger('thron')
+          ->info(t('Updated the medias through the THRON API: %result', [
+            '%result' => json_encode($ret),
+          ]));
+      }
+      catch (\Exception $exception) {
+        \Drupal::logger('thron')
+          ->error(t('Unable to update THRON caches. Check your <a href=":url">connection configuration</a>.', [
+            ':url' => Url::fromRoute('thron.configuration_form')->toString(),
+          ]));
+      }
+    }
+    else {
+      \Drupal::logger('thron')
+        ->notice(t('Update time limit has not expired yet'));
+    }
+  }
+  else {
+    \Drupal::logger('thron')
+      ->notice(t('Thron is not configured to use.'));
+  }
+}
+
+/**
+ * Implements hook_views_post_render().
+ *
+ * @param \Drupal\views\ViewExecutable $view
+ * @param $output
+ * @param \Drupal\views\Plugin\views\cache\CachePluginBase $cache
+ */
+function thron_views_post_render(ViewExecutable $view, &$output, CachePluginBase $cache) {
+  if (in_array($view->id(), ['thron_media_browser', 'media_library'])) {
+    $output['#attached']['library'][] = 'thron/media_library_override';
+  }
+}
+
+function thron_preprocess_thron_select_sortable_widget(&$variables) {
+  $element = $variables['element'];
+  
+  $variables['available_tags'] = $element['#available_tags'];
+  $variables['selected_tags'] = $element['#selected_tags'];
+
+  $variables['selected_ui_attributes'] = new Attribute([
+    'data-target-select' => '#'.$element['#id'],
+  ]);
+
+  Element::setAttributes($element, ['id', 'name', 'size']);
+  RenderElement::setAttributes($element, ['form-select']);
+  $variables['attributes'] = $element['#attributes'];
+  $variables['options'] = form_select_options($element);
+}
+
+
+/**
+ * Implements hook_form_alter().
+ *
+ * @param $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param $form_id
+ */
+function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if ($form_id == 'views_exposed_form') {
+    $view_names = ['media', 'media_entity_browser', 'media_library'];
+    $stored_view = $form_state->getStorage('view');
+    if (in_array($stored_view['view']->id(), $view_names, TRUE)) {
+      unset($form['type']['#options']['thron_with_media_source']);
+      unset($form['provider']['#options']['thron_with_media_source']);
+    }
+  }
+  elseif ($form_id == 'entity_embed_dialog') {
+    if ($form_state->get('step') == 'embed') {
+      // Modify the link to the entity.
+      /** @var \Drupal\thron\THRONApiInterface $thron_api */
+      $thron_api = \Drupal::service('thron_api');
+      $metadata = $form_state->get('metadata');
+      $ext = '';
+      $sourceFiles = $thron_api->getMediaDetails($metadata['id'], 'sourceFiles');
+      if (!empty($sourceFiles)) {
+        $first = reset($sourceFiles);
+        list(, $extension) = explode("/", $first['mimeType']);
+        $ext = ' / ' . strtoupper($extension);
+      }
+      $content_types_labels = $thron_api->getContentTypes();
+      $type = $metadata['contentType'];
+      $real_type = $metadata['contentTypeFull'];
+      $final_type = $type != $real_type ? $type . '_' . $real_type : $type;
+
+      $form['entity']['#markup'] .= new FormattableMarkup(' (@type@extension)', [
+        '@type' => $content_types_labels[$final_type],
+        '@extension' => $ext,
+      ]);
+
+      // Change formatter select title.
+      $form['attributes']['data-entity-embed-display']['#title'] = t('Embed type');
+
+      // hiding the data-caption:
+      $form['attributes']['data-caption']['#access'] = FALSE;
+
+      // Disable aligment in responsive mode, as it cause the media to be shown at 0x0px.
+      $form['attributes']['data-align']['#states']['invisible'] = [
+        ['select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'noresize']],
+        ['select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'responsive']],
+      ];
+
+      // Custom validation to avoid align data to be saved when not needed.
+      $form['#validate'][] = 'thron_entity_embed_dialog_validate';
+    }
+  }
+}
+
+function thron_entity_embed_dialog_validate(array &$form, FormStateInterface $form_state) {
+  $resizing = $form_state->getValue(['attributes', 'data-entity-embed-display-settings', 'embed_resizing']);
+  if ($resizing == 'responsive') {
+    $form_state->setValue(['attributes', 'data-align'], NULL);
+  }
+}
+
+/**
+ * Implements hook_library_info_build().
+ */
+function thron_library_info_build() {
+
+  $config = \Drupal::config('thron.settings');
+  if ($clientId = $config->get('client_id')) {
+    $libraries['tracking'] = [
+      'js' => [
+        "https://$clientId-cdn.thron.com/shared/plugins/tracking/current/bootstrapper-min.js" => [
+          'type' => 'external', 'preprocess' => FALSE, 'minified' => TRUE,
+        ],
+      ],
+    ];
+
+    $libraries['universal_player'] = [
+      'js' => [
+        "https://$clientId-cdn.thron.com/shared/ce/bootstrap/1/scripts/embeds-min.js" => [
+          'type' => 'external', 'preprocess' => FALSE, 'minified' => TRUE,
+        ],
+      ],
+    ];
+
+    return $libraries;
+  }
+  return [];
+}
+
+/**
+ * Implements hook_preprocess_entity_add_list().
+ */
+function thron_preprocess_entity_add_list(&$variables) {
+  unset($variables['bundles']['thron_with_media_source']);
+}
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function thron_entity_type_build(array &$entity_types) {
+  if (isset($entity_types['entity_browser'])) {
+    $entity_types['entity_browser']->setFormClass('edit_widgets', '\Drupal\thron\Form\ThronWidgetsConfig');
+  }
+}

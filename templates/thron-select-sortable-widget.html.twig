@@ -1,0 +1,35 @@
+<div class="sortable-widget">
+  <div class="available">
+    <label>{{ 'Available tags' | t }}</label>
+    <ul class="connected-sortable">
+      {% for id,name in available_tags %}
+        <li data-tag-id="{{ id }}">{{ name }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="selected">
+    <label>{{ 'Selected tags' | t }}</label>
+    <ul class="connected-sortable"{{ selected_ui_attributes }}>
+      {% for id,name in selected_tags %}
+        <li data-tag-id="{{ id }}">{{ name }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+{% spaceless %}
+  <select{{ attributes }}>
+    {% for option in options %}
+      {% if option.type == 'optgroup' %}
+        <optgroup label="{{ option.label }}">
+          {% for sub_option in option.options %}
+            <option value="{{ sub_option.value }}"{{ sub_option.selected ? ' selected="selected"' }}>{{ sub_option.label }}</option>
+          {% endfor %}
+        </optgroup>
+      {% elseif option.type == 'option' %}
+        <option value="{{ option.value }}"{{ option.selected ? ' selected="selected"' }}>{{ option.label }}</option>
+      {% endif %}
+    {% endfor %}
+  </select>
+{% endspaceless %}

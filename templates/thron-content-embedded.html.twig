@@ -1,0 +1,37 @@
+<style>
+  .embedded-entity.align-center .thron-content-embedded .player-wrap,
+  .embedded-entity.align-center .thron-content-embedded .teaser-content {
+    margin-left: auto;
+    margin-right: auto;
+  }
+</style>
+
+{% set classes = [
+  'thron-content',
+  'thron-content-embedded',
+  'thron-content-embedded--' ~ contentType|lower,
+] %}
+<div{{ attributes.addClass(classes) }}>
+  {% if view_mode == '_entity_embed' %}
+    <div{{ wrapper_attributes }}>
+      <img src="{{ metadata.thumbnail_url }}" alt="{{ metadata.name }}" {{ inner_attributes }}/>
+    </div>
+    
+  {% else %}
+    <div class="full-content">
+      <div itemscope itemtype="http://schema.org/MediaObject">
+        <meta itemprop="name" content="{{ metadata.name }}"/>
+        <meta itemprop="description" content="{{ metadata.description }}"/>
+        <meta itemprop="alternateName" content="{{ metadata.name }}"/>
+        <meta itemprop="uploadDate" content="{{ metadata.created }}"/>
+        <meta itemprop="thumbnailUrl" content="{{ metadata.thumbnail_url }}"/>
+        <meta itemprop="contentUrl" content="{{ metadata.content_url }}"/>
+        <meta itemprop="keywords" content="{{ metadata.tags|join(', ') }}"/>
+      </div>
+      
+      <div {{ wrapper_attributes }}>
+        <div id="{{ divId }}" {{ inner_attributes }}></div>
+      </div>
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,93 @@
+media_library_override:
+  version: VERSION
+  css:
+    component:
+      css/thron.media_library.module.css: {}
+    theme:
+      css/thron.media_library.theme.css: {}
+  dependencies:
+    - media_library/view
+
+search_view:
+  version: VERSION
+  js:
+    js/thron.search_view.js: {}
+  css:
+    theme:
+      css/thron.search_view.css: {}
+      css/thron.throbber.css: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - thron/imagesloaded
+
+config_form:
+  version: VERSION
+  js:
+    js/thron.config_form.js: {}
+  css:
+    theme:
+      css/thron.config_form.css: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+
+imagesloaded:
+  remote: https://github.com/desandro/imagesloaded
+  version: VERSION
+  license:
+    name: MIT
+    url: https://github.com/desandro/imagesloaded/
+    gpl-compatible: true
+  js:
+    libraries/imagesloaded/imagesloaded.pkgd.min.js: { minified: true }
+  dependencies:
+    - core/jquery
+
+formatter_resizing_config:
+  version: VERSION
+  js:
+    js/thron.formatter-resizing.js: {}
+  css:
+    base:
+      css/thron.formatter-resizing.css: {}
+
+formatter:
+  version: VERSION
+  js:
+    js/thron.formatter.js: {}
+  css:
+    theme:
+      css/thron.formatter.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+
+search_config:
+  version: VERSION
+  js:
+    js/thron.search_config.js: {}
+  css:
+    theme:
+      css/thron.search_config.css: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/jquery.ui.sortable
+    - core/drupal
+
+autocomplete:
+  version: VERSION
+  js:
+    js/thron.autocomplete.js: {}
+  css:
+    base:
+      css/thron.autocomplete.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+    - core/drupal.ajax
+    - core/jquery.ui.autocomplete

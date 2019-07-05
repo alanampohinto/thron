@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - media.type.thron_with_media_source
+  content:
+    - 'file:file:d73e8434-3fa4-41ec-b718-46946a3a1c58'
+  module:
+    - entity_embed
+    - media
+    - thron
+label: Thron
+id: thron
+type_id: entity
+type_settings:
+  entity_type: media
+  bundles:
+    - thron_with_media_source
+  display_plugins:
+    - 'entity_reference:thron_embedded'
+    - 'entity_reference:thron_html5'
+    # - 'entity_reference:thron_html5_picture'
+  entity_browser: thron_entity_browser
+  entity_browser_settings:
+    display_review: false
+icon_uuid: d73e8434-3fa4-41ec-b718-46946a3a1c58

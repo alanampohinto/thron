@@ -1,0 +1,14 @@
+thron.configuration_form:
+  path: '/admin/config/services/thron'
+  defaults:
+    _form: '\Drupal\thron\Form\THRONConfigurationForm'
+    _title: 'THRON Configuration'
+  requirements:
+    _permission: 'administer thron configuration'
+
+thron.autocomplete_tags:
+  path: '/thron_autocomplete/tags/{depth}/{classifications}'
+  defaults:
+    _controller: '\Drupal\thron\Controller\ThronAutocompleteController::handleTagsAutocomplete'
+  requirements:
+    _permission: 'thron search media'

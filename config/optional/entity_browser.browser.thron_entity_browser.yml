@@ -1,0 +1,30 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - thron
+name: thron_entity_browser
+label: 'Thron entity browser'
+display: iframe
+display_configuration:
+  width: '1140'
+  height: '500'
+  link_text: 'Select media'
+  auto_open: true
+selection_display: no_display
+selection_display_configuration: {  }
+widget_selector: single
+widget_selector_configuration: {  }
+widgets:
+  6f761f81-692b-4beb-b3e0-d4aa810d3bda:
+    settings:
+      items_per_page: 50
+      tags:
+        enabled: 0
+      media_type: thron_with_media_source
+      submit_text: 'Select media'
+      allowed_properties: {  }
+    uuid: 6f761f81-692b-4beb-b3e0-d4aa810d3bda
+    weight: 1
+    label: 'THRON browser'
+    id: thron_search

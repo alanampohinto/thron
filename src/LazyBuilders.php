@@ -1,0 +1,60 @@
+<?php
+
+namespace Drupal\thron;
+
+use Drupal\Core\Render\RendererInterface;
+
+/**
+ * Provides #lazy_builder callbacks.
+ */
+class LazyBuilders {
+
+  /**
+   * The renderer service
+   *
+   * @var \Drupal\thron\THRONApiInterface
+   */
+  protected $api;
+
+  /**
+   * The renderer service
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
+   * Constructs a new CartLazyBuilders object.
+   *
+   * @param \Drupal\thron\THRONApiInterface $thorn_api
+   *   The renderer service.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
+   */
+  public function __construct(THRONApiInterface $thorn_api, RendererInterface $renderer) {
+    $this->api = $thorn_api;
+    $this->renderer = $renderer;
+  }
+
+  /**
+   * Builds the extension markup
+   *
+   * @param string $content_id
+   *   the id of thron media being processed.
+   *
+   * @return array|NULL
+   *   A renderable array containing the cart form.
+   */
+  public function mediaContentExtension($content_id) {
+    $media_info = $this->api->getMediaDetails($content_id, 'sourceFiles');
+    if (!empty($media_info)) {
+      $first = reset($media_info);
+      list(, $extension) = explode("/", $first['mimeType']);
+      return [
+        '#plain_text' => strtoupper($extension),
+      ];
+    }
+    return NULL;
+  }
+
+}

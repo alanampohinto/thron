@@ -1,0 +1,24 @@
+{#
+
+#}
+{% set classes = [
+  'thron-content',
+  'thron-content--' ~ view_mode,
+] %}
+<div{{ attributes.addClass(classes) }}>
+  <div class="teaser-info">
+    <p style="margin-bottom:.2rem"><small><strong>Name:</strong> {{ contentName }}</small></p>
+    <p style="margin-bottom:.2rem"><small><strong>Created:</strong> {{ uploadDate }}</small></p>
+    <p style="margin-bottom:.2rem"><small><strong>Owner:</strong> {{ owner }}</small></p>
+    {% if keywords and keywords.length > 0 %}
+      <p><small><strong>Tags:</strong>{{ keywords|join(", ") }}</small></p>
+    {% endif %}
+    <p><strong>Type:</strong> {{ contentType }}</p>
+  </div>
+
+  {% if thumbnailUrl %}
+  <div class="teaser-image">
+    <img src="{{ thumbnailUrl }}" alt="{{ contentName }}" width="180" />
+  </div>
+  {% endif %}
+</div>

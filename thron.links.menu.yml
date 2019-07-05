@@ -1,0 +1,5 @@
+thron.configuration_form:
+  title: 'THRON'
+  parent: system.admin_config_services
+  description: 'Configure integration with THRON.'
+  route_name: thron.configuration_form

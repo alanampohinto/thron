@@ -1,0 +1,76 @@
+<style>
+  .embedded-entity.align-center .thron-content-html5 .content-wrap,
+  .embedded-entity.align-center .thron-content-html5 .teaser-content {
+    margin-left: auto;
+    margin-right: auto;
+  }
+</style>
+
+{% set classes = [
+  'thron-content',
+  'thron-content-html5',
+  'thron-content-html5--' ~ contentType|lower,
+] %}
+<div{{ attributes.addClass(classes) }}>
+  {% if view_mode == '_entity_embed' %}
+    <div{{ wrapper_attributes }}>
+      <img src="{{ metadata.thumbnail_url }}" alt="{{ metadata.name }}" {{ inner_attributes }}/>
+    </div>
+  
+  {% else %}
+    <div class="full-content">
+      {% if contentType == "IMAGE" %}
+        <div itemscope itemtype="http://schema.org/ImageObject">
+          <meta itemprop="name" content="{{ metadata.name }}"/>
+          <meta itemprop="description" content="{{ metadata.description }}"/>
+          <meta itemprop="alternateName" content="{{ metadata.name }}"/>
+          <meta itemprop="width" content="{{ metadata.width }}px"/>
+          <meta itemprop="height" content="{{ metadata.height }}px"/>
+          <meta itemprop="uploadDate" content="{{ metadata.created }}"/>
+          <meta itemprop="contentUrl" content="{{ metadata.thumbnail_url }}"/>
+          <meta itemprop="keywords" content="{{ metadata.tags|join(', ') }}"/>
+        </div>
+        <div {{ wrapper_attributes }}>
+          {% if metadata.use_picture %}
+            <picture{{ inner_attributes }}>
+              {% for source in metadata.imageset %}
+              <source media="{{ source.media }}" srcset="{{ source.srcset }}" type="{{ source.type }}"/>
+              {% endfor %}
+              <img class="tci_impression_load_click" 
+                src="{{ metadata.content_url }}" 
+                alt="{{ metadata.name }}"/>
+            </picture>
+            
+          {% else %}
+            <img class="tci_impression_load_click" 
+              src="{{ metadata.content_url }}" 
+              alt="{{ metadata.name }}" 
+              {{ inner_attributes }}/>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% if contentType == "VIDEO" %}
+        <div itemscope itemtype="http://schema.org/VideoObject">
+          <meta itemprop="name" content="{{ metadata.name }}"/>
+          <meta itemprop="description" content="{{ metadata.description }}"/>
+          <meta itemprop="alternateName" content="{{ metadata.name }}"/>
+          <meta itemprop="uploadDate" content="{{ metadata.created }}"/>
+          <meta itemprop="thumbnailUrl" content="{{ metadata.thumbnail_url }}"/>
+          <meta itemprop="contentUrl" content="{{ metadata.content_url }}"/>
+          <meta itemprop="keywords" content="{{ metadata.tags|join(', ') }}"/>
+        </div>
+        <div {{ wrapper_attributes }}>
+          <video class="tci_impression_load_click" controls poster="{{ metadata.thumbnail_url }}" {{ inner_attributes }}>
+            {% for source in metadata.sources %}
+            <source src="{{ source.src }}" />
+            {% endfor %}
+            {{ 'Your browser does not support the video tag.'|t }}
+          </video>
+        </div>
+
+      {% endif %}
+    </div>
+  
+  {% endif %}
+</div>

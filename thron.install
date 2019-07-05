@@ -1,0 +1,59 @@
+<?php
+
+use Drupal\file\Entity\File;
+use Drupal\thron\THRONApi;
+
+/**
+ * @file
+ * Install, uninstall and update hooks for THRON module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function thron_install() {
+  $module_handler = \Drupal::service('module_handler');
+  $destination = $module_handler->getModule('thron')
+      ->getPath() . '/images/thron_button_16x16.png';
+
+  $filesystem = \Drupal::service('file_system');
+  // Create file entity.
+  $image = File::create();
+  $image->setFileUri($destination);
+  $image->setOwnerId(\Drupal::currentUser()->id());
+  $image->setMimeType('image/png');
+  $image->setFileName($filesystem->basename($destination));
+  $image->setPermanent();
+  try {
+    $image->save();
+    $config = \Drupal::configFactory()
+      ->getEditable('embed.button.thron')
+      ->set('icon_uuid', $image->uuid())
+      ->save();
+  } catch (\Exception $e) {
+    \Drupal::logger('thron install')
+      ->error('error on thron icon generation occurred');
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function thron_uninstall() {
+  // Clear variables.
+  \Drupal::state()->delete(THRONApi::THRON_LAST_UPDATE_STATE_KEY);
+  // Delete Medias.
+  $media_storage = \Drupal::entityTypeManager()->getStorage('media');
+  $thron_medias = $media_storage->getQuery()
+    ->condition('bundle', 'thron_with_media_source')
+    ->execute();
+
+  if (!empty($thron_medias)) {
+    $thron_medias = $media_storage->loadMultiple($thron_medias);
+    try {
+      $media_storage->delete($thron_medias);
+    } catch (\Drupal\Core\Entity\EntityStorageException $e) {
+      \Drupal::logger('thron')->error($e->getMessage());
+    }
+  }
+}

@@ -1,0 +1,30 @@
+.thron-wrapper {
+  position: relative;
+}
+.thron-content.thron-content-html5 .full-content .image-wrap {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+}
+.thron-content.thron-content-html5 .full-content .image-wrap > img {
+  position: absolute;
+  width: 100%; height: auto;
+}
+.thron-content.thron-content-html5 .full-content .video-wrap {
+  display: inline-block;
+  position: relative;
+}
+.thron-content.thron-content-html5 .full-content .video-wrap > video {
+  position: absolute;
+  width: 100%; height: 100%;
+  top: 0; left: 0;
+}
+.thron-content.thron-content-html5 .full-content .player-wrap {
+  display: inline-block;
+  position: relative;
+}
+.thron-content.thron-content-html5 .full-content .player-wrap > div.player-placeholder {
+  position: absolute;
+  width: 100%; height: 100%;
+  top: 0; left: 0;
+}

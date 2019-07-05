@@ -1,0 +1,196 @@
+/**
+ * @file thron.search_view.css
+ *   Styles for Entity browser search widget.
+ */
+
+
+/* set default standard media queries for responsive grid. */
+
+@media only screen and (min-width: 320px) {
+    .grid-sizer,
+    .grid-item {
+        width: 96%;
+    }
+    .gutter-sizer {
+        width: 20px;
+    }
+}
+
+@media only screen and (min-width: 768px) {
+    .grid-sizer,
+    .grid-item {
+        width: 258px;
+        height: 328px;
+    }
+    .gutter-sizer {
+        width: 10px;
+    }
+    .img-container {
+        width: 258px;
+        height: 250px;
+    }
+}
+
+
+/* Jump back down for XL screens to better utilize the space. */
+
+@media only screen and (min-width: 1600px) {
+    .grid-sizer,
+    .grid-item {
+        width: 387px;
+        height: 479px;
+    }
+    .gutter-sizer {
+        width: 10px;
+    }
+    .img-container {
+        width: 387px;
+        height: 400px;
+    }
+}
+
+#edit-filters select[name="filters[content_type]"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 2em 0 1em;
+}
+
+.img-container {
+    width: 258px;
+    height: 250px;
+    background-color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-item {
+  position: relative;
+  transition: .2s;
+  overflow: hidden;
+  font-size: 12px;
+  margin-bottom: 1rem;
+  background-color: black;
+  margin-left: 1rem;
+}
+
+.grid-item:nth-child(4n+1) {
+  margin-left: 0;
+}
+
+.grid-item .form-type-checkbox {
+    display: none;
+    position: absolute;
+    bottom: 0.5em;
+    left: 1em;
+    margin: 0;
+    z-index: 1;
+}
+
+.grid-item img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+}
+
+.grid-item .more-info {
+  background: #000;
+  background: rgba(0, 0, 0, 1);
+  color: whitesmoke;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  position: absolute;
+  padding: 0.5em;
+}
+
+.grid-item .more-info .name {
+    margin: 0 0.5em 0.5em 0.5em;
+}
+
+.grid-item .more-info .created {
+    margin: 0.5em 0.5em 0 0.5em;
+}
+
+.grid-item .more-info .type {
+    margin: 0 0.5em 0.5em 0.5em;
+}
+
+.grid-item .more-info .type span[data-big-pipe-placeholder-id] {
+  display: inline-block;
+  width: 16px;
+  height: 11px;
+  background: url(../images/ajax-loader-extension.gif) no-repeat center center;
+  background-size: contain;
+}
+
+.grid-item.checked:after {
+    background-size: 54px 54px;
+}
+
+.grid-item.item-style {
+    opacity: 1;
+    transition: opacity .25s ease-in-out;
+    -moz-transition: opacity .25s ease-in-out;
+    -webkit-transition: opacity .25s ease-in-out;
+}
+
+.grid-item:hover {}
+
+.grid-item.checked {}
+
+.grid-item.checked:after {
+    background: url("../images/checkmark.svg") no-repeat center center;
+    background-size: contain;
+    content: " ";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 30%;
+    width: 30%;
+    transform: translate(-50%, -50%);
+}
+
+.thron-filters .form-item {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.thron-filters .tag-filters-wrapper {
+    display: inline-block;
+}
+
+.form-item-attributes-data-entity-embed-display-settings-media-info-error {
+  color: red;
+}
+
+#edit-search-button {
+    clear: both;
+    margin-left: 0;
+}
+
+.form-type-entity-browser-pager {
+  margin-bottom: 90px !important;
+}
+
+#edit-actions {
+  position: fixed;
+  width: 100%;
+  bottom: -1rem; 
+  left: 0;
+  background: white;
+  padding: 1rem;
+  margin: 0;
+}
+
