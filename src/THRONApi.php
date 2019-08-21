@@ -122,7 +122,7 @@ class THRONApi implements THRONApiInterface {
                               TimeInterface $time,
                               AccountInterface $current_user
   ) {
-    $this->config = $config_factory->get('thron.settings');
+	$this->config = $config_factory->get('thron.settings');
     $this->mediaStorage = $entity_type_manager->getStorage('media');
     $this->termStorage = $entity_type_manager->getStorage('taxonomy_term');
     $this->logger = $logger;

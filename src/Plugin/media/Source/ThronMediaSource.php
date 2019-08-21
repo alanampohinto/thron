@@ -107,8 +107,8 @@ class ThronMediaSource extends MediaSourceBase {
     $this->accountProxy = $account_proxy;
     $this->urlGenerator = $url_generator;
     $this->logger = $logger_factory->get('thron');
-    $this->config = $this->configFactory->get('thron.settings');
-    $this->THRONApi = $thron_api;
+    $this->config = $config_factory->get('thron.settings');
+	$this->THRONApi = $thron_api;
   }
 
   /**

@@ -8,7 +8,7 @@
 <div{{ attributes.addClass(classes) }}>
   <div class="teaser-info">
     <p style="margin-bottom:.2rem"><small><strong>Name:</strong> {{ contentName }}</small></p>
-    <p style="margin-bottom:.2rem"><small><strong>Created:</strong> {{ uploadDate }}</small></p>
+    <p style="margin-bottom:.2rem"><small><strong>Created:</strong> {{ uploadDate | date("d/m/Y H:i:s") }}</small></p>
     <p style="margin-bottom:.2rem"><small><strong>Owner:</strong> {{ owner }}</small></p>
     {% if keywords and keywords.length > 0 %}
       <p><small><strong>Tags:</strong>{{ keywords|join(", ") }}</small></p>
