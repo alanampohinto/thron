@@ -350,8 +350,9 @@ class ThronHTML5Formatter extends ThronFormatterBase {
                   '@paddingTop' => ($paddingTopBase * $formatter_settings['embed_resizing_responsive_width'] / 100) . '%',
                 ]);
 
+                // Hack for CK editor to show a width-less element as wide as possible.
                 if ($ckeditor_preview_mode) {
-                  $base = 950;
+                  $base = 800;
                   $fake_width = $base * $formatter_settings['embed_resizing_responsive_width'] / 100;
                   $wrapper_attributes['style'] .= new FormattableMarkup('width:@width;padding-top:@paddingTop;', [
                     '@width' => $fake_width . 'px',

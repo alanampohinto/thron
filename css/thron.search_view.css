@@ -79,6 +79,18 @@
   margin-left: 1rem;
 }
 
+.grid-item:after {
+  background: url("../images/checkmark.svg") no-repeat center center;
+  background-size: contain;
+  content: " ";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 0;
+  width: 0;
+  transform: translate(-100%, -100%);
+}
+
 .grid-item:nth-child(4n+1) {
   margin-left: 0;
 }
@@ -127,16 +139,13 @@
     margin: 0 0.5em 0.5em 0.5em;
 }
 
+.grid-item .more-info .type span[thron-media-id],
 .grid-item .more-info .type span[data-big-pipe-placeholder-id] {
   display: inline-block;
   width: 16px;
   height: 11px;
   background: url(../images/ajax-loader-extension.gif) no-repeat center center;
   background-size: contain;
-}
-
-.grid-item.checked:after {
-    background-size: 54px 54px;
 }
 
 .grid-item.item-style {
@@ -151,15 +160,11 @@
 .grid-item.checked {}
 
 .grid-item.checked:after {
-    background: url("../images/checkmark.svg") no-repeat center center;
-    background-size: contain;
-    content: " ";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    height: 30%;
-    width: 30%;
-    transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  height: 30%;
+  width: 30%;
+  transform: translate(-50%, -50%);
 }
 
 .thron-filters .form-item {

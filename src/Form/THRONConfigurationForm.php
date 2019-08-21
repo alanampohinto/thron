@@ -306,68 +306,14 @@ class THRONConfigurationForm extends ConfigFormBase {
           '#title_display' => 'invisible',
           '#default_value' => isset($default_breakpoints[$tag_id]) ? $default_breakpoints[$tag_id]['value'] : $default_possible_value,
           '#size' => 60,
-          '#required' => TRUE,
+          '#states' => [
+            'required' => [
+              'input[name="responsive_pictures_enable"]' => ['checked' => TRUE],
+            ],
+          ],
         ];
       }
     }
-
-    /*
-    $avoid_classifications = $config->get('avoid_classifications');
-    $no_classifications = empty($config->get('classifications')) ||
-      array_reduce($config->get('classifications'), function ($carry, $item) {
-      return $carry && empty($item);
-    }, TRUE);
-    */
-
-    /* No neeed to manually test connection
-     $form['test'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('API connection test'),
-      'wrapper' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#attributes' => ['id' => 'connection-test'],
-        '#attached' => ['library' => ['thron/config_form']],
-      ],
-      'check' => [
-        '#type' => 'button',
-        '#limit_validation_errors' => [],
-        '#value' => $this->t('Test connection'),
-        '#ajax' => ['callback' => '::testConnectionAjaxCallback'],
-      ],
-      'test_connection' => [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Test connection before saving'),
-        '#description' => $this->t("Uncheck to allow saving credentials even if connection to THRON can't be established."),
-        '#default_value' => TRUE,
-      ],
-    ];
-    */
-
-    /* Import will be made via CkEditor plugin.
-    $form['import'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Import media from THRON'),
-      'wrapper' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#attributes' => ['id' => 'import-media-thron'],
-        '#attached' => ['library' => ['thron/config_form']],
-      ],
-      'notice' => [
-        '#type' => 'markup',
-        '#markup' => '<p>NB: Save settings before try to import media from THRON!</p>',
-      ],
-      'importbutton' => [
-        '#type' => 'button',
-        '#limit_validation_errors' => [],
-        '#value' => $lastUpdate ? $this->t('Update media') : $this->t('First import'),
-        '#ajax' => ['callback' => $lastUpdate ? '::udpateThronDataAjax' : '::importThronDataAjax'],
-        '#description' => 'Allows to import/update THRON medias into drupal media library',
-        '#disabled' => $no_classifications && !$avoid_classifications,
-      ],
-    ];
-    */
 
     $form['#cache'] = [
       'max-age' => 0,
@@ -397,71 +343,6 @@ class THRONConfigurationForm extends ConfigFormBase {
       }
     }
     return $ret;
-  }
-
-  /**
-   * AJAX callback for test connection button.
-   */
-  public function testConnectionAjaxCallback(array $form, FormStateInterface $form_state) {
-    $response = new AjaxResponse();
-    $return_markup = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#attributes' => ['id' => 'connection-test'],
-    ];
-
-    $credentials = $form_state->getValue('credentials');
-    if ($this->testApiConnection($credentials['client_id'], $credentials['app_id'], $credentials['app_key'])) {
-      $return_markup['#value'] = $this->t('The API connection was established successfully.');
-      $return_markup['#attributes']['style'] = 'color: green;';
-    }
-    else {
-      $return_markup['#value'] = $this->t('Could not establish connection with THRON. Check your credentials or <a href=":support">contact support.</a>', [':support' => 'mailto:support@thron.com']);
-      $return_markup['#attributes']['style'] = 'color: red;';
-    }
-
-    $response->addCommand(new ReplaceCommand('#connection-test', $this->renderer->render($return_markup)));
-    return $response;
-  }
-
-  /**
-   * AJAX callback for import media button.
-   *
-   * @deprecated not used anymore
-   */
-  public function importThronDataAjax($form, FormStateInterface $form_state){
-    $response = new AjaxResponse();
-    $return_markup = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#attributes' => ['id' => 'import-media-thron'],
-    ];
-
-    $ret = $this->importThronMediasAndGetFeedback();
-    $return_markup['#value'] = $ret['#value'];
-    $return_markup['#attributes'] = $ret['#attributes'];
-
-    $response->addCommand(new ReplaceCommand('#import-media-thron', $this->renderer->render($return_markup)));
-    return $response;
-  }
-
-  /**
-   * AJAX callback for import media button.
-   */
-  public function udpateThronDataAjax($form, FormStateInterface $form_state){
-    $response = new AjaxResponse();
-    $return_markup = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#attributes' => ['id' => 'import-media-thron'],
-    ];
-
-    $ret = $this->updateThronMediasAndGetFeedback();
-    $return_markup['#value'] = $ret['#value'];
-    $return_markup['#attributes'] = $ret['#attributes'];
-
-    $response->addCommand(new ReplaceCommand('#import-media-thron', $this->renderer->render($return_markup)));
-    return $response;
   }
 
   /**
@@ -614,71 +495,6 @@ class THRONConfigurationForm extends ConfigFormBase {
       return FALSE;
     }
     return TRUE;
-  }
-
-  /**
-   * Import media assets from THRON using its API.
-   *
-   * @return array
-   *   Return info markup.
-   *
-   * @deprecated not used anymore
-   */
-  public function importThronMediasAndGetFeedback() {
-    $return_markup = [
-      '#value' => '',
-      '#attributes' => ['style' => ''],
-    ];
-
-    // Do actual import here via service:
-    $importInfo = $this->THRONApi->importMedia();
-
-    if ($importInfo['created'] > 0) {
-      $return_markup['#value'] = $importInfo['created'] . $this->t(" medias correctly imported from THRON");
-      if ($importInfo['errors'] > 0) {
-        $return_markup['#value'] .= " - " . $importInfo['created'] . $this->t(" errors occurred, check drupal log for more info");
-        $return_markup['#attributes']['style'] = 'color: red;';
-      }
-      else {
-        $return_markup['#attributes']['style'] = 'color: green;';
-      }
-    }
-
-    if ($importInfo['skipped'] > 0) {
-      $return_markup['#value'] .= !empty($return_markup['#value']) ? ' - ' : '';
-      $return_markup['#value'] .= $importInfo['skipped'] . " Elements skipped";
-      // $return_markup['#attributes']['style'] = 'color: green;';
-    }
-
-    return $return_markup;
-  }
-
-  /**
-   * Import media assets from THRON using its API.
-   *
-   * @return array
-   *   Return info markup.
-   */
-  public function updateThronMediasAndGetFeedback() {
-    $return_markup = [
-      '#value' => '',
-      '#attributes' => ['style' => 'color: green;'],
-    ];
-
-    // Do actual import here via service:
-    $updateInfo = $this->THRONApi->updateMedia();
-
-    if ($updateInfo['created'] > 0) {
-      $return_markup['#value'] .= $this->t('Created @count items', ['@count' => $updateInfo['created']]);
-    }
-    if ($updateInfo['updated'] > 0) {
-      $return_markup['#value'] .= $this->t('Updated @count items', ['@count' => $updateInfo['updated']]);
-    }
-    if ($updateInfo['deleted'] > 0) {
-      $return_markup['#value'] .= $this->t('Deleted @count items', ['@count' => $updateInfo['deleted']]);
-    }
-
-    return $return_markup;
   }
 
 }

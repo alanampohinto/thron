@@ -1039,8 +1039,10 @@ class THRONApi implements THRONApiInterface {
   /**
    * Get's the information about media.
    *
+   * @param $content_id
+   * @param null $key
+   *
    * @return array|FALSE
-   * @throws \Exception
    */
   public function getMediaDetails($content_id, $key = NULL) {
     $cid = 'mediaContentDetails_' . md5($content_id);

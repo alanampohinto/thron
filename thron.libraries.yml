@@ -12,6 +12,8 @@ search_view:
   version: VERSION
   js:
     js/thron.search_view.js: {}
+    js/thron.lazy_load.js:
+      attributes: { defer: true, async: true }
   css:
     theme:
       css/thron.search_view.css: {}
@@ -20,6 +22,8 @@ search_view:
     - core/jquery
     - core/jquery.once
     - core/drupal
+    - core/drupalSettings
+    - core/drupal.ajax
     - thron/imagesloaded
 
 config_form:
@@ -91,3 +95,8 @@ autocomplete:
     - core/drupalSettings
     - core/drupal.ajax
     - core/jquery.ui.autocomplete
+
+embed_button:
+  css:
+    theme:
+      css/thron.embed_button.css: { preprocess: false }

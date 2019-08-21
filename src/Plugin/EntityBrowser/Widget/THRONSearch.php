@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Url;
 use Drupal\entity_browser\Element\EntityBrowserPagerElement;
 use Drupal\entity_browser\Events\EntitySelectionEvent;
 use Drupal\entity_browser\Events\Events;
@@ -18,7 +19,6 @@ use Drupal\entity_browser\WidgetValidationManager;
 use Drupal\media\Entity\Media;
 use Drupal\media\MediaInterface;
 use Drupal\thron\Exception\UnableToConnectException;
-use Drupal\thron\Plugin\media\Source\ThronMediaSource;
 use Drupal\thron\THRONApiInterface;
 use Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -406,6 +406,8 @@ class THRONSearch extends THRONWidgetBase {
     }
 
     $form['#attached']['library'][] = 'thron/search_view';
+    $form['#attached']['drupalSettings']['thron']['media_extension']['basepath'] = Url::fromRoute('thron.media_extension')
+      ->toString();
 
     $form['filters'] = [
       '#type' => 'container',
@@ -549,8 +551,6 @@ class THRONSearch extends THRONWidgetBase {
       'tags' => [],
     ];
 
-
-
     $show_reset_button = FALSE;
 
     if ($content_type = $form_state->getValue(['filters', 'content_type'])) {
@@ -651,8 +651,15 @@ class THRONSearch extends THRONWidgetBase {
 
         if (in_array(strtoupper($media['type']), ['IMAGE', 'VIDEO', 'OTHER', 'AUDIO'])) {
           $form['thumbnails']['thumbnail-' . $media_id]['image']['#extension'] = [
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#attributes' => [
+              'thron-media-id' => $media_id,
+            ],
+            /* Not used because works only the first load (BigPipe issue? Works as designed?).
             '#lazy_builder' => ['thron.lazy_builders:mediaContentExtension', [$media_id]],
             '#create_placeholder' => TRUE,
+            */
           ];
         }
       }

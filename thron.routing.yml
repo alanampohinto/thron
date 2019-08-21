@@ -12,3 +12,12 @@ thron.autocomplete_tags:
     _controller: '\Drupal\thron\Controller\ThronAutocompleteController::handleTagsAutocomplete'
   requirements:
     _permission: 'thron search media'
+
+thron.media_extension:
+  path: '/thron/media-extension/{media_id}'
+  defaults:
+    _controller: '\Drupal\thron\Controller\ThronMediaExtensionController::get'
+    media_id: 'NOMEDIA'
+  requirements:
+    _permission: 'thron search media'
+    media_id: '[a-z0-9\-]+'
