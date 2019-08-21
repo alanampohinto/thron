@@ -90,8 +90,7 @@ class THRONConfigurationForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('thron.settings');
-
+    $config = \Drupal::config('thron.settings');
     $no_conf  = empty($config->get('app_key'));
     $no_conf &= empty($config->get('app_id'));
     $no_conf &= empty($config->get('client_id'));
@@ -492,7 +491,7 @@ class THRONConfigurationForm extends ConfigFormBase {
       }
     }
 
-    $config = $this->config('thron.settings');
+    $config = \Drupal::config('thron.settings');
     $is_initial_save = empty($config->get('app_key'));
     $is_initial_save &= empty($config->get('app_id'));
     $is_initial_save &= empty($config->get('client_id'));
@@ -519,7 +518,7 @@ class THRONConfigurationForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
 
-    $config = $this->config('thron.settings');
+    $config = \Drupal::configFactory()->getEditable('thron.settings');
     $credentials = $form_state->getValue('credentials');
 
     // Connection test.

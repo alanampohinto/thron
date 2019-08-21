@@ -14,7 +14,7 @@
 <img src="{{ thumbnail_uri }}" alt="{{ name }}"/>
 <div class="more-info">
     {% if created %}
-        <div class="created">{{ 'Created'|t }}: {{ created }}</div>
+        <div class="created">{{ 'Created'|t }}: {{ created | date("d/m/Y H:i:s") }}</div>
     {% endif %}
     <small class="type">
       {% if type %}({{ type }}{% if extension %} / {{ extension }}{% endif %}){% endif %}
