@@ -323,25 +323,7 @@ class THRONConfigurationForm extends ConfigFormBase {
   }
 
   private function getBreakpointTags() {
-    $ret = [];
-    $login_data = $this->THRONApi->getLoginData();
-    if (isset($login_data['image_set_tag_info']) && !empty($login_data['image_set_tag_info'])) {
-      $parent_tag_data = $this->THRONApi->getTagDefinitionDetail($login_data['image_set_tag_info'], FALSE, TRUE);
-      $sub_nodes = $parent_tag_data['subNodeIds'];
-      if (!empty($sub_nodes)) {
-        foreach ($sub_nodes as $tag_id) {
-          $tag = [
-            'classificationId' => $login_data['image_set_tag_info']['classificationId'],
-            'id' => $tag_id,
-          ];
-          $tag_data = $this->THRONApi->getTagDefinitionDetail($tag, FALSE, FALSE);
-          $ret[$tag_data['id']] = [
-            'pretty-id' => $tag_data['prettyId'],
-          ];
-        }
-      }
-    }
-    return $ret;
+    return $this->THRONApi->getBreakpointTags();
   }
 
   /**

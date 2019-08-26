@@ -372,7 +372,10 @@ class ThronHTML5Formatter extends ThronFormatterBase {
                   $metadata['use_picture'] = TRUE;
                   $metadata['content_url'] .= '.' . $ext;
                   $responsiveness = $this->config->get('responsive_pictures_breakpoints');
-                  $new_imageset = [];
+                  if(empty($responsiveness))
+                    $responsiveness=$this->THRON->getBreakpointTags(true);
+
+				  $new_imageset = [];
                   if (!empty($metadata['imageset']) && $responsiveness) {
                     foreach ($metadata['imageset'] as $media_key => $url) {
                       $new_imageset[$media_key] = [

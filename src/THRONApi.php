@@ -1098,4 +1098,44 @@ class THRONApi implements THRONApiInterface {
           THRON_CACHE_MAX_AGE;
     }
   }
+  
+  /**
+   * Get the breakpoint tags (if present)
+   */
+  public function getBreakpointTags($asMediaQueries=false) {
+    try {
+      $obj = [];
+      if (!$login_data = $this->getLoginData()) {
+        throw new \Exception('LoginApp error');
+      }
+      if (isset($login_data['image_set_tag_info']) && !empty($login_data['image_set_tag_info'])) {
+        $parent_tag_data = $this->getTagDefinitionDetail($login_data['image_set_tag_info'], FALSE, TRUE);
+        $sub_nodes = $parent_tag_data['subNodeIds'];
+        if (!empty($sub_nodes)) {
+          foreach ($sub_nodes as $tag_id) {
+            $tag = [
+              'classificationId' => $login_data['image_set_tag_info']['classificationId'],
+              'id' => $tag_id,
+            ];
+            $tag_data = $this->getTagDefinitionDetail($tag, FALSE, FALSE);
+            $obj[$tag_data['id']] = [
+              'pretty-id' => $tag_data['prettyId'],
+            ];
+          }
+        }
+      }
+
+      if($asMediaQueries) {
+        $ret=[];
+        foreach($obj as $k=>$v) {
+          array_push($ret, [$k=>["name"=>$v["pretty-id"], "value"=>"*"]]);
+        }
+        return $ret;
+      } else
+        return $obj;
+    } catch(\Exception $ex) {
+      var_dump($ex); exit();
+      return false;
+    }
+  }
 }

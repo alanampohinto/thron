@@ -286,6 +286,9 @@ class ThronMediaSource extends MediaSourceBase {
         $metadata['content_url_pattern'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
 
         $responsiveness = $this->config->get('responsive_pictures_breakpoints');
+        if(empty($responsiveness))
+          $responsiveness=$this->THRONApi->getBreakpointTags(true);
+
         if (!empty($responsiveness)) {
           $master_image_set_tag_id = $responsiveness['default'];
 

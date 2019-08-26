@@ -207,5 +207,9 @@ interface THRONApiInterface {
    * @return int
    */
   public function getCacheInterval($name = NULL);
-
+  
+  /**
+   * Get the breakpoint tags (if present)
+   */
+  public function getBreakpointTags($asMediaQueries=false);
 }
