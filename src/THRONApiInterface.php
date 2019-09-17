@@ -200,6 +200,16 @@ interface THRONApiInterface {
   public function getMediaDetails($content_id, $key);
 
   /**
+   * @return string|FALSE
+   */
+  public function getThronMediaPkey($content_id);
+
+  /**
+   * @return bool
+   */
+  public function setThronMediaPkey($content_id, $pkey);
+
+  /**
    * Get's the Interval in secconds for the given cache expire amount.
    *
    * @param string|NULL $name

@@ -216,7 +216,7 @@ class THRONApi implements THRONApiInterface {
    * @return array|bool
    */
   public function getLoginData($skip_cache = FALSE) {
-    $cid = 'loginData';
+    $cid = 'loginData_'.$this->config->get('client_id');
     if (!$skip_cache && $cache = $this->cache->get($cid)) {
       return $cache->data;
     }
@@ -296,7 +296,7 @@ class THRONApi implements THRONApiInterface {
    * @return array|bool|mixed|null
    */
   public function getContentDetail($xcontentId) {
-    $cid = 'xcontent__' . $xcontentId;
+    $cid = 'xcontent__'.$this->config->get('client_id')."§" . $xcontentId;
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
@@ -329,7 +329,7 @@ class THRONApi implements THRONApiInterface {
    * @deprecated no more used.
    */
   public function getContents() {
-    $cid = 'syncExport_contents';
+    $cid = 'syncExport_contents_'.$this->config->get('client_id');
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
@@ -457,7 +457,7 @@ class THRONApi implements THRONApiInterface {
       return NULL;
     }
 
-    $cid = "classification_tags__{$classification}";
+    $cid = "classification_tags__{$classification}_".$this->config->get('client_id');
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
@@ -554,7 +554,7 @@ class THRONApi implements THRONApiInterface {
       return FALSE;
     }
 
-    $cid = 'tag_definition_detail__' . $tag['classificationId'] . '_' . $tag['id'];
+    $cid = 'tag_definition_detail__' .$this->config->get('client_id')."_". $tag['classificationId'] . '_' . $tag['id'];
     if ($cache = $this->cache->get($cid)) {
       $data = $cache->data;
       return $data['item'];
@@ -588,7 +588,7 @@ class THRONApi implements THRONApiInterface {
   public function getClassifications() {
     $classifications = [];
 
-    $cid = 'classifications';
+    $cid = 'classifications_'.$this->config->get('client_id');
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
@@ -630,7 +630,7 @@ class THRONApi implements THRONApiInterface {
       return [];
     }
 
-    $cid = 'classification_' . $classificationId . '_tags';
+    $cid = 'classification_' .$this->config->get('client_id')."_${classificationId}_tags";
     if ($cache = $this->cache->get($cid)) {
       $data = $cache->data;
       return $data['tags'];
@@ -675,10 +675,47 @@ class THRONApi implements THRONApiInterface {
   }
 
   /**
+   * @return string|FALSE
+   */
+  public function getThronMediaPkey($content_id) {
+    $query = $this->mediaStorage->getQuery()
+      ->condition('bundle', 'thron_with_media_source')
+      ->condition('field_thron_id', $content_id);
+    $res = $query->execute();
+    if (empty($res)) {
+      return FALSE;
+    }
+    $obj = $this->mediaStorage->load(reset($res));
+	return $obj->get('field_thron_embed_id')->value;
+  }
+
+  /**
+   * @return bool
+   */
+  public function setThronMediaPkey($content_id, $pkey) {
+    $query = $this->mediaStorage->getQuery()
+      ->condition('bundle', 'thron_with_media_source')
+      ->condition('field_thron_id', $content_id);
+    $res = $query->execute();
+    if (empty($res)) {
+      return FALSE;
+    }
+    $obj = $this->mediaStorage->load(reset($res));
+    $obj->set('field_thron_embed_id', $pkey);
+    try {
+      $obj->save();
+      return TRUE;
+    } catch (EntityStorageException $e) {
+		var_dump($e); exit();
+      return FALSE;
+    }
+  }
+
+  /**
    * @return bool|array
    */
   public function getVideoPlayerTemplatesList() {
-    $cid = 'player_templates';
+    $cid = 'player_templates_'.$this->config->get('client_id');
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
@@ -725,7 +762,7 @@ class THRONApi implements THRONApiInterface {
    * @return array|null
    */
   public function getVideoPlayerTemplateData($templateId) {
-    $cid = 'player_template__' . $templateId;
+    $cid = 'player_template__'.$this->config->get('client_id')."_" . $templateId;
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
@@ -762,7 +799,7 @@ class THRONApi implements THRONApiInterface {
    * @throws \Exception
    */
   public function insertPlayerEmbedCode($templateId, $xcontentId, $uniqueId, $disguisedToken) {
-    $cid = 'player_embedcode__' . $templateId . '__' . preg_replace('/-/', '_', $xcontentId);
+    $cid = 'player_embedcode__'.$this->config->get('client_id')."_${templateId}__" . preg_replace('/-/', '_', $xcontentId);
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
@@ -945,11 +982,12 @@ class THRONApi implements THRONApiInterface {
    * @return array|mixed|null
    */
   public function contentFindByProperties($properties) {
-    $cache_key = $this->gluey($properties);
-    $cid = 'contentFindByProperties_' . md5($cache_key);
+    // these details should NEVER be put into a cache!
+    /*$cache_key = $this->gluey($properties);
+    $cid = 'contentFindByProperties_'.$this->config->get('client_id')."_" . md5($cache_key);
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
-    }
+    }*/
 
     try {
       if (!$login_data = $this->getLoginData()) {
@@ -976,7 +1014,7 @@ class THRONApi implements THRONApiInterface {
       if ($data['resultCode'] !== 'OK') {
         throw new \Exception($data['errorDescription']);
       }
-      $this->cache->set($cid, $data, $this->time->getRequestTime() + $this->getCacheInterval());
+      //$this->cache->set($cid, $data, $this->time->getRequestTime() + $this->getCacheInterval());
       return $data;
     }
     catch (AppTokenExpiredException $ex) {
@@ -1045,7 +1083,7 @@ class THRONApi implements THRONApiInterface {
    * @return array|FALSE
    */
   public function getMediaDetails($content_id, $key = NULL) {
-    $cid = 'mediaContentDetails_' . md5($content_id);
+    $cid = 'mediaContentDetails_'.$this->config->get('client_id')."_". md5($content_id);
     if ($key) { $cid .= ':' . $key; }
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
