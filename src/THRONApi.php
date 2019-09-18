@@ -1128,7 +1128,9 @@ class THRONApi implements THRONApiInterface {
       if($asMediaQueries) {
         $ret=[];
         foreach($obj as $k=>$v) {
-          array_push($ret, [$k=>["name"=>$v["pretty-id"], "value"=>"*"]]);
+          if($v["pretty-id"] == "image-set-master")
+            $ret["default"] = ["name"=>$v["pretty-id"], "value"=>"*"];
+          $ret[$k] = ["name"=>$v["pretty-id"], "value"=>"*"];
         }
         return $ret;
       } else
