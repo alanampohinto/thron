@@ -1129,7 +1129,7 @@ class THRONApi implements THRONApiInterface {
         $ret=[];
         foreach($obj as $k=>$v) {
           if($v["pretty-id"] == "image-set-master")
-            $ret["default"] = ["name"=>$v["pretty-id"], "value"=>"*"];
+            $ret["default"] = $k;
           $ret[$k] = ["name"=>$v["pretty-id"], "value"=>"*"];
         }
         return $ret;
