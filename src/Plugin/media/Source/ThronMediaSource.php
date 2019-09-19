@@ -303,28 +303,38 @@ class ThronMediaSource extends MediaSourceBase {
               if ($apiResponse = $this->THRONApi->getContentDetail($content->id)) {
                 $info = $apiResponse->content;
                 if ($info->contentType == 'IMAGE' && !empty($info->itags)) {
-                  $tag_pretty_id = $responsiveness[$info->itags[0]->id]['name'];
-                  $divArea = join('x', [
-                    $info->deliverySize->maxWidth,
-                    $info->deliverySize->maxHeight,
-                  ]);
-
-                  $content_url = "//$clientId-cdn.thron.com/delivery/public/image/$clientId/{$info->id}/$pkey/std/$divArea/";
-                  if (property_exists($info, 'prettyIds') && !empty($info->prettyIds)) {
-                    $content_url .= $info->prettyIds[0]->id;
+                  $responsiveTag=false;
+                  foreach($info->itags as $t) {
+                    if(isset($responsiveness[$t->id]) && isset($responsiveness[$t->id]['name']) && trim($responsiveness[$t->id]['name']) != "") {
+                      $responsiveTag = $responsiveness[$t->id]['name'];
+                      break;
+                    }
                   }
-                  else {
-                    $content_url .= $info->id;
+                  
+                  if($responsiveTag) {
+                    $tag_pretty_id = $responsiveTag;
+                    $divArea = join('x', [
+                      $info->deliverySize->maxWidth,
+                      $info->deliverySize->maxHeight,
+                    ]);
+                   
+                    $content_url = "//$clientId-cdn.thron.com/delivery/public/image/$clientId/{$info->id}/$pkey/std/$divArea/";
+                    if (property_exists($info, 'prettyIds') && !empty($info->prettyIds)) {
+                      $content_url .= $info->prettyIds[0]->id;
+                    }
+                    else {
+                      $content_url .= $info->id;
+                    }
+
+                    $extension = array_filter($info->metadatas, function($item) {
+                      return $item->name == '_SOURCE_MIMETYPE_';
+                    });
+                    $extension = reset($extension);
+                    list(, $ext) = explode("/", $extension->value);
+                    $content_url .= '.' .$ext;
+
+                    $imageset[$tag_pretty_id] = $content_url;
                   }
-
-                  $extension = array_filter($info->metadatas, function($item) {
-                    return $item->name == '_SOURCE_MIMETYPE_';
-                  });
-                  $extension = reset($extension);
-                  list(, $ext) = explode("/", $extension->value);
-                  $content_url .= '.' .$ext;
-
-                  $imageset[$tag_pretty_id] = $content_url;
                 }
               }
             }
