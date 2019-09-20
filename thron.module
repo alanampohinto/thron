@@ -169,60 +169,64 @@ function thron_preprocess_thron_select_sortable_widget(&$variables) {
  * @param $form_id
  */
 function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  switch ($form_id) {
-    case 'views_exposed_form':
-      $view_names = ['media', 'media_entity_browser', 'media_library'];
-      $stored_view = $form_state->getStorage('view');
-      if (in_array($stored_view['view']->id(), $view_names, TRUE)) {
-        unset($form['type']['#options']['thron_with_media_source']);
-        unset($form['provider']['#options']['thron_with_media_source']);
-      }
-      break;
-
-    case 'entity_embed_dialog':
-      if ($form_state->get('step') == 'embed') {
-        // Modify the link to the entity.
-        /** @var \Drupal\thron\THRONApiInterface $thron_api */
-        $thron_api = \Drupal::service('thron_api');
-        $metadata = $form_state->get('metadata');
-        $ext = '';
-        $sourceFiles = $thron_api->getMediaDetails($metadata['id'], 'sourceFiles');
-        if (!empty($sourceFiles)) {
-          $first = reset($sourceFiles);
-          list(, $extension) = explode("/", $first['mimeType']);
-          $ext = ' / ' . strtoupper($extension);
+  // fix THRON editor icon
+  if(preg_match('/node_([^_]+)_edit_form/', $form_id)) {
+    $form['#attached']['library'][] = 'thron/embed_button';
+  } else {
+    switch ($form_id) {
+      case 'views_exposed_form':
+        $view_names = ['media', 'media_entity_browser', 'media_library'];
+        $stored_view = $form_state->getStorage('view');
+        if (in_array($stored_view['view']->id(), $view_names, TRUE)) {
+          unset($form['type']['#options']['thron_with_media_source']);
+          unset($form['provider']['#options']['thron_with_media_source']);
         }
-        $content_types_labels = $thron_api->getContentTypes();
-        $type = $metadata['contentType'];
-        $real_type = $metadata['contentTypeFull'];
-        $final_type = $type != $real_type ? $type . '_' . $real_type : $type;
+        break;
 
-        $form['entity']['#markup'] .= new FormattableMarkup(' (@type@extension)', [
-          '@type' => $content_types_labels[$final_type],
-          '@extension' => $ext,
-        ]);
+      case 'entity_embed_dialog':
+        if ($form_state->get('step') == 'embed') {
+          // Modify the link to the entity.
+          /** @var \Drupal\thron\THRONApiInterface $thron_api */
+          $thron_api = \Drupal::service('thron_api');
+          $metadata = $form_state->get('metadata');
+          $ext = '';
+          $sourceFiles = $thron_api->getMediaDetails($metadata['id'], 'sourceFiles');
+          if (!empty($sourceFiles)) {
+            $first = reset($sourceFiles);
+            list(, $extension) = explode("/", $first['mimeType']);
+            $ext = ' / ' . strtoupper($extension);
+          }
+          $content_types_labels = $thron_api->getContentTypes();
+          $type = $metadata['contentType'];
+          $real_type = $metadata['contentTypeFull'];
+          $final_type = $type != $real_type ? $type . '_' . $real_type : $type;
 
-        // Change formatter select title.
-        $form['attributes']['data-entity-embed-display']['#title'] = t('Embed type');
+          $form['entity']['#markup'] .= new FormattableMarkup(' (@type@extension)', [
+            '@type' => $content_types_labels[$final_type],
+            '@extension' => $ext,
+          ]);
 
-        // hiding the data-caption:
-        $form['attributes']['data-caption']['#access'] = FALSE;
+          // Change formatter select title.
+          $form['attributes']['data-entity-embed-display']['#title'] = t('Embed type');
 
-        // Disable aligment in responsive mode, as it cause the media to be shown at 0x0px.
-        $form['attributes']['data-align']['#states']['invisible'] = [
-          ['select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'noresize']],
-          ['select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'responsive']],
-        ];
+          // hiding the data-caption:
+          $form['attributes']['data-caption']['#access'] = FALSE;
 
-        // Custom validation to avoid align data to be saved when not needed.
-        $form['#validate'][] = 'thron_entity_embed_dialog_validate';
-      }
-      break;
+          // Disable aligment in responsive mode, as it cause the media to be shown at 0x0px.
+          $form['attributes']['data-align']['#states']['invisible'] = [
+            ['select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'noresize']],
+            ['select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'responsive']],
+          ];
 
-    case 'node_page_form':
-    case 'node_page_edit_form':
-      $form['#attached']['library'][] = 'thron/embed_button';
-      break;
+          // Custom validation to avoid align data to be saved when not needed.
+          $form['#validate'][] = 'thron_entity_embed_dialog_validate';
+        }
+        break;
+
+      case 'node_page_form':
+        $form['#attached']['library'][] = 'thron/embed_button';
+        break;
+    }
   }
 }
 
