@@ -180,12 +180,9 @@ class Thronintegration_HTTP {
       ini_set("memory_limit", "512M");
       ini_set('max_execution_time', 900);
 
-      // DOING THE CALL
-      //=====================================
       $res = curl_exec($curl);
       $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-      //=====================================
-
+      
       if ($file) {
         try {
           fclose($file);
@@ -224,7 +221,6 @@ class Thronintegration_HTTP {
         throw new AppTokenExpiredException();
       }
 
-      var_dump($ex);
       return FALSE;
     }
   }

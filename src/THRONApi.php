@@ -706,8 +706,7 @@ class THRONApi implements THRONApiInterface {
       $obj->save();
       return TRUE;
     } catch (EntityStorageException $e) {
-		var_dump($e); exit();
-      return FALSE;
+		  return FALSE;
     }
   }
 
@@ -1174,7 +1173,6 @@ class THRONApi implements THRONApiInterface {
       } else
         return $obj;
     } catch(\Exception $ex) {
-      var_dump($ex); exit();
       return false;
     }
   }
