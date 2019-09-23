@@ -18,5 +18,5 @@
         "drupal/entity_browser": "~2.1",
         "drupal/entity_embed": "^1.0",
         "drupal/media_entity_browser": "^2.0"
-    }
+    } 
 }
