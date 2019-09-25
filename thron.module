@@ -170,7 +170,7 @@ function thron_preprocess_thron_select_sortable_widget(&$variables) {
  */
 function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   // fix THRON editor icon
-  if(preg_match('/node_([^_]+)_edit_form/', $form_id)) {
+  if(preg_match('/node_([^_]+)_edit_form/', $form_id) || preg_match('/node_([^_]+)_form/', $form_id)) {
     $form['#attached']['library'][] = 'thron/embed_button';
   } else {
     switch ($form_id) {
@@ -223,7 +223,6 @@ function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         }
         break;
 
-      case 'node_page_form':
 	  case 'filter_format_edit_form':
         $form['#attached']['library'][] = 'thron/embed_button';
         break;
