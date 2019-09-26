@@ -2,13 +2,13 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.media.field_thron_embed_id
+    - field.storage.media.field_thron_embed_ids
     - media.type.thron_with_media_source
-id: media.thron_with_media_source.field_thron_embed_id
-field_name: field_thron_embed_id
+id: media.thron_with_media_source.field_thron_embed_ids
+field_name: field_thron_embed_ids
 entity_type: media
 bundle: thron_with_media_source
-label: 'THRON embed ID'
+label: 'THRON embed IDs'
 description: ''
 required: false
 translatable: false

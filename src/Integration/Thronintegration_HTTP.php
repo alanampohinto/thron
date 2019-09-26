@@ -236,10 +236,6 @@ class Thronintegration_HTTP {
    * @throws \Drupal\thron\Exception\AppTokenExpiredException
    */
   public static function doHTTP($method, $url, $data = FALSE, $headers = FALSE, $returnResponseHeaders = FALSE) {
-    if (function_exists("add_action") || function_exists("\add_action")) {
-      return self::callWPHTTP($method, $url, $data, $headers);
-    }
-
     return self::callCurl($method, $url, $data, $headers, $returnResponseHeaders);
   }
 

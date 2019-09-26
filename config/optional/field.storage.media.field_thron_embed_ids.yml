@@ -3,13 +3,11 @@ status: true
 dependencies:
   module:
     - media
-id: media.field_thron_embed_id
-field_name: field_thron_embed_id
+id: media.field_thron_embed_ids
+field_name: field_thron_embed_ids
 entity_type: media
-type: string
+type: string_long
 settings:
-  max_length: 255
-  is_ascii: false
   case_sensitive: false
 module: core
 locked: false

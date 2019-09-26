@@ -677,7 +677,7 @@ class THRONApi implements THRONApiInterface {
   /**
    * @return string|FALSE
    */
-  public function getThronMediaPkey($content_id) {
+  public function getThronMediaEmbedPkey($content_id, $templateId) {
     $query = $this->mediaStorage->getQuery()
       ->condition('bundle', 'thron_with_media_source')
       ->condition('field_thron_id', $content_id);
@@ -686,13 +686,15 @@ class THRONApi implements THRONApiInterface {
       return FALSE;
     }
     $obj = $this->mediaStorage->load(reset($res));
-	return $obj->get('field_thron_embed_id')->value;
+  	$templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
+    if(!isset($templateIds[$templateId])) return FALSE;
+    return $templateIds[$templateId];
   }
 
   /**
    * @return bool
    */
-  public function setThronMediaPkey($content_id, $pkey) {
+  public function setThronMediaEmbedPkey($content_id, $pkey, $templateId) {
     $query = $this->mediaStorage->getQuery()
       ->condition('bundle', 'thron_with_media_source')
       ->condition('field_thron_id', $content_id);
@@ -701,7 +703,9 @@ class THRONApi implements THRONApiInterface {
       return FALSE;
     }
     $obj = $this->mediaStorage->load(reset($res));
-    $obj->set('field_thron_embed_id', $pkey);
+    $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
+    $templateIds[$templateId]=$pkey;
+    $obj->set('field_thron_embed_ids', json_encode($templateIds));
     try {
       $obj->save();
       return TRUE;
@@ -797,13 +801,14 @@ class THRONApi implements THRONApiInterface {
 
   /**
    * @param $templateId
+   * @param templateLabel
    * @param $xcontentId
-   * @param $uniqueId
+   * @param $disguisedToken
    *
    * @return array|mixed|null
    * @throws \Exception
    */
-  public function insertPlayerEmbedCode($templateId, $xcontentId, $uniqueId, $disguisedToken) {
+  public function insertPlayerEmbedCode($templateId, $templateLabel, $xcontentId, $disguisedToken) {
     $cid = 'player_embedcode__'.$this->config->get('client_id')."_${templateId}__" . preg_replace('/-/', '_', $xcontentId);
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
@@ -817,10 +822,17 @@ class THRONApi implements THRONApiInterface {
       $values = [];
       $secure = FALSE;
       $source = ['id' => $xcontentId, 'type' => 'CONTENT'];
-      $embedName = 'Random usage on Drupal ' . $uniqueId; // TODO: make this more informative
+      $sitename = "";
+      try {
+        $sitename = \Drupal::config('system.site')->get('name');
+      } catch(\Exception $ex) {};
+
+      if($sitename)
+        $embedName = "Drupal embed on $sitename (template $templateLabel)";
+      else
+        $embedName = "Drupal embed (template $templateLabel)";
 
       $data = Thronintegration_Api::insertEmbedCode($this->config->get('client_id'), $disguisedToken, $embedName, $source, FALSE, $templateId, 'CUSTOM', $values, $secure);
-
       if ($data['resultCode'] !== 'OK') {
         throw new \Exception($data['errorDescription']);
       }
@@ -829,7 +841,7 @@ class THRONApi implements THRONApiInterface {
       return $data;
     }
     catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('insertPlayerEmbedCode', NULL, $ex, [$templateId, $xcontentId, $uniqueId, $disguisedToken]);
+      return $this->refreshAndRecall('insertPlayerEmbedCode', NULL, $ex, [$templateId, $templateLabel, $xcontentId, $disguisedToken]);
     }
     catch (\Exception $e) {
       $this->logger->error($e->getMessage());
