@@ -97,13 +97,26 @@ class ThronEmbedFormatter extends ThronFormatterBase {
         $data = $this->THRON->getVideoPlayerTemplatesList();
         if (!empty($data)) {
           $templates = $data['templates'];
-          $options = [
-            $data['default_templates']['default'] => $this->t('Default'),
-            $data['default_templates']['noSkin'] => $this->t('No Skin'),
-          ];
-          if (count($templates) > 2) {
-            $options['---------'] = []; // separator
-            foreach ($templates as $template) {
+          $defaultAdded = false;
+
+          $options = [];
+
+          if(isset($data['default_templates']['default'])) {
+            $options[$data['default_templates']['default']] = $this->t('Default');
+            $defaultAdded = true;
+          }
+
+          if(isset($data['default_templates']['noSkin'])) {
+            $options[$data['default_templates']['noSkin']] = $this->t('noSkin');
+            $defaultAdded = true;
+          }
+
+          if($defaultAdded) $options['---------'] = []; // separator
+          foreach ($templates as $template) {
+            if(
+              (isset($data['default_templates']['default']) && $template['id'] != $data['default_templates']['default']) &&
+              (isset($data['default_templates']['noSkin']) && $template['id'] != $data['default_templates']['noSkin'])
+            ) {
               if (isset($options[$template['id']])) {
                 $options[$template['id']] .= '  ('.$template['name'].')';
               }
@@ -117,7 +130,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
         $elements['embed_template'] = [
           '#type' => 'select',
           '#title' => $this->t('Player Template'),
-          '#description' => $this->t('choose the way to embed the video'),
+          '#description' => $this->t('Choose the template to be applied onto the player'),
           '#default_value' => $this->getSetting('embed_template') ?: $data['default_player_templates']['default'],
           '#options' => $options,
         ];

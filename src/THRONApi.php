@@ -726,11 +726,8 @@ class THRONApi implements THRONApiInterface {
       }
 
       $ret = [
-        'default_templates' => [
-          'default' => $login_data['default_player_templates']['default'],
-          'noSkin' => $login_data['default_player_templates']['noSkin'],
-        ],
         'templates' => [],
+        'default_templates' => [],
       ];
 
       $data = Thronintegration_Api::getPlayerCustomTemplates($this->config->get('client_id'), $login_data['token'], 0);
@@ -739,10 +736,19 @@ class THRONApi implements THRONApiInterface {
         throw new \Exception($data['errorDescription']);
       }
 
-      foreach ($data['items'] as $template) {
+      foreach ($data['items'] as $template)
         $ret['templates'][$template['id']] = $template;
-      }
 
+      if(isset($login_data['default_player_templates'])) {
+        if(isset($login_data['default_player_templates']['default']))
+          if(array_key_exists($login_data['default_player_templates']['default'], $ret['templates']))
+            $ret['default_templates']['default'] = $login_data['default_player_templates']['default'];
+        
+        if(isset($login_data['default_player_templates']['noSkin']))
+          if(array_key_exists($login_data['default_player_templates']['noSkin'], $ret['templates']))
+            $ret['default_templates']['noSkin'] = $login_data['default_player_templates']['noSkin'];
+      }
+  
       $this->cache->set($cid, $ret, $this->time->getRequestTime() + $this->getCacheInterval());
       return $ret;
     }
