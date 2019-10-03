@@ -343,7 +343,7 @@ class THRONSearch extends THRONWidgetBase {
       return [];
     }
 
-    $cid = 'search_tags_' . join('', $classifications);
+    $cid = 'search_tags_' .$this->config->get('client_id')."_". join('', $classifications);
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
@@ -824,7 +824,7 @@ class THRONSearch extends THRONWidgetBase {
           foreach ($api_list['media'] as $api_item) {
             foreach ($selected_ids as $selected_id) {
               if ($api_item['id'] == $selected_id) {
-                $this->cache->set('thron_item_' . $selected_id, $api_item, ($this->time->getRequestTime() + 120));
+                $this->cache->set('thron_item_'.$this->config->get('client_id')."§". $selected_id, $api_item, ($this->time->getRequestTime() + 120));
               }
             }
           }

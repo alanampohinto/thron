@@ -147,13 +147,13 @@ interface THRONApiInterface {
    * Creates an embed code on the fly
    *
    * @param $templateId
+   * @param $templateLabel
    * @param $xcontentId
-   * @param $uniqueId
    * @param $disguisedToken
    *
    * @return mixed
    */
-  public function insertPlayerEmbedCode($templateId, $xcontentId, $uniqueId, $disguisedToken);
+  public function insertPlayerEmbedCode($templateId, $templateLabel, $xcontentId, $disguisedToken);
 
   /**
    * @param $array
@@ -198,6 +198,16 @@ interface THRONApiInterface {
    * @return array|NULL
    */
   public function getMediaDetails($content_id, $key);
+
+  /**
+   * @return string|FALSE
+   */
+  public function getThronMediaEmbedPkey($content_id, $templateId);
+
+  /**
+   * @return bool
+   */
+  public function setThronMediaEmbedPkey($content_id, $embedCodeId, $templateId);
 
   /**
    * Get's the Interval in secconds for the given cache expire amount.

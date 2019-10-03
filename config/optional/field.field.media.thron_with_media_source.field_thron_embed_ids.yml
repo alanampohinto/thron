@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_thron_embed_ids
+    - media.type.thron_with_media_source
+id: media.thron_with_media_source.field_thron_embed_ids
+field_name: field_thron_embed_ids
+entity_type: media
+bundle: thron_with_media_source
+label: 'THRON embed IDs'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

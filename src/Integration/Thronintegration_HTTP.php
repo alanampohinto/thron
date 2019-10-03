@@ -180,12 +180,9 @@ class Thronintegration_HTTP {
       ini_set("memory_limit", "512M");
       ini_set('max_execution_time', 900);
 
-      // DOING THE CALL
-      //=====================================
       $res = curl_exec($curl);
       $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-      //=====================================
-
+      
       if ($file) {
         try {
           fclose($file);
@@ -224,7 +221,6 @@ class Thronintegration_HTTP {
         throw new AppTokenExpiredException();
       }
 
-      var_dump($ex);
       return FALSE;
     }
   }
@@ -240,10 +236,6 @@ class Thronintegration_HTTP {
    * @throws \Drupal\thron\Exception\AppTokenExpiredException
    */
   public static function doHTTP($method, $url, $data = FALSE, $headers = FALSE, $returnResponseHeaders = FALSE) {
-    if (function_exists("add_action") || function_exists("\add_action")) {
-      return self::callWPHTTP($method, $url, $data, $headers);
-    }
-
     return self::callCurl($method, $url, $data, $headers, $returnResponseHeaders);
   }
 

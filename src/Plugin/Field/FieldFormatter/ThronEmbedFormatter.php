@@ -97,13 +97,26 @@ class ThronEmbedFormatter extends ThronFormatterBase {
         $data = $this->THRON->getVideoPlayerTemplatesList();
         if (!empty($data)) {
           $templates = $data['templates'];
-          $options = [
-            $data['default_templates']['default'] => $this->t('Default'),
-            $data['default_templates']['noSkin'] => $this->t('No Skin'),
-          ];
-          if (count($templates) > 2) {
-            $options['---------'] = []; // separator
-            foreach ($templates as $template) {
+          $defaultAdded = false;
+
+          $options = [];
+
+          if(isset($data['default_templates']['default'])) {
+            $options[$data['default_templates']['default']] = $this->t('Default');
+            $defaultAdded = true;
+          }
+
+          if(isset($data['default_templates']['noSkin'])) {
+            $options[$data['default_templates']['noSkin']] = $this->t('noSkin');
+            $defaultAdded = true;
+          }
+
+          if($defaultAdded) $options['---------'] = []; // separator
+          foreach ($templates as $template) {
+            if(
+              (isset($data['default_templates']['default']) && $template['id'] != $data['default_templates']['default']) &&
+              (isset($data['default_templates']['noSkin']) && $template['id'] != $data['default_templates']['noSkin'])
+            ) {
               if (isset($options[$template['id']])) {
                 $options[$template['id']] .= '  ('.$template['name'].')';
               }
@@ -117,7 +130,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
         $elements['embed_template'] = [
           '#type' => 'select',
           '#title' => $this->t('Player Template'),
-          '#description' => $this->t('choose the way to embed the video'),
+          '#description' => $this->t('Choose the template to be applied onto the player'),
           '#default_value' => $this->getSetting('embed_template') ?: $data['default_player_templates']['default'],
           '#options' => $options,
         ];
@@ -282,20 +295,35 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                 if (strpos($route_match->getRouteName(), 'entity.node.') === 0) {
                   $view_mode = 'full';
 
-                  // $template_settings = $this->THRON->getVideoPlayerTemplateData($formatter_settings['embed_template']);
-                  // $displaySettings['template_settings'] = $template_settings['item'];
-                  if ($disguisedToken = $this->THRON->impersonateApp()) {
-                    $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $metadata['id'], Crypt::randomBytesBase64(8), $disguisedToken);
-                    $displaySettings['embed_player_code'] = $embed_player_code['item'];
+                  // is there already an embed code for this content?
+                  $pkey = $this->THRON->getThronMediaEmbedPkey($metadata['id'], $formatter_settings['embed_template']);
+                  if(!$pkey) {
+                    if ($disguisedToken = $this->THRON->impersonateApp()) {
+                      // find the label for this template
+                      $template_settings = $this->THRON->getVideoPlayerTemplateData($formatter_settings['embed_template']);
+                      $templateLabel = "unknown";
+                      if($template_settings)
+                        if(isset($template_settings["item"]["name"]))
+                          $templateLabel = $template_settings["item"]["name"];
+                        elseif(isset($template_settings["name"]))
+                          $templateLabel = $template_settings["name"];
+                      
+                      $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $metadata['id'], $disguisedToken);
+                      $displaySettings['embed_player_code'] = $embed_player_code['item'];
+                      $pkey = $embed_player_code['item']['pkey'];
+                      $res = $this->THRON->setThronMediaEmbedPkey($metadata['id'], $formatter_settings['embed_template'], $pkey);
+                    }
                   }
-
+                  
+                  if(!$pkey)
+                    $pkey = $this->config->get('pkey');
+				  
                   $attached['library'][] = 'thron/universal_player';
                   $attached['library'][] = 'thron/formatter';
                   $attached['drupalSettings']['thron']['players'][$uniqueDiv] = [
                     'clientId' => $this->config->get('client_id'),
                     'xcontentId' => $metadata['id'],
-                    'sessId' => isset($displaySettings['embed_player_code']) && isset($displaySettings['embed_player_code']['pkey']) ?
-                      $displaySettings['embed_player_code']['pkey'] : $this->config->get('pkey'),
+                    'sessId' => $pkey, 
                     'language' => $language,
                   ];
 

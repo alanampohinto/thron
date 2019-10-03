@@ -2951,9 +2951,7 @@ class Thronintegration_Api {
         ],
         "skipPkeyCreation" => $secure,
       ];
-      //echo json_encode($params);exit;
       $insertEmbedCode = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $params, ["X-TOKENID" => $tokenId]);
-      //var_dump($insertEmbedCode);exit;
       if ($insertEmbedCode && !Thronintegration_Utils::IsNullOrEmptyString($insertEmbedCode)) {
         $insertEmbedCodeObj = json_decode($insertEmbedCode, TRUE);
         if (!$insertEmbedCodeObj || !isset($insertEmbedCodeObj["resultCode"]) || $insertEmbedCodeObj["resultCode"] != "OK") {
