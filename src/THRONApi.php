@@ -686,9 +686,29 @@ class THRONApi implements THRONApiInterface {
       return FALSE;
     }
     $obj = $this->mediaStorage->load(reset($res));
-  	$templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
-    if(!isset($templateIds[$templateId])) return FALSE;
-    return $templateIds[$templateId];
+  	try {
+      $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
+      if(!isset($templateIds[$templateId])) return FALSE;
+      return $templateIds[$templateId];
+    } catch(\Exception $e) {
+      try {
+        $pkey = $obj->get('field_thron_embed_id')->value;
+        if($pkey && trim($pkey) != "") {
+          try {
+            $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
+          } catch(\Exception $exc) {
+            $templateIds = [];
+          }
+
+          $templateIds[$templateId]=$pkey;
+          $obj->set('field_thron_embed_ids', json_encode($templateIds));
+        }
+
+        return $templateId;
+      } catch(\Exception $ex) {
+        return FALSE; 
+      }
+    }
   }
 
   /**
