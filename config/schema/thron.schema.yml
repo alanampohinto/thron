@@ -11,6 +11,48 @@ thron.settings:
     app_key:
       type: text
       label: 'App key'
+    preview_language:
+      type: text
+      label: 'Preview language'
+    cache_max_age:
+      type: integer
+      label: 'Cache max age'
+    login_cache_max_age:
+      type: integer
+      label: 'Login cache max age'
+    responsive_pictures_enable:
+      type: boolean
+      label: 'Responsive pictures enable'
+    avoid_classifications:
+      type: boolean
+      label: 'Avoid classifications'
+    responsive_pictures_breakpoints:
+      type: sequence
+      label: 'Responsive pictures breakpoints'
+      sequence:
+        type: thron.settings.responsive_pictures_breakpoints.[%key]
+        label: 'Responsive pictures breakpoints options'
+    classifications:
+      type: sequence
+      label: 'Classifications'
+      sequence:
+        type: string
+
+
+thron.settings.responsive_pictures_breakpoints.default:
+  type: string
+  label: 'Responsive pictures breakpoints default option'
+
+thron.settings.responsive_pictures_breakpoints.*:
+  type: mapping
+  label: 'Responsive pictures breakpoints other option'
+  mapping:
+    name:
+      type: string
+      label: 'Responsive picture breakpoint name'
+    value:
+      type: string
+      label: 'Responsive picture breakpoint value'
 
 media.source.thron:
   type: media.source.field_aware
@@ -29,3 +71,34 @@ entity_browser.browser.widget.thron_search:
     media_type:
       type: string
       label: 'Media type for created entities'
+    allowed_properties:
+      type: sequence
+      label: 'Allowed properties'
+      sequence:
+        type: string
+        label: 'Allowed property'
+    tags:
+      type: mapping
+      label: 'Tags'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enabled'
+        search_type:
+          type: string
+          label: 'Search type'
+        search_autocomplete_depth:
+          type: integer
+          label: 'Search autocomplete depth'
+        chosen_tags:
+          type: sequence
+          label: 'Chosen tags'
+          sequence:
+            type: string
+            label: 'Chosen tag'
+        search_autocomplete_classifications:
+          type: sequence
+          label: 'Search autocomplete classifications'
+          sequence:
+            type: string
+            label: 'Search autocomplete classification'

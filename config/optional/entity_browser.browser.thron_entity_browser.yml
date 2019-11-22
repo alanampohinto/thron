@@ -20,7 +20,7 @@ widgets:
     settings:
       items_per_page: 50
       tags:
-        enabled: 0
+        enabled: FALSE
       media_type: thron_with_media_source
       submit_text: 'Select media'
       allowed_properties: {  }

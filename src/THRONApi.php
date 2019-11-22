@@ -55,11 +55,6 @@ class THRONApi implements THRONApiInterface {
   protected $mediaStorage;
 
   /**
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $termStorage;
-
-  /**
    * @var \Drupal\Core\Logger\LoggerChannelInterface
    */
   protected $logger;
@@ -124,7 +119,6 @@ class THRONApi implements THRONApiInterface {
   ) {
 	$this->config = $config_factory->get('thron.settings');
     $this->mediaStorage = $entity_type_manager->getStorage('media');
-    $this->termStorage = $entity_type_manager->getStorage('taxonomy_term');
     $this->logger = $logger;
     $this->state = $state;
     $this->dateFormatter = $dateFormatter;

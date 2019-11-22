@@ -168,13 +168,13 @@ class THRONConfigurationForm extends ConfigFormBase {
     $form['cache'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Cache management'),
-      '#description' => $this->t('Each value expressed in secconds'),
+      '#description' => $this->t('Each value expressed in seconds'),
     ];
 
     $form['cache']['cache_max_age'] = [
       '#type' => 'number',
       '#title' => $this->t('Default'),
-      '#description' => $this->t('Used for Thumbnails, Tags info, Classifications info, Content details ...'),
+      '#description' => $this->t('Used for Thumbnails, Tags info, Classifications info, Content details...'),
       '#min' => 0,
       '#step' => 10,
       '#size' => 10,
@@ -192,7 +192,6 @@ class THRONConfigurationForm extends ConfigFormBase {
       '#default_value' => $config->get('login_cache_max_age') ?: THRON_LOGIN_CACHE_MAX_AGE,
       '#required' => TRUE,
     ];
-
 
     $classifications = !$no_conf ? $this->THRONApi->getClassifications() : FALSE;
     if ($classifications) {
@@ -332,25 +331,24 @@ class THRONConfigurationForm extends ConfigFormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $credentials = $form_state->getValue('credentials');
     foreach (['client_id', 'app_key'] as $name) {
-      if (!ctype_alnum(trim($credentials[$name]))) {
-        $form_state->setError($form[$name], $this->t('@label needs to contain only letters and numbers.', [
-          '@label' => $form[$name]['#title']->render(),
+      if (!ctype_alnum($credentials[$name])) {
+        $form_state->setError($form['credentials'][$name], $this->t('@label needs to contain only letters and numbers.', [
+            '@label' => $form['credentials'][$name]['#title']->render(),
         ]));
       }
     }
 
     preg_match('/CS-(.+)/', $credentials["app_id"], $preg_test);
-    if ((count($preg_test) == 0) || !ctype_alnum(str_replace("-", "", trim($credentials[$name])))) {
-      $form_state->setError($form[$name], $this->t('App_id is empty or invalid.', [
-        '@label' => $form[$name]['#title']->render(),
+    if ((count($preg_test) == 0) || !ctype_alnum(str_replace("-", "", $credentials['app_id']))) {
+      $form_state->setError($form['credentials']['app_id'], $this->t('app_id is empty or invalid.', [
+          '@label' => $form['credentials']['app_id']['#title']->render(),
       ]));
     }
-
 
     // Makes sure we don't have a leading slash in the domain url.
     if ($form_state->getValue('test_connection')) {
       if (!$form_state::hasAnyErrors() && !$this->testApiConnection($credentials['client_id'], $credentials['app_id'], $credentials['app_key'])) {
-        $form_state->setErrorByName('credentials', $this->t('Could not establish connection with THRON. Check your credentials or <a href=":support">contact support.</a>', [':support' => 'mailto:support@thron.com']));
+        $form_state->setErrorByName('credentials', $this->t('Could not establish a connection with THRON. Check your credentials or <a href=":support">contact support.</a>', [':support' => 'mailto:support@thron.com']));
       }
     }
 
