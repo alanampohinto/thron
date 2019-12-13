@@ -30,7 +30,7 @@ class EntitySelectionEvent extends EventBase {
   }
 
   /**
-   * Gets selected entities.
+   * Returns selected entities.
    *
    * @return \Drupal\Core\Entity\EntityInterface[]
    */

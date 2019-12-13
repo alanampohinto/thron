@@ -691,7 +691,7 @@ class THRONSearch extends THRONWidgetBase {
   }
 
   /**
-   * Get's the Array of tags
+   * Returns the Array of tags to be used for filtering
    * @param $tag_ids
    *
    * @return array

@@ -671,7 +671,7 @@ class THRONApi implements THRONApiInterface {
   /**
    * @return string|FALSE
    */
-  public function getThronMediaEmbedPkey($content_id, $templateId) {
+  public function getThronMediaEmbedId($content_id, $templateId) {
     $query = $this->mediaStorage->getQuery()
       ->condition('bundle', 'thron_with_media_source')
       ->condition('field_thron_id', $content_id);
@@ -708,7 +708,7 @@ class THRONApi implements THRONApiInterface {
   /**
    * @return bool
    */
-  public function setThronMediaEmbedPkey($content_id, $pkey, $templateId) {
+  public function setThronMediaEmbedId($content_id, $pkey, $templateId) {
     $query = $this->mediaStorage->getQuery()
       ->condition('bundle', 'thron_with_media_source')
       ->condition('field_thron_id', $content_id);
@@ -834,7 +834,7 @@ class THRONApi implements THRONApiInterface {
       }
 
       $values = [];
-      $secure = FALSE;
+      $skipPkeyCreation = TRUE;
       $source = ['id' => $xcontentId, 'type' => 'CONTENT'];
       $sitename = "";
       try {
@@ -846,7 +846,7 @@ class THRONApi implements THRONApiInterface {
       else
         $embedName = "Drupal embed (template $templateLabel)";
 
-      $data = Thronintegration_Api::insertEmbedCode($this->config->get('client_id'), $disguisedToken, $embedName, $source, FALSE, $templateId, 'CUSTOM', $values, $secure);
+      $data = Thronintegration_Api::insertEmbedCode($this->config->get('client_id'), $disguisedToken, $embedName, $source, FALSE, $templateId, 'CUSTOM', $values, $skipPkeyCreation);
       if ($data['resultCode'] !== 'OK') {
         throw new \Exception($data['errorDescription']);
       }
@@ -1106,7 +1106,7 @@ class THRONApi implements THRONApiInterface {
   }
 
   /**
-   * Get's the information about media.
+   * Returns the details about media.
    *
    * @param $content_id
    * @param null $key
@@ -1149,7 +1149,7 @@ class THRONApi implements THRONApiInterface {
   }
 
   /**
-   * Get's the Interval in secconds for the given cache expire amount.
+   * Returns the Interval for the given cache expire amount (in seconds).
    *
    * @param string|NULL $name
    *   The interval name to retreive.

@@ -296,8 +296,8 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                   $view_mode = 'full';
 
                   // is there already an embed code for this content?
-                  $pkey = $this->THRON->getThronMediaEmbedPkey($metadata['id'], $formatter_settings['embed_template']);
-                  if(!$pkey) {
+                  $embedCodeId = $this->THRON->getThronMediaEmbedId($metadata['id'], $formatter_settings['embed_template']);
+                  if(!$embedCodeId) {
                     if ($disguisedToken = $this->THRON->impersonateApp()) {
                       // find the label for this template
                       $template_settings = $this->THRON->getVideoPlayerTemplateData($formatter_settings['embed_template']);
@@ -310,13 +310,13 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                       
                       $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $metadata['id'], $disguisedToken);
                       $displaySettings['embed_player_code'] = $embed_player_code['item'];
-                      $pkey = $embed_player_code['item']['pkey'];
-                      $res = $this->THRON->setThronMediaEmbedPkey($metadata['id'], $formatter_settings['embed_template'], $pkey);
+                      $embedCodeId = $embed_player_code['item']['id'];
+                      $res = $this->THRON->setThronMediaEmbedId($metadata['id'], $formatter_settings['embed_template'], $embedCodeId);
                     }
                   }
                   
-                  if(!$pkey)
-                    $pkey = $this->config->get('pkey');
+                  // get the folder pkey from the application's settings
+                  $pkey = $this->THRON->getLoginData()['pkey'];
 				  
                   $attached['library'][] = 'thron/universal_player';
                   $attached['library'][] = 'thron/formatter';
@@ -324,6 +324,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                     'clientId' => $this->config->get('client_id'),
                     'xcontentId' => $metadata['id'],
                     'sessId' => $pkey, 
+                    'embedCodeId' => $embedCodeId,
                     'language' => $language,
                   ];
 

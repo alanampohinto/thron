@@ -225,7 +225,7 @@ class ThronMediaSource extends MediaSourceBase {
   }
 
   /**
-   * Get's the metadata assoc array for given data structure.
+   * Returns the metadata assoc array for given data structure.
    *
    * @param mixed $data
    * @param string $langcode

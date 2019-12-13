@@ -191,7 +191,7 @@ interface THRONApiInterface {
   public function getPreviewLanguage();
 
   /**
-   * Get's the information about media.
+   * Returns the details about media.
    *
    * @param int $content_id
    * @param string|NULL $key
@@ -210,7 +210,7 @@ interface THRONApiInterface {
   public function setThronMediaEmbedPkey($content_id, $embedCodeId, $templateId);
 
   /**
-   * Get's the Interval in secconds for the given cache expire amount.
+   * Returns the Interval in seconds for the given cache expire amount.
    *
    * @param string|NULL $name
    *

@@ -751,7 +751,7 @@ class Thronintegration_Api {
   }
 
   /**
-   * Gets the contents specified by properties
+   * Returns the contents specified by properties
    * @param $clientId
    * @param $token
    * @param $categoryId
@@ -1333,7 +1333,7 @@ class Thronintegration_Api {
 
   public static function getUserRightsForApp($appDetails, $userName, $userCapabilities) {
     try {
-      // gets the rights for this user on this app
+      // fetch the rights for this user on this app
       $userRights = [];
       // is this user the owner of this application?
       if ($appDetails["ownerUsername"] == $userName) {
@@ -2245,7 +2245,7 @@ class Thronintegration_Api {
   }
 
   /**
-   * Gets the tags by classification
+   * Returns the tags by classification
    * @param $clientId
    * @param $token
    * @param $classificationId
@@ -2408,7 +2408,7 @@ class Thronintegration_Api {
   }
 
   /**
-   * Gets the Classification list
+   * Returns the Classification list
    * @param $clientId
    * @param $token
    * @param bool $onlyActive
@@ -2712,7 +2712,7 @@ class Thronintegration_Api {
   }
 
   /**
-   * Gets the possible templates to embeddable thron player to use
+   * Returns the available templates for the THRON player
    * @param $clientId
    * @param $tokenId
    * @param $offset
@@ -2758,7 +2758,7 @@ class Thronintegration_Api {
   }
 
   /**
-   * Gets the embed player template data
+   * Returns the embed player template data
    * @param $clientId
    * @param $tokenId
    * @param $templateId
@@ -2920,12 +2920,12 @@ class Thronintegration_Api {
    * @param $templateId
    * @param $templateType
    * @param $values
-   * @param $secure
+   * @param $skipPkeyCreation
    *
    * @return array|mixed
    * @throws \Drupal\thron\Exception\AppTokenExpiredException
    */
-  public static function insertEmbedCode($clientId, $tokenId, $embedName, $source, $contextId, $templateId, $templateType, $values, $secure) {
+  public static function insertEmbedCode($clientId, $tokenId, $embedName, $source, $contextId, $templateId, $templateType, $values, $skipPkeyCreation) {
     $res = ["status" => "ERROR", "errorDescription" => ""];
 
     try {
@@ -2949,7 +2949,7 @@ class Thronintegration_Api {
           "useContextId" => $contextId,
           "values" => $values,
         ],
-        "skipPkeyCreation" => $secure,
+        "skipPkeyCreation" => $skipPkeyCreation,
       ];
       $insertEmbedCode = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $params, ["X-TOKENID" => $tokenId]);
       if ($insertEmbedCode && !Thronintegration_Utils::IsNullOrEmptyString($insertEmbedCode)) {
@@ -3131,7 +3131,7 @@ class Thronintegration_Api {
   }
 
   /**
-   * Gets the media content detailed information.
+   * Returns the media content detailed information.
    *
    * @param $clientId
    * @param $tokenId
