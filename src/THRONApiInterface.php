@@ -36,10 +36,11 @@ interface THRONApiInterface {
 
   /**
    * @param string $xcontentId
+   * @param string|null $divArea
    *
    * @return array
    */
-  public function getContentDetail($xcontentId);
+  public function getContentDetail($xcontentId, $divArea = null);
 
   /**
    * @return array
@@ -113,9 +114,9 @@ interface THRONApiInterface {
   public function getVideoPlayerTemplatesList();
 
   /**
-   * Retreives the Template characteristics.
+   * Retrieve the Template characteristics.
    *
-   * @param string $templateId The ID of Thron based template ID
+   * @param string $templateId The ID of THRON based template ID
    *
    * @return array
    */
@@ -202,12 +203,12 @@ interface THRONApiInterface {
   /**
    * @return string|FALSE
    */
-  public function getThronMediaEmbedPkey($content_id, $templateId);
+  public function getThronMediaEmbedId($content_id, $templateId);
 
   /**
    * @return bool
    */
-  public function setThronMediaEmbedPkey($content_id, $embedCodeId, $templateId);
+  public function setThronMediaEmbedId($content_id, $embedCodeId, $templateId);
 
   /**
    * Returns the Interval in seconds for the given cache expire amount.

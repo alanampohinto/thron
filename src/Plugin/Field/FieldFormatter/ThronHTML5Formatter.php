@@ -330,6 +330,12 @@ class ThronHTML5Formatter extends ThronFormatterBase {
                     '@divArea' => $w . "x" . $h,
                   ]));
                 }
+
+                if (isset($metadata['thumbnail_url_pattern'])) {
+                  $metadata['thumbnail_url'] = (string) (new FormattableMarkup($metadata['thumbnail_url_pattern'], [
+                    '@divArea' => $w . "x" . $h,
+                  ]));
+                }
               }
               else {
                 $this->privateTempStore->set('embed_resizing_responsive', [
@@ -364,7 +370,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
               if ($metadata['contentType'] == 'IMAGE') {
                 $this->privateTempStore->set('embed_image_as_webp', $formatter_settings['embed_image_as_webp']);
                 $ext = $this->getMediaContentExtension($metadata['id']);
-                if ($ext == 'webp') {
+                if ($ext == 'webp' && $formatter_settings['embed_image_as_webp']) {
                   $metadata['content_url'] .= '?format=webp';
                 }
 
@@ -375,7 +381,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
                   if(empty($responsiveness))
                     $responsiveness=$this->THRON->getBreakpointTags(true);
 
-				  $new_imageset = [];
+				          $new_imageset = [];
                   if (!empty($metadata['imageset']) && $responsiveness) {
                     foreach ($metadata['imageset'] as $media_key => $url) {
                       $new_imageset[$media_key] = [

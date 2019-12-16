@@ -286,10 +286,11 @@ class THRONApi implements THRONApiInterface {
 
   /**
    * @param string $xcontentId
+   * @param string|null $divArea
    *
    * @return array|bool|mixed|null
    */
-  public function getContentDetail($xcontentId) {
+  public function getContentDetail($xcontentId, $divArea = null) {
     $cid = 'xcontent__'.$this->config->get('client_id')."§" . $xcontentId;
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
@@ -300,7 +301,7 @@ class THRONApi implements THRONApiInterface {
         throw new \Exception('LoginApp error');
       }
 
-      $data = Thronintegration_Api::getContentDetail($this->config->get('client_id'), $login_data['token'], $login_data['pkey'], $xcontentId);
+      $data = Thronintegration_Api::getContentDetail($this->config->get('client_id'), $login_data['token'], $login_data['pkey'], $xcontentId, $divArea);
       if ($data->resultCode != 'OK') {
         throw new \Exception($data['errorDescription']);
       }
@@ -1152,7 +1153,7 @@ class THRONApi implements THRONApiInterface {
    * Returns the Interval for the given cache expire amount (in seconds).
    *
    * @param string|NULL $name
-   *   The interval name to retreive.
+   *   The interval name to retrieve.
    *
    * @return int
    */

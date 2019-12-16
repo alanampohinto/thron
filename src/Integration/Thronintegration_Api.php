@@ -434,7 +434,7 @@ class Thronintegration_Api {
   /*
    * THRON integration: invokes the delivery/getContentDetail function
    */
-  public static function getContentDetail($clientId, $token, $pkey, $xcontentId, $anticache = FALSE, $divarea = FALSE) {
+  public static function getContentDetail($clientId, $token, $pkey, $xcontentId, $anticache = FALSE, $divArea = FALSE) {
     try {
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "delivery/getContentDetail";
       $data = [
@@ -447,8 +447,8 @@ class Thronintegration_Api {
       }
 
       $data["divArea"] = '320x0';
-      if ($divarea && !Thronintegration_Utils::IsNullOrEmptyString($divarea)) {
-        $data["divArea"] = $divarea;
+      if ($divArea && !Thronintegration_Utils::IsNullOrEmptyString($divArea)) {
+        $data["divArea"] = $divArea;
       }
 
       $params = NULL;
@@ -522,7 +522,8 @@ class Thronintegration_Api {
     } catch (AppTokenExpiredException $ex) {
       throw $ex;
     } catch (\Exception $ex) {
-      var_dump($ex);
+      //var_dump($ex);
+      throw $ex;
       exit();
     }
   }
@@ -587,7 +588,8 @@ class Thronintegration_Api {
       throw $ex;
     }
     catch (\Exception $ex) {
-      var_dump($ex);
+      //var_dump($ex);
+      throw $ex;
       exit();
     }
   }
@@ -1267,7 +1269,7 @@ class Thronintegration_Api {
         }
       }
     } catch (\Exception $ex) {
-      var_dump($ex);
+      //var_dump($ex);
       // TODO notify
       return FALSE;
     }
@@ -1498,7 +1500,7 @@ class Thronintegration_Api {
 
       return json_decode($listAclResp, TRUE);
     } catch (\Exception $ex) {
-      var_dump($ex);
+      //var_dump($ex);
       // TODO notify this error
       return FALSE;
     }

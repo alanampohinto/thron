@@ -151,7 +151,7 @@ class ThronMediaSource extends MediaSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function getMetadata(MediaInterface $media, $name = NULL, $langcode = NULL) {
+  public function getMetadata(MediaInterface $media, $name = NULL, $langcode = NULL, $divArea = NULL) {
     if (!$source_field = $this->configuration['source_field']) {
       return FALSE;
     }
@@ -165,7 +165,7 @@ class ThronMediaSource extends MediaSourceBase {
     }
 
     if (!isset($this->apiResponse)) {
-      $this->apiResponse = $this->THRONApi->getContentDetail($xcontentId);
+      $this->apiResponse = $this->THRONApi->getContentDetail($xcontentId, $divArea);
       if (!$this->apiResponse) {
         return FALSE;
       }
@@ -271,7 +271,7 @@ class ThronMediaSource extends MediaSourceBase {
         $metadata['height'] = $data->deliverySize->maxHeight;
         $metadata['aspect_ratio'] = $data->deliverySize->aspectRatio;
 
-        $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/320x0/";
+        $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/0x0/";
         $metadata['thumbnail_url'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
 
         $divArea = join('x', [
@@ -361,30 +361,35 @@ class ThronMediaSource extends MediaSourceBase {
         $sources = [];
         foreach ($data->deliveryInfo as $deliveryInfo) {
           if (strpos($deliveryInfo->channelType, 'WEB') !== FALSE) {
-            $sources[$deliveryInfo->channelType] = [
-              'poster' => $deliveryInfo->defaultThumbUrl,
-              'src' => $deliveryInfo->contentUrl,
-              'mime' => $mimetype,
-            ];
+            // if this is a video, we can skip the WEBAUDIO channel
+            if ($metadata['contentType'] == 'VIDEO' && $deliveryInfo->channelType !== "WEBAUDIO") {
+              $sources[$deliveryInfo->channelType] = [
+                'poster' => $deliveryInfo->defaultThumbUrl,
+                'src' => $deliveryInfo->contentUrl,
+                'mime' => $mimetype,
+              ];
 
-            foreach ($deliveryInfo->sysMetadata as $meta) {
-              $sources[$deliveryInfo->channelType][strtolower($meta->name)] = $meta->value;
+              foreach ($deliveryInfo->sysMetadata as $meta) {
+                $sources[$deliveryInfo->channelType][strtolower($meta->name)] = $meta->value;
+              }
             }
           }
         }
         $metadata['sources'] = $sources;
 
-        $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/320x0/";
+        $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/0x0/";
         $metadata['thumbnail_url'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
 
         $metadata['content_url'] = "//$clientId-cdn.thron.com/delivery/public/video/$clientId/{$data->id}/$pkey/WEBHD/";
         $metadata['content_url'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
       }
-
       else {
         $metadata['aspect_ratio'] = $data->deliverySize->aspectRatio;
         $metadata['thumbnail_url'] = $data->dynThumbService;
       }
+
+      $metadata['thumbnail_url_pattern'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/@divArea/";
+      $metadata['thumbnail_url_pattern'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
     }
     return $metadata;
   }
