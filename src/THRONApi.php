@@ -709,7 +709,7 @@ class THRONApi implements THRONApiInterface {
   /**
    * @return bool
    */
-  public function setThronMediaEmbedId($content_id, $pkey, $templateId) {
+  public function setThronMediaEmbedId($content_id, $embedCodeId, $templateId) {
     $query = $this->mediaStorage->getQuery()
       ->condition('bundle', 'thron_with_media_source')
       ->condition('field_thron_id', $content_id);
@@ -719,7 +719,7 @@ class THRONApi implements THRONApiInterface {
     }
     $obj = $this->mediaStorage->load(reset($res));
     $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
-    $templateIds[$templateId]=$pkey;
+    $templateIds[$templateId]=$embedCodeId;
     $obj->set('field_thron_embed_ids', json_encode($templateIds));
     try {
       $obj->save();

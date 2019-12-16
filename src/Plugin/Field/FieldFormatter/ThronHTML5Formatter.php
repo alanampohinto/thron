@@ -244,7 +244,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
       else {
         $elements['media_info_error'] = [
           '#type' => 'item',
-          '#markup' => $this->t('Can\'t access the media info. Something\'s went wrong'),
+          '#markup' => $this->t('Can\'t access the media info. Something\'s gone wrong'),
         ];
       }
     }

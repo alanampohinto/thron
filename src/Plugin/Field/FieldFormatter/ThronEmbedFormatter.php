@@ -248,7 +248,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
       else {
         $elements['media_info_error'] = [
           '#type' => 'item',
-          '#markup' => $this->t('Can\'t access the media info. Something\'s went wrong'),
+          '#markup' => $this->t('Can\'t access the media info. Something\'s gone wrong'),
         ];
       }
     }
@@ -278,7 +278,6 @@ class ThronEmbedFormatter extends ThronFormatterBase {
             $language = $this->THRON->getPreviewLanguage();
             // Retrieve THRON content Metadata.
             if ($metadata = $source_plugin->getMetadata($media, NULL, $language)) {
-
               $wrapper_attributes = [];
               $inner_attributes = [];
               $attached = [];
@@ -311,7 +310,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                       $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $metadata['id'], $disguisedToken);
                       $displaySettings['embed_player_code'] = $embed_player_code['item'];
                       $embedCodeId = $embed_player_code['item']['id'];
-                      $res = $this->THRON->setThronMediaEmbedId($metadata['id'], $formatter_settings['embed_template'], $embedCodeId);
+                      $res = $this->THRON->setThronMediaEmbedId($metadata['id'], $embedCodeId, $formatter_settings['embed_template']);
                     }
                   }
                   
