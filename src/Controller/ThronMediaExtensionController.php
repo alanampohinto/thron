@@ -54,7 +54,14 @@ class ThronMediaExtensionController extends ControllerBase {
 
     if (!empty($media_info)) {
       $first = reset($media_info);
-      list(, $extension) = explode("/", $first['mimeType']);
+      try {
+        $extension = pathinfo($first["fileName"], PATHINFO_EXTENSION);
+      } catch (\Exception $ex) {
+        $extension = false;
+      }
+      
+      if(!$extension)
+        list(, $extension) = explode("/", $first['mimeType']);
       $content = [
         '#plain_text' => strtoupper($extension),
       ];

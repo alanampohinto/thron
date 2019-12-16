@@ -26,13 +26,13 @@ class LazyBuilders {
   /**
    * Constructs a new CartLazyBuilders object.
    *
-   * @param \Drupal\thron\THRONApiInterface $thorn_api
+   * @param \Drupal\thron\THRONApiInterface $thron_api
    *   The renderer service.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer service.
    */
-  public function __construct(THRONApiInterface $thorn_api, RendererInterface $renderer) {
-    $this->api = $thorn_api;
+  public function __construct(THRONApiInterface $thron_api, RendererInterface $renderer) {
+    $this->api = $thron_api;
     $this->renderer = $renderer;
   }
 
@@ -49,7 +49,15 @@ class LazyBuilders {
     $media_info = $this->api->getMediaDetails($content_id, 'sourceFiles');
     if (!empty($media_info)) {
       $first = reset($media_info);
-      list(, $extension) = explode("/", $first['mimeType']);
+      try {
+        $extension = pathinfo($first["fileName"], PATHINFO_EXTENSION);
+      } catch (\Exception $ex) {
+        $extension = false;
+      }
+      
+      if(!$extension)
+        list(, $extension) = explode("/", $first['mimeType']);
+        
       return [
         '#plain_text' => strtoupper($extension),
       ];

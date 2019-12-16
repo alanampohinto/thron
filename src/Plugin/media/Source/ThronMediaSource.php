@@ -326,11 +326,12 @@ class ThronMediaSource extends MediaSourceBase {
                       $content_url .= $info->id;
                     }
 
-                    $extension = array_filter($info->metadatas, function($item) {
+                    $mimetype = array_filter($info->metadatas, function($item) {
                       return $item->name == '_SOURCE_MIMETYPE_';
                     });
-                    $extension = reset($extension);
-                    list(, $ext) = explode("/", $extension->value);
+                    $mimetype = reset($mimetype);
+
+                    $ext = Thronintegration_Utils::getExtensionFromMimeType($mimetype->value);
                     $content_url .= '.' .$ext;
 
                     $imageset[$tag_pretty_id] = $content_url;

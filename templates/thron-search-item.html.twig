@@ -17,7 +17,7 @@
         <div class="created">{{ 'Created'|t }}: {{ created | date("d/m/Y H:i:s") }}</div>
     {% endif %}
     <small class="type">
-      {% if type %}({{ type }}{% if extension %} / {{ extension }}{% endif %}){% endif %}
+      {% if type %}({{ type }}{% if extension %} / {{ extension }}){% else %}){% endif %}{% endif %}
       {{ 'Owner'|t }}: {{ owner }}
     </small>
     <h5 class="name">{{ name }}</h5>
