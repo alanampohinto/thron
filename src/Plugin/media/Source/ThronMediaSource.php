@@ -377,7 +377,7 @@ class ThronMediaSource extends MediaSourceBase {
         }
         $metadata['sources'] = $sources;
 
-        $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/0x0/";
+        $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/1920x0/";
         $metadata['thumbnail_url'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
 
         $metadata['content_url'] = "//$clientId-cdn.thron.com/delivery/public/video/$clientId/{$data->id}/$pkey/WEBHD/";
