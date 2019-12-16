@@ -359,7 +359,13 @@ class ThronMediaSource extends MediaSourceBase {
         }
 
         $sources = [];
-        foreach ($data->deliveryInfo as $deliveryInfo) {
+        $web_channels=array_filter($data->deliveryInfo, function($obj) { return strpos($obj->channelType, 'WEB') !== FALSE; });
+        
+        usort($web_channels, function($a, $b) { 
+          return $this->extractSizeForChannel($a->sysMetadata) < $this->extractSizeForChannel($b->sysMetadata);
+        });
+
+        foreach ($web_channels as $deliveryInfo) {
           if (strpos($deliveryInfo->channelType, 'WEB') !== FALSE) {
             // if this is a video, we can skip the WEBAUDIO channel
             if ($metadata['contentType'] == 'VIDEO' && $deliveryInfo->channelType !== "WEBAUDIO") {
@@ -426,5 +432,12 @@ class ThronMediaSource extends MediaSourceBase {
 
   public function isImageSet() {
     return $this->isImageSource ?: FALSE;
+  }
+
+  private function extractSizeForChannel($smd) {
+    $size = array_values(array_filter($smd, function($obj) { return $obj->name == "Size"; }));
+    if(count($size)==0)
+      return -1;
+    return array_values($size)[0]->value;
   }
 }
