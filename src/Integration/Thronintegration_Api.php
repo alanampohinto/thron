@@ -3174,4 +3174,44 @@ class Thronintegration_Api {
     return $res;
   }
 
+  /**
+   * Performs a content search
+   *
+   * @param $clientId
+   * @param $tokenId
+   * @param $search_param
+   *
+   * @return array|mixed
+   * @throws \Drupal\thron\Exception\AppTokenExpiredException
+   */
+  public static function contentSearch($clientId, $tokenId, $search_param) {
+    $res = ["resultCode" => "ERROR", "errorDescription" => ""];
+
+    try {
+      $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "content/search/$clientId";
+
+      $resp = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $search_param, ["X-TOKENID" => $tokenId]);
+      if ($resp && !Thronintegration_Utils::IsNullOrEmptyString($resp)) {
+        $respObj = json_decode($resp, TRUE);
+        if (!$respObj || !isset($respObj["resultCode"]) || $respObj["resultCode"] != "OK") {
+          throw new \Exception("Invalid response getMediaContentDetails for client $clientId, content $contentId");
+        }
+
+        $res = $respObj;
+        $res["resultCode"] = "OK";
+      }
+      else {
+        throw new \Exception("Invalid response while getMediaContentDetails for $clientId, content $contentId");
+      }
+    }
+    catch (AppTokenExpiredException $ex) {
+      throw $ex;
+    }
+    catch (\Exception $ex) {
+      $res["resultCode"] = "ERROR";
+      $res["errorDescription"] = $ex->getMessage();
+    }
+    return $res;
+  }
+
 }

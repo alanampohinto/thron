@@ -184,17 +184,10 @@ abstract class ThronFormatterBase extends FormatterBase implements ContainerFact
    * @return string|null
    */
   protected function getMediaContentExtension($content_id) {
-    $sourceFiles = $this->THRON->getMediaDetails($content_id, 'sourceFiles');
+    $sourceFiles = $this->THRON->getMediaDetails($content_id, 'source');
     if (!empty($sourceFiles)) {
       $first = reset($sourceFiles);
-      try {
-        $extension = pathinfo($first["fileName"], PATHINFO_EXTENSION);
-      } catch (\Exception $ex) {
-        $extension = false;
-      }
-      
-      if(!$extension)
-        list(, $extension) = explode("/", $first['mimeType']);
+      $extension = $first['extension'];
       return $extension;
     }
     return NULL;

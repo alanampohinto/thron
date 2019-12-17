@@ -50,18 +50,11 @@ class ThronMediaExtensionController extends ControllerBase {
    */
   public function get(Request $request, $media_id) {
     $content = '?';
-    $media_info = ($media_id != 'NOMEDIA') ? $this->api->getMediaDetails($media_id, 'sourceFiles') : NULL;
+    $media_info = ($media_id != 'NOMEDIA') ? $this->api->getMediaDetails($media_id, 'source') : NULL;
 
     if (!empty($media_info)) {
       $first = reset($media_info);
-      try {
-        $extension = pathinfo($first["fileName"], PATHINFO_EXTENSION);
-      } catch (\Exception $ex) {
-        $extension = false;
-      }
-      
-      if(!$extension)
-        list(, $extension) = explode("/", $first['mimeType']);
+      $extension = $first['extension'];
       $content = [
         '#plain_text' => strtoupper($extension),
       ];

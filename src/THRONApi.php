@@ -1115,7 +1115,7 @@ class THRONApi implements THRONApiInterface {
    * @return array|FALSE
    */
   public function getMediaDetails($content_id, $key = NULL) {
-    $cid = 'mediaContentDetails_'.$this->config->get('client_id')."_". md5($content_id);
+    $cid = 'mediaDetails_'.$this->config->get('client_id')."_". md5($content_id);
     if ($key) { $cid .= ':' . $key; }
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
@@ -1126,19 +1126,27 @@ class THRONApi implements THRONApiInterface {
         throw new \Exception('LoginApp error');
       }
 
-      $data = Thronintegration_Api::getMediaContentDetails($this->config->get('client_id'), $login_data['token'], $content_id);
-      if ($data && isset($data['status']) && $data['status'] == "OK") {
-        $ret = [];
-        if ($key && isset($data['mediaContent'][$key])) {
-          $ret = $data['mediaContent'][$key];
-        }
-        else {
-          $ret = $data['mediaContent'];
-        }
-        $this->cache->set($cid, $ret, $this->time->getRequestTime() + $this->getCacheInterval());
-        return $ret;
+      $search_param = [
+        "criteria" => [
+          "ids" => [$content_id]
+        ],
+        "responseOptions" => [
+          "returnDetailsFields" => ["locales", "author", "owner", "lastUpdate", "prettyIds", "playlistDetails", "userSpecificValues", "aclInfo", "publishingStatus", "highlights", "availableChannels", "linkedContent", "source", "itags", "linkedCategoryIds", "properties", "imetadata", "externalIds"]
+        ]
+      ];
+
+      $data = Thronintegration_Api::contentSearch($this->config->get('client_id'), $login_data['token'], $search_param);
+      $ret = [];
+      if ($key) {
+        $ret = array_map(function($obj) use($key) {
+          return $obj["details"][$key];
+        }, $data['items']);
       }
-      return FALSE;
+      else {
+        $ret = $data['items'];
+      }
+      $this->cache->set($cid, $ret, $this->time->getRequestTime() + $this->getCacheInterval());
+      return $ret;
     }
     catch (AppTokenExpiredException $ex) {
       return $this->refreshAndRecall('getMediaDetails', NULL, $ex, [$content_id, $key]);

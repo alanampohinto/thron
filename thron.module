@@ -190,10 +190,10 @@ function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
           $thron_api = \Drupal::service('thron_api');
           $metadata = $form_state->get('metadata');
           $ext = '';
-          $sourceFiles = $thron_api->getMediaDetails($metadata['id'], 'sourceFiles');
+          $sourceFiles = $thron_api->getMediaDetails($metadata['id'], 'source');
           if (!empty($sourceFiles)) {
             $first = reset($sourceFiles);
-            list(, $extension) = explode("/", $first['mimeType']);
+            $extension = $first['extension'];
             $ext = ' / ' . strtoupper($extension);
           }
           $content_types_labels = $thron_api->getContentTypes();
