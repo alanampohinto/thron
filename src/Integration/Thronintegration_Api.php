@@ -874,42 +874,6 @@ class Thronintegration_Api {
     return $res;
   }
 
-  public static function contentsFindByXContentIdOrPrettyId($clientId, $token, $categoryId, $xContentOrprettyId) {
-    try {
-      $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "content/findByProperties";
-
-      $findByPropertiesObj = new \stdClass();
-      $findByPropertiesObj->client = new \stdClass();
-      $findByPropertiesObj->client->clientId = $clientId;
-      $findByPropertiesObj->criteria = new \stdClass();
-      $findByPropertiesObj->criteria->weeboStatus = "PUBLISHED";
-      $findByPropertiesObj->criteria->contentIds = [$xContentOrprettyId];
-
-      if (!Thronintegration_Utils::IsNullOrEmptyString($categoryId)) {
-        $findByPropertiesObj->criteria->linkedCategories = [$categoryId];
-      }
-
-      $findByPropertiesObj->orderBy = 'creationDate_D';
-      $findByPropertiesObj->contentFieldOption = new \stdClass();
-      $findByPropertiesObj->contentFieldOption->returnThumbnailUrl = TRUE;
-      $findByPropertiesObj->contentFieldOption->returnItags = TRUE;
-      $findByPropertiesObj->contentFieldOption->returnImetadata = TRUE;
-      $findByPropertiesObj->contentFieldOption->returnLinkedContents = TRUE;
-
-      $findByPropertiesObj->offset = 0;
-      $findByPropertiesObj->numberOfresults = THRON_RESULTS_PER_PAGE;
-
-      $findByPropertiesResp = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $findByPropertiesObj, ["X-TOKENID" => $token]);
-      if (!$findByPropertiesResp) {
-        throw new \Exception(sprintf("Cannot find contents for client %s!", $clientId));
-      }
-      return json_decode($findByPropertiesResp, FALSE);
-    } catch (\Exception $ex) {
-      // TODO notify!
-      return FALSE;
-    }
-  }
-
   public static function getCategoriesForNames($clientId, $token, $lang, $ids) {
     try {
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "category/findByProperties2";
