@@ -203,12 +203,12 @@ interface THRONApiInterface {
   /**
    * @return string|FALSE
    */
-  public function getThronMediaEmbedId($content_id, $templateId);
+  public function getThronMediaEmbedId($content_id, $node_id, $templateId);
 
   /**
    * @return bool
    */
-  public function setThronMediaEmbedId($content_id, $embedCodeId, $templateId);
+  public function setThronMediaEmbedId($content_id, $node_id, $templateId, $embedCodeId);
 
   /**
    * Returns the Interval in seconds for the given cache expire amount.

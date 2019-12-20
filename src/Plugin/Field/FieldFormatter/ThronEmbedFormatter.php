@@ -295,50 +295,63 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                   $view_mode = 'full';
 
                   // is there already an embed code for this content?
-                  $embedCodeId = $this->THRON->getThronMediaEmbedId($metadata['id'], $formatter_settings['embed_template']);
-                  if(!$embedCodeId) {
-                    if ($disguisedToken = $this->THRON->impersonateApp()) {
-                      // find the label for this template
-                      $template_settings = $this->THRON->getVideoPlayerTemplateData($formatter_settings['embed_template']);
-                      $templateLabel = "unknown";
-                      if($template_settings)
-                        if(isset($template_settings["item"]["name"]))
-                          $templateLabel = $template_settings["item"]["name"];
-                        elseif(isset($template_settings["name"]))
-                          $templateLabel = $template_settings["name"];
-                      
-                      $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $metadata['id'], $disguisedToken);
-                      $displaySettings['embed_player_code'] = $embed_player_code['item'];
-                      $embedCodeId = $embed_player_code['item']['id'];
-                      $res = $this->THRON->setThronMediaEmbedId($metadata['id'], $embedCodeId, $formatter_settings['embed_template']);
+                  $node = \Drupal::routeMatch()->getParameter('node');
+                  if($node) {
+                    try {
+                      $nid = $node->id();
+                    } catch(\Exception $ex) {
+                      $nid = false;
                     }
-                  }
-                  
+                  } else $nid = false;
+				  
+                  if($nid) {
+                    $embedCodeId = $this->THRON->getThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template']);
+                    if(!$embedCodeId) {
+                      if ($disguisedToken = $this->THRON->impersonateApp()) {
+                        // find the label for this template
+                        $template_settings = $this->THRON->getVideoPlayerTemplateData($formatter_settings['embed_template']);
+                        $templateLabel = "unknown";
+                        if($template_settings)
+                          if(isset($template_settings["item"]["name"]))
+                            $templateLabel = $template_settings["item"]["name"];
+                          elseif(isset($template_settings["name"]))
+                            $templateLabel = $template_settings["name"];
+                        
+                        $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $metadata['id'], $disguisedToken);
+                        $displaySettings['embed_player_code'] = $embed_player_code['item'];
+                        $embedCodeId = $embed_player_code['item']['id'];
+                        $res = $this->THRON->setThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template'], $embedCodeId);
+                      }
+                    }
+                  } else $embedCodeId = false;
+                          
                   // get the folder pkey from the application's settings
                   $pkey = $this->THRON->getLoginData()['pkey'];
-				  
+          
                   $attached['library'][] = 'thron/universal_player';
                   $attached['library'][] = 'thron/formatter';
                   $attached['drupalSettings']['thron']['players'][$uniqueDiv] = [
                     'clientId' => $this->config->get('client_id'),
                     'xcontentId' => $metadata['id'],
                     'sessId' => $pkey, 
-                    'embedCodeId' => $embedCodeId,
                     'language' => $language,
                   ];
+				  
+                  if($nid && $embedCodeId) 
+                    $attached['drupalSettings']['thron']['players'][$uniqueDiv]['embedCodeId'] = $embedCodeId;
 
                   $wrapper_attributes['class'] = ['player-wrap'];
                   $wrapper_attributes['style'] = 'position:relative;';
                   $inner_attributes['class'] = ['player-placeholder'];
                   $inner_attributes['style'] = 'position:absolute;width:100%;height:100%;top:0;';
-                }
-                else {
-                  $wrapper_attributes['class'] = ['teaser-content'];
-                  $wrapper_attributes['style'] = 'position:relative;border:1px solid grey;overflow:hidden;';
-                  $inner_attributes['class'] = ['thron-thumbnail'];
-                  $inner_attributes['style'] = 'position:absolute;width:100%;height:auto;top:50%;transform:translateY(-50%);';
-                }
               }
+              else {
+                $wrapper_attributes['class'] = ['teaser-content'];
+                $wrapper_attributes['style'] = 'position:relative;border:1px solid grey;overflow:hidden;';
+                $inner_attributes['class'] = ['thron-thumbnail'];
+                $inner_attributes['style'] = 'position:absolute;width:100%;height:auto;top:50%;transform:translateY(-50%);';
+              }
+            }
 
               if ($formatter_settings['embed_resizing'] == 'fixed') {
                 $sizes = [

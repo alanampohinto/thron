@@ -672,7 +672,7 @@ class THRONApi implements THRONApiInterface {
   /**
    * @return string|FALSE
    */
-  public function getThronMediaEmbedId($content_id, $templateId) {
+  public function getThronMediaEmbedId($content_id, $node_id, $templateId) {
     $query = $this->mediaStorage->getQuery()
       ->condition('bundle', 'thron_with_media_source')
       ->condition('field_thron_id', $content_id);
@@ -683,33 +683,38 @@ class THRONApi implements THRONApiInterface {
     $obj = $this->mediaStorage->load(reset($res));
   	try {
       $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
-      if(!isset($templateIds[$templateId])) return FALSE;
-      return $templateIds[$templateId];
-    } catch(\Exception $e) {
-      try {
-        $pkey = $obj->get('field_thron_embed_id')->value;
-        if($pkey && trim($pkey) != "") {
-          try {
-            $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
-          } catch(\Exception $exc) {
-            $templateIds = [];
+
+      // detect the save format for this field and update it if needed
+      if(count($templateIds)>0) {
+        if(!isset($templateIds[0]["node_id"])) {
+          $newTemplates = [];
+          foreach($templateIds as $tid=>$eid) {
+            array_push($newTemplates, ["node_id"=>false, "template_id"=>$tid, "embed_code_id"=>$eid]);
           }
-
-          $templateIds[$templateId]=$pkey;
-          $obj->set('field_thron_embed_ids', json_encode($templateIds));
+          $templateIds = $newTemplates;
         }
-
-        return $templateId;
-      } catch(\Exception $ex) {
-        return FALSE; 
       }
+      $filtered = array_filter($templateIds, function($obj) use($node_id, $template_id) {
+        return $obj["template_id"] === $template_id && $obj["node_id"] === $node_id;
+      });
+      if(count($filtered) == 0) {
+        $filtered = array_filter($templateIds, function($obj) use($template_id) {
+          return $obj["template_id"] === $template_id;
+        });
+      }
+
+      if(count($filtered) == 0) return FALSE;
+      $filtered = array_shift($filtered);
+      return $filtered["embed_code_id"];
+    } catch(\Exception $e) {
+      return FALSE; 
     }
   }
 
   /**
    * @return bool
    */
-  public function setThronMediaEmbedId($content_id, $embedCodeId, $templateId) {
+  public function setThronMediaEmbedId($content_id, $node_id, $templateId, $embedCodeId) {
     $query = $this->mediaStorage->getQuery()
       ->condition('bundle', 'thron_with_media_source')
       ->condition('field_thron_id', $content_id);
@@ -719,14 +724,78 @@ class THRONApi implements THRONApiInterface {
     }
     $obj = $this->mediaStorage->load(reset($res));
     $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
-    $templateIds[$templateId]=$embedCodeId;
-    $obj->set('field_thron_embed_ids', json_encode($templateIds));
-    try {
-      $obj->save();
-      return TRUE;
-    } catch (EntityStorageException $e) {
-		  return FALSE;
+
+    // detect the save format for this field and update it if needed
+    if(count($templateIds)>0) {
+      if(!isset($templateIds[0]["node_id"])) {
+        $newTemplates = [];
+        foreach($templateIds as $tid=>$eid) {
+          array_push($newTemplates, ["node_id"=>false, "template_id"=>$tid, "embed_code_id"=>$eid]);
+        }
+        $templateIds = $newTemplates;
+
+        $obj->set('field_thron_embed_ids', json_encode($templateIds));
+        try {
+          $obj->save();
+        } catch (EntityStorageException $e) {
+          // look into it
+        }
+      }
+      
     }
+
+    $newTemplates=[];
+    $willUpdate=false;
+	  $templateFound=false;
+
+    // loop through the templates array
+    foreach($templateIds as $template) {
+      // is this embed code id linked to the same template?
+      if($template["template_id"] === $templateId) {
+        // is this node the same?
+        if($template["node_id"] === $node_id) {
+          // is the embed code ID the same?
+          if($template["embed_code_id"] === $embedCodeId) {
+            // copy this as-is
+            array_push($newTemplates, $template);
+		      	$templateFound=true;
+          } else {
+            // we can modify this
+            $template["embed_code_id"] = $embedCodeId;
+            array_push($newTemplates, $template);
+            $willUpdate = true;
+      			$templateFound=true;
+          }
+
+        } else if($template["node_id"] == false) {
+          // we can modify this
+          $template["node_id"] = $node_id;
+          array_push($newTemplates, $template);
+          $willUpdate = true;
+	    	  $templateFound=true;
+        } else {
+          // this embed code refers to a different page
+          array_push($newTemplates, $template);
+        }
+      } else
+        array_push($newTemplates, $template);
+    }
+	
+    if(!$templateFound) {
+      array_push($newTemplates, ["node_id"=>$node_id, "template_id"=>$templateId, "embed_code_id"=>$embedCodeId]);
+      $willUpdate = true;
+    }
+
+    if($willUpdate) {
+      $obj->set('field_thron_embed_ids', json_encode($newTemplates));
+      try {
+        $obj->save();
+        return TRUE;
+      } catch (EntityStorageException $e) {
+        return FALSE;
+      }  
+    } else
+      return TRUE;
   }
 
   /**
