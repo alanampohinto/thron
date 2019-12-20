@@ -1098,13 +1098,6 @@ class THRONApi implements THRONApiInterface {
    * @return array|mixed|null
    */
   public function contentFindByProperties($properties) {
-    // these details should NEVER be put into a cache!
-    /*$cache_key = $this->gluey($properties);
-    $cid = 'contentFindByProperties_'.$this->config->get('client_id')."_" . md5($cache_key);
-    if ($cache = $this->cache->get($cid)) {
-      return $cache->data;
-    }*/
-
     try {
       if (!$login_data = $this->getLoginData()) {
         throw new \Exception('LoginApp error');

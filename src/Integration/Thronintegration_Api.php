@@ -345,6 +345,7 @@ class Thronintegration_Api {
       }
 
       if ($textSearch && !Thronintegration_Utils::IsNullOrEmptyString($textSearch)) {
+        $body->criteria->locale = strtoupper($locale);
         $body->criteria->textSearch = new \stdClass();
         $body->criteria->textSearch->searchKey = $textSearch;
         $body->criteria->textSearch->searchOnFields = ['NAME', 'DESCRIPTION'];

@@ -610,17 +610,9 @@ class THRONSearch extends THRONWidgetBase {
 
     $media_list = [];
     try {
-      // We store last result into the form state to prevent same requests
-      // happening multiple times if not necessary.
-      $key_hash = $this->THRONApi->gluey($query);
-      if (!empty($form_state->get('thron_media_list_hash')) && ($form_state->get('thron_media_list_hash') == md5($key_hash))) {
-        $media_list = $form_state->get('thron_media_list');
-      }
-      else {
-        $media_list = $this->doSearch($query);
-        $form_state->set('thron_media_list', $media_list);
-        $form_state->set('thron_media_list_hash', md5($key_hash));
-      }
+      $media_list = $this->doSearch($query);
+      $form_state->set('thron_media_list', $media_list);
+      $form_state->set('thron_media_list_hash', md5($key_hash));
     }
     catch (Exception $e) {
       (new UnableToConnectException())->logException()->displayMessage();
