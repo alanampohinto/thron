@@ -360,26 +360,22 @@ class ThronMediaSource extends MediaSourceBase {
         }
 
         $sources = [];
-        $web_channels=array_filter($data->deliveryInfo, function($obj) { return strpos($obj->channelType, 'WEB') !== FALSE; });
-        
-        usort($web_channels, function($a, $b) { 
-          return $this->extractSizeForChannel($a->sysMetadata) < $this->extractSizeForChannel($b->sysMetadata);
-        });
+        $filteredChannels = $this->getchannels($data->deliveryInfo);
+        $channelsList = [];
+        foreach ($filteredChannels as $channelName => $fc) {
+          if(count($fc)>0)
+            array_push($channelsList, $fc[0]);
+        }
 
-        foreach ($web_channels as $deliveryInfo) {
-          if (strpos($deliveryInfo->channelType, 'WEB') !== FALSE) {
-            // if this is a video, we can skip the WEBAUDIO channel
-            if ($metadata['contentType'] == 'VIDEO' && $deliveryInfo->channelType !== "WEBAUDIO") {
-              $sources[$deliveryInfo->channelType] = [
-                'poster' => $deliveryInfo->defaultThumbUrl,
-                'src' => $deliveryInfo->contentUrl,
-                'mime' => $mimetype,
-              ];
+        foreach ($channelsList as $deliveryInfo) {
+          $sources[$deliveryInfo->channelType] = [
+            'poster' => $deliveryInfo->defaultThumbUrl,
+            'src' => (isset($deliveryInfo->contentDescriptorUrl) && trim($deliveryInfo->contentDescriptorUrl))?$deliveryInfo->contentDescriptorUrl:$deliveryInfo->contentUrl,
+            'mime' => $mimetype,
+          ];
 
-              foreach ($deliveryInfo->sysMetadata as $meta) {
-                $sources[$deliveryInfo->channelType][strtolower($meta->name)] = $meta->value;
-              }
-            }
+          foreach ($deliveryInfo->sysMetadata as $meta) {
+            $sources[$deliveryInfo->channelType][strtolower($meta->name)] = $meta->value;
           }
         }
         $metadata['sources'] = $sources;
@@ -435,10 +431,51 @@ class ThronMediaSource extends MediaSourceBase {
     return $this->isImageSource ?: FALSE;
   }
 
-  private function extractSizeForChannel($smd) {
-    $size = array_values(array_filter($smd, function($obj) { return $obj->name == "Size"; }));
-    if(count($size)==0)
-      return -1;
-    return array_values($size)[0]->value;
+  public function getchannels($deliveryInfo) {
+    // Return the list of channels to be passed on to the player
+    $channels = [];
+    $channelTypesRegexps = [[
+      "channel" => "STREAMHTTPIOS",
+      "find" => "/^STREAMHTTPIOS.?/",
+      "findNot" => false
+    ], [
+      "channel" => "WEBFULLHD",
+      "find" => "/^WEBFULLHD.?/",
+      "findNot" => false
+    ], [
+      "channel" => "WEBHD",
+      "find" => "/^WEBHD.?/",
+      "findNot" => false
+    ], [
+      "channel" => "WEB",
+      "find" => "/^WEB.?/",
+      "findNot" => "/^WEB(FULLHD|HD|AUDIO).?/"
+    ]];
+    
+    foreach($channelTypesRegexps as $ctre) {
+      foreach($deliveryInfo as $channel) {
+        $shouldAdd = false;
+        preg_match($ctre["find"], $channel->channelType, $found);
+        if(count($found)>0) {
+          if(!$ctre["findNot"]) {
+            $shouldAdd = true;
+          } else {
+            preg_match($ctre["findNot"], $channel->channelType, $found);
+            if(!$found) {
+              $shouldAdd = true;
+            }
+          }
+        }
+
+        if($shouldAdd) {
+          if(!isset($channels[$ctre["channel"]]))
+            $channels[$ctre["channel"]]=[];
+  
+          array_push($channels[$ctre["channel"]], $channel);
+        }
+      }
+    }
+
+    return $channels;
   }
 }
