@@ -1920,11 +1920,14 @@ class Thronintegration_Api {
           ],
           "embedTarget" => "GENERIC",
           "enabled" => TRUE,
-          "useContextId" => $contextId,
           "values" => $values,
         ],
         "skipPkeyCreation" => $skipPkeyCreation,
       ];
+
+      if($contextId)
+        $params["value"]["useContextId"] = $contextId;
+
       $insertEmbedCode = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $params, ["X-TOKENID" => $tokenId]);
       if ($insertEmbedCode && !Thronintegration_Utils::IsNullOrEmptyString($insertEmbedCode)) {
         $insertEmbedCodeObj = json_decode($insertEmbedCode, TRUE);

@@ -149,12 +149,13 @@ interface THRONApiInterface {
    *
    * @param $templateId
    * @param $templateLabel
+   * @param $context
    * @param $xcontentId
    * @param $disguisedToken
    *
    * @return mixed
    */
-  public function insertPlayerEmbedCode($templateId, $templateLabel, $xcontentId, $disguisedToken);
+  public function insertPlayerEmbedCode($templateId, $templateLabel, $context, $xcontentId, $disguisedToken);
 
   /**
    * @param $array

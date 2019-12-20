@@ -294,6 +294,8 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                 if (strpos($route_match->getRouteName(), 'entity.node.') === 0) {
                   $view_mode = 'full';
 
+                  $login_data = $this->THRON->getLoginData();
+
                   // is there already an embed code for this content?
                   $node = \Drupal::routeMatch()->getParameter('node');
                   if($node) {
@@ -316,8 +318,8 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                             $templateLabel = $template_settings["item"]["name"];
                           elseif(isset($template_settings["name"]))
                             $templateLabel = $template_settings["name"];
-                        
-                        $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $metadata['id'], $disguisedToken);
+                        $context = $login_data['tracking_context'];
+                        $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $context, $metadata['id'], $disguisedToken);
                         $displaySettings['embed_player_code'] = $embed_player_code['item'];
                         $embedCodeId = $embed_player_code['item']['id'];
                         $res = $this->THRON->setThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template'], $embedCodeId);
@@ -326,7 +328,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                   } else $embedCodeId = false;
                           
                   // get the folder pkey from the application's settings
-                  $pkey = $this->THRON->getLoginData()['pkey'];
+                  $pkey = $login_data['pkey'];
           
                   $attached['library'][] = 'thron/universal_player';
                   $attached['library'][] = 'thron/formatter';

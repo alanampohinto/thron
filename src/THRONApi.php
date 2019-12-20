@@ -167,25 +167,39 @@ class THRONApi implements THRONApiInterface {
     }
 
     // Retrieve pKey.
-    $pkey = array_map(function ($obj) {
+    $pkey_arr = array_map(function ($obj) {
       return $obj->value;
     }, array_filter($res->app->metadata, function ($obj) {
       return $obj->name == 'pkey';
-    }))[0];
-
-    if (!isset($pkey) || empty($pkey)) {
+    }));
+    
+    if(count($pkey_arr) == 0) {
       throw new NoPkeyException();
     }
+    $pkey = array_shift(array_values($pkey_arr));
+
+    // retrieve the tracking context
+    $tracking_context_el = array_map(function ($obj) {
+      return $obj->value;
+    }, array_filter($res->app->metadata, function ($obj) {
+      return $obj->name == 'tracking_context';
+    }));
+
+    if (count($tracking_context_el) == 0)
+      $tracking_context = false;
+    else 
+      $tracking_context = array_shift(array_values($tracking_context_el));
 
     // Build login data.
     $login_data = [
       'token' => $res->appUserTokenId,
       'pkey' => $pkey,
+      'tracking_context' => $tracking_context,
       'disguise_username' => $res->app->canDisguise ? reset($res->app->disguiseData->usersWhiteList) : FALSE,
       'rootCategoryId' => isset($res->app->rootCategoryId) ? $res->app->rootCategoryId : '',
     ];
-
-    $templates = array_filter($res->app->metadata, function ($item) {
+	
+	  $templates = array_filter($res->app->metadata, function ($item) {
       return $item->name == 'playerTemplates';
     });
     if (count($templates) > 0) {
@@ -886,13 +900,14 @@ class THRONApi implements THRONApiInterface {
   /**
    * @param $templateId
    * @param templateLabel
+   * @param context
    * @param $xcontentId
    * @param $disguisedToken
    *
    * @return array|mixed|null
    * @throws \Exception
    */
-  public function insertPlayerEmbedCode($templateId, $templateLabel, $xcontentId, $disguisedToken) {
+  public function insertPlayerEmbedCode($templateId, $templateLabel, $context, $xcontentId, $disguisedToken) {
     $cid = 'player_embedcode__'.$this->config->get('client_id')."_${templateId}__" . preg_replace('/-/', '_', $xcontentId);
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
@@ -916,7 +931,7 @@ class THRONApi implements THRONApiInterface {
       else
         $embedName = "Drupal embed (template $templateLabel)";
 
-      $data = Thronintegration_Api::insertEmbedCode($this->config->get('client_id'), $disguisedToken, $embedName, $source, FALSE, $templateId, 'CUSTOM', $values, $skipPkeyCreation);
+      $data = Thronintegration_Api::insertEmbedCode($this->config->get('client_id'), $disguisedToken, $embedName, $source, $context, $templateId, 'CUSTOM', $values, $skipPkeyCreation);
       if ($data['resultCode'] !== 'OK') {
         throw new \Exception($data['errorDescription']);
       }
@@ -925,7 +940,7 @@ class THRONApi implements THRONApiInterface {
       return $data;
     }
     catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('insertPlayerEmbedCode', NULL, $ex, [$templateId, $templateLabel, $xcontentId, $disguisedToken]);
+      return $this->refreshAndRecall('insertPlayerEmbedCode', NULL, $ex, [$templateId, $templateLabel, $context, $xcontentId, $disguisedToken]);
     }
     catch (\Exception $e) {
       $this->logger->error($e->getMessage());
