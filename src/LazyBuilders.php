@@ -50,10 +50,17 @@ class LazyBuilders {
     if (!empty($media_info)) {
       $first = reset($media_info);
       $extension = $first['extension'];
+      if($first['extension'] && trim($first['extension']) != '') {
+		  $extension = $first['extension'];
+		  return [
+			'#plain_text' => strtoupper($extension),
+		  ];
+	  } else {
+			return [
+			'#plain_text' => "",
+		  ];
+	  }
       
-      return [
-        '#plain_text' => strtoupper($extension),
-      ];
     }
     return NULL;
   }

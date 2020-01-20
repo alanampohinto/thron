@@ -110,18 +110,26 @@ class ThronEmbedFormatter extends ThronFormatterBase {
             $options[$data['default_templates']['noSkin']] = $this->t('noSkin');
             $defaultAdded = true;
           }
-
-          if($defaultAdded) $options['---------'] = []; // separator
+		  
+		  $sepAdded = false;
           foreach ($templates as $template) {
             if(
               (isset($data['default_templates']['default']) && $template['id'] != $data['default_templates']['default']) &&
               (isset($data['default_templates']['noSkin']) && $template['id'] != $data['default_templates']['noSkin'])
             ) {
               if (isset($options[$template['id']])) {
-                $options[$template['id']] .= '  ('.$template['name'].')';
+				  if($defaultAdded && !$sepAdded) {
+  				    $options['---------'] = []; // separator
+					$sepAdded=true;
+				  }
+				  $options[$template['id']] .= '  ('.$template['name'].')';
               }
               else {
-                $options[$template['id']] = $template['name'];
+				  if($defaultAdded && !$sepAdded) {
+  				    $options['---------'] = []; // separator
+					$sepAdded=true;
+				  }
+                  $options[$template['id']] = $template['name'];
               }
             }
           }

@@ -187,8 +187,9 @@ abstract class ThronFormatterBase extends FormatterBase implements ContainerFact
     $sourceFiles = $this->THRON->getMediaDetails($content_id, 'source');
     if (!empty($sourceFiles)) {
       $first = reset($sourceFiles);
+	  
       $extension = $first['extension'];
-      return $extension;
+	  return $extension;
     }
     return NULL;
   }

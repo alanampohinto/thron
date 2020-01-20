@@ -54,10 +54,16 @@ class ThronMediaExtensionController extends ControllerBase {
 
     if (!empty($media_info)) {
       $first = reset($media_info);
-      $extension = $first['extension'];
-      $content = [
-        '#plain_text' => strtoupper($extension),
-      ];
+	  if($first['extension'] && trim($first['extension']) != '') {
+		  $extension = $first['extension'];
+		  $content = [
+			'#plain_text' => strtoupper($extension),
+		  ];
+	  } else {
+		  $content = [
+			'#plain_text' => "",
+		  ];
+	  }
     }
 
     $response = new AjaxResponse();

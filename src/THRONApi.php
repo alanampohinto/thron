@@ -1060,6 +1060,7 @@ class THRONApi implements THRONApiInterface {
       'AUDIO' => $this->t('Audio')->__toString(),
       'PLAYLIST_GALLERY' => $this->t('Gallery')->__toString(),
       'PLAYLIST_360' => $this->t('360° Gallery')->__toString(),
+	  'PLAYLIST' => $this->t('Gallery')->__toString(),
       'URL' => $this->t('Url')->__toString(),
       'PAGELET' => $this->t('Pagelet')->__toString(),
     ];
