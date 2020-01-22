@@ -317,7 +317,10 @@ class THRONApi implements THRONApiInterface {
 
       $data = Thronintegration_Api::getContentDetail($this->config->get('client_id'), $login_data['token'], $login_data['pkey'], $xcontentId, $divArea);
       if ($data->resultCode != 'OK') {
-        throw new \Exception($data['errorDescription']);
+        if(isset($data->errorDescription))
+          throw new \Exception($data->errorDescription);
+        else
+          throw new \Exception("An unknown problem occurred while invoking getContentDetail");
       }
 
       $this->cache->set($cid, $data, $this->time->getRequestTime() + $this->getCacheInterval());
