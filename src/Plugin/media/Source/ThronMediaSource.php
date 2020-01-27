@@ -435,9 +435,13 @@ class ThronMediaSource extends MediaSourceBase {
     // Return the list of channels to be passed on to the player
     $channels = [];
     $channelTypesRegexps = [[
+      "channel" => "STREAMHTTPIOSHD",
+      "find" => "/^STREAMHTTPIOSHD.?/",
+      "findNot" => false
+    ], [
       "channel" => "STREAMHTTPIOS",
       "find" => "/^STREAMHTTPIOS.?/",
-      "findNot" => false
+      "findNot" => "/^STREAMHTTPIOSHD.?/",
     ], [
       "channel" => "WEBFULLHD",
       "find" => "/^WEBFULLHD.?/",
