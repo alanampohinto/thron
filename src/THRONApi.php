@@ -176,7 +176,8 @@ class THRONApi implements THRONApiInterface {
     if(count($pkey_arr) == 0) {
       throw new NoPkeyException();
     }
-    $pkey = array_shift(array_values($pkey_arr));
+    $vals = array_values($pkey_arr);
+    $pkey = array_shift($vals);
 
     // retrieve the tracking context
     $tracking_context_el = array_map(function ($obj) {
@@ -187,9 +188,11 @@ class THRONApi implements THRONApiInterface {
 
     if (count($tracking_context_el) == 0)
       $tracking_context = false;
-    else 
-      $tracking_context = array_shift(array_values($tracking_context_el));
-
+    else {
+      $vals = array_values($tracking_context_el)
+      $tracking_context = array_shift($vals);
+    }
+    
     // Build login data.
     $login_data = [
       'token' => $res->appUserTokenId,

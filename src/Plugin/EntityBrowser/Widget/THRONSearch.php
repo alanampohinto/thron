@@ -611,6 +611,7 @@ class THRONSearch extends THRONWidgetBase {
     $media_list = [];
     try {
       $media_list = $this->doSearch($query);
+      $key_hash = $this->THRONApi->gluey($query);
       $form_state->set('thron_media_list', $media_list);
       $form_state->set('thron_media_list_hash', md5($key_hash));
     }
