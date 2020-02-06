@@ -705,6 +705,7 @@ class THRONApi implements THRONApiInterface {
       $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
 
       // detect the save format for this field and update it if needed
+      if(empty($templateIds)) return FALSE;
       if(count($templateIds)>0) {
         if(!isset($templateIds[0]["node_id"])) {
           $newTemplates = [];
@@ -714,12 +715,12 @@ class THRONApi implements THRONApiInterface {
           $templateIds = $newTemplates;
         }
       }
-      $filtered = array_filter($templateIds, function($obj) use($node_id, $template_id) {
-        return $obj["template_id"] === $template_id && $obj["node_id"] === $node_id;
+      $filtered = array_filter($templateIds, function($obj) use($node_id, $templateId) {
+        return $obj["template_id"] === $templateId && $obj["node_id"] === $node_id;
       });
       if(count($filtered) == 0) {
-        $filtered = array_filter($templateIds, function($obj) use($template_id) {
-          return $obj["template_id"] === $template_id;
+        $filtered = array_filter($templateIds, function($obj) use($templateId) {
+          return $obj["template_id"] === $templateId;
         });
       }
 
@@ -744,6 +745,7 @@ class THRONApi implements THRONApiInterface {
     }
     $obj = $this->mediaStorage->load(reset($res));
     $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
+    if(empty($templateIds)) $templateIds=[];
 
     // detect the save format for this field and update it if needed
     if(count($templateIds)>0) {
@@ -952,96 +954,6 @@ class THRONApi implements THRONApiInterface {
       $this->logger->error($e->getMessage());
       return NULL;
     }
-  }
-
-  /**
-   * @return array
-   *
-   * @deprecated not used anymore and will be removed soon
-   */
-  public function importMedia() {
-    $ret = ['created' => 0, 'skipped' => 0, 'errors' => 0];
-    $thronMedias = $this->getContents();
-
-    if ($thronMedias === FALSE) {
-      $this->logger->error('An error occurred retrieving medias.');
-      $ret['errors']++;
-      return $ret;
-    }
-
-    foreach ($thronMedias as $k => $v) {
-      if ($media_id = $this->checkExistingThronMedia($v['id'])) {
-        $ret['skipped']++;
-      }
-      else {
-        try {
-          $media = $this->mediaStorage->create([
-            'bundle' => 'thron_with_media_source',
-            'name' => $v['name'],
-            'field_thron_id' => [
-              'value' => $v['id'],
-            ],
-          ]);
-          // $media->set('field_tags', $media_tags);
-          $media->save();
-          $ret['created']++;
-        } catch (\Exception $e) {
-          $ret['errors']++;
-          $this->logger->error('Cannot import media -' . $e->getMessage());
-        }
-      }
-    }
-
-    $this->state->set(self::THRON_LAST_UPDATE_STATE_KEY, $this->time->getRequestTime());
-    return $ret;
-  }
-
-  /**
-   * @param int $last_update
-   *  Timestamp.
-   *
-   * @return array
-   * @throws \Drupal\Core\Entity\EntityStorageException
-   *
-   * @deprecated No longer needed! Use for tests or devel ops only!
-   */
-  public function updateMedia($last_update) {
-    $ret = ['deleted' => 0, 'errors' => 0];
-
-    if (!$last_update) {
-      $this->logger->error('Invalid Last update timestamp.');
-      $ret['errors']++;
-      return $ret;
-    }
-
-    $thronMediasToUpdate = $this->getUpdatedContents($last_update);
-
-    if ($thronMediasToUpdate === FALSE) {
-      $this->logger->error('An error occurred retrieving medias.');
-      $ret['errors']++;
-      return $ret;
-    }
-
-    foreach ($thronMediasToUpdate as $k => $v) {
-      if (!$v['removed']) {
-        continue;
-      }
-
-      $media_id = $this->checkExistingThronMedia($v['id']);
-      /** @var \Drupal\media\Entity\Media $media */
-      $media = $media_id ? $this->mediaStorage->load($media_id) : NULL;
-      if ($media) {
-        // Delete.
-        $media->delete();
-        $cid = 'xcontent__' . $v['id'];
-        $this->cache->delete($cid);
-        $ret['deleted']++;
-      }
-    }
-
-    // Updating the last update timestamp
-    $this->state->set(self::THRON_LAST_UPDATE_STATE_KEY, $this->time->getRequestTime());
-    return $ret;
   }
 
   /**

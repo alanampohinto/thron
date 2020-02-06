@@ -58,19 +58,6 @@ interface THRONApiInterface {
 
   /**
    * @return array
-   * @deprecated not used anymore and will be removed soon
-   */
-  public function importMedia();
-
-  /**
-   * @param int $last_update
-   *
-   * @return array
-   */
-  public function updateMedia($last_update);
-
-  /**
-   * @return array
    */
   public function getClassifications();
 
