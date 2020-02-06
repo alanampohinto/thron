@@ -189,10 +189,10 @@ class THRONApi implements THRONApiInterface {
     if (count($tracking_context_el) == 0)
       $tracking_context = false;
     else {
-      $vals = array_values($tracking_context_el)
+      $vals = array_values($tracking_context_el);
       $tracking_context = array_shift($vals);
     }
-    
+
     // Build login data.
     $login_data = [
       'token' => $res->appUserTokenId,
