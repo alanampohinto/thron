@@ -43,3 +43,4 @@ You will now be able to embed THRON content via the button in the CKEditor windo
 ![Embed THRON content in page](https://hub-cdn.thron.com/delivery/public/image/hub/8f5cee6b-47bf-4f94-91c6-4c8c61b089a6/tyxv1l/std/1024x488/04-drupal-config "Embed THRON content in page")
 
 For more detail please check [the Drupal Connector's page](https://marketplace.thron.com/EN/apps/drupal-connector) in the [THRON Marketplace](https://marketplace.thron.com).
+
