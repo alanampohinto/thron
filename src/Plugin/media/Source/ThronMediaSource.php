@@ -274,7 +274,7 @@ class ThronMediaSource extends MediaSourceBase {
         $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/0x0/";
         $metadata['thumbnail_url'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
 
-        $divArea = join('x', [
+        $divArea = implode('x', [
           $metadata['width'],
           $metadata['height'],
         ]);
@@ -313,7 +313,7 @@ class ThronMediaSource extends MediaSourceBase {
                   
                   if($responsiveTag) {
                     $tag_pretty_id = $responsiveTag;
-                    $divArea = join('x', [
+                    $divArea = implode('x', [
                       $info->deliverySize->maxWidth,
                       $info->deliverySize->maxHeight,
                     ]);

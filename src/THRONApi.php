@@ -262,7 +262,7 @@ class THRONApi implements THRONApiInterface {
       return $default_return;
     }
 
-    if (!$login_data = $this->getLoginData(TRUE)) {
+    if (!$this->getLoginData(TRUE)) {
       return $default_return;
     }
 
@@ -503,8 +503,6 @@ class THRONApi implements THRONApiInterface {
         });
         if (empty($names)) {
           $names = array_filter($tag['names'], function($item) {
-            $upper_language = strtoupper(\Drupal::languageManager()
-              ->getCurrentLanguage()->getId());
             return $item['lang'] == 'EN';
           });
         }
@@ -671,22 +669,6 @@ class THRONApi implements THRONApiInterface {
       $this->logger->error($ex->getMessage());
       return FALSE;
     }
-  }
-
-  /**
-   * @param string $mid
-   *
-   * @return bool|mixed
-   */
-  private function checkExistingThronMedia($mid) {
-    $query = $this->mediaStorage->getQuery()
-      ->condition('bundle', 'thron_with_media_source')
-      ->condition('field_thron_id', $mid);
-    $res = $query->execute();
-    if (empty($res)) {
-      return FALSE;
-    }
-    return reset($res);
   }
 
   /**
@@ -922,7 +904,7 @@ class THRONApi implements THRONApiInterface {
     }
 
     try {
-      if (!$login_data = $this->getLoginData()) {
+      if (!$this->getLoginData()) {
         throw new \Exception('LoginApp error');
       }
 

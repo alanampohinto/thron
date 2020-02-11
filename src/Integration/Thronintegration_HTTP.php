@@ -74,8 +74,8 @@ class Thronintegration_HTTP {
       $file = FALSE;
 
       $curl = curl_init();
-      curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
-      curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+      //curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+      //curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
       curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
       curl_setopt($curl, CURLOPT_ENCODING, '');
 

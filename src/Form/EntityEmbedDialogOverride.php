@@ -60,25 +60,6 @@ class EntityEmbedDialogOverride extends EntityEmbedDialog {
 
     $form['#title'] = $this->t('Embed @type', ['@type' => $entity->getEntityType()->getLowercaseLabel()]);
 
-//    try {
-//      if ($entity->getEntityType()->hasLinkTemplate('canonical')) {
-//        $options = [
-//          'attributes' => [
-//            'target' => '_blank',
-//          ],
-//        ];
-//        $entity_label = $entity->toLink($entity->label(), 'canonical', $options)->toString();
-//      }
-//      elseif ($entity->getEntityTypeId() == 'file') {
-//        $entity_label = '<a href="' . file_create_url($entity->getFileUri()) . '" target="_blank">' . $entity->label() . '</a>';
-//      }
-//      else {
-//        $entity_label = '<a href="' . $entity->toUrl()->toString() . '" target="_blank">' . $entity->label() . '</a>';
-//      }
-//    }
-//    catch (\Exception $e) {
-//      $entity_label = $entity->label();
-//    }
     $entity_label = $entity->label();
 
     $form['entity'] = [
@@ -161,7 +142,6 @@ class EntityEmbedDialogOverride extends EntityEmbedDialog {
       }
     }
     //==========================================================================
-
     $form['attributes']['data-entity-embed-display-settings'] = [
       '#type' => 'container',
       '#prefix' => '<div id="data-entity-embed-display-settings-wrapper">',
