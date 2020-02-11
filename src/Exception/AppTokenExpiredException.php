@@ -2,7 +2,6 @@
 
 namespace Drupal\thron\Exception;
 
-
 use Drupal\Core\Url;
 
 class AppTokenExpiredException extends ThronException {
@@ -28,4 +27,5 @@ class AppTokenExpiredException extends ThronException {
       $log_message_args
     );
   }
+
 }

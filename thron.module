@@ -18,14 +18,14 @@ use Drupal\Component\Render\FormattableMarkup;
 
 
 /**
- * Max age in seconds for cache items.
+ * Max age in seconds for cache items (in seconds)
  */
-define('THRON_CACHE_MAX_AGE', 120); // seconds = 2 minutes
+define('THRON_CACHE_MAX_AGE', 120);
 
 /**
- * Max age in seconds for login tokens cache.
+ * Max age in seconds for login tokens cache (in seconds).
  */
-define('THRON_LOGIN_CACHE_MAX_AGE', 3600); // seconds = 1 hour;
+define('THRON_LOGIN_CACHE_MAX_AGE', 3600);
 
 /**
  * Implements hook_help().
@@ -282,7 +282,3 @@ function thron_entity_type_build(array &$entity_types) {
     $entity_types['entity_browser']->setFormClass('edit_widgets', '\Drupal\thron\Form\ThronWidgetsConfig');
   }
 }
-
-//function thron_media_embed_context_alter(array &$context, \Drupal\Core\Entity\EntityInterface $entity) {
-//  xdebug_break();
-//}

@@ -24,4 +24,5 @@ class UnableToDeleteUsageException extends ThronException {
       $log_message_args
     );
   }
+
 }

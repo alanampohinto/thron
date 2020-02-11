@@ -14,7 +14,8 @@ class NoCredentialException extends ThronException {
    */
   public function __construct() {
     $log_message = 'No credentials found to connect to THRON. ';
-    $log_message .= 'Check if the  <a target="_blank" href=":url">configuration is set properly</a> or contact <a href=":support">support</a>.';
+    $log_message .= 'Check if the  <a target="_blank" href=":url">configuration is set properly</a> ';
+    $log_message .= 'or contact <a href=":support">support</a>.';
     $log_message_args = [
       ':url' => Url::fromRoute('thron.configuration_form')->toString(),
       ':support' => 'https://www.thron.com/en/customer-service',

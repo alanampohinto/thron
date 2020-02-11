@@ -7,6 +7,9 @@ use Drupal\thron\Access\MediaThronAccessCheck;
 use Drupal\thron\Access\MediaThronAddAccessCheck;
 use Symfony\Component\Routing\RouteCollection;
 
+/**
+ * The route subscriber
+ */
 class RouteSubscriber extends RouteSubscriberBase {
 
   /**
@@ -37,4 +40,5 @@ class RouteSubscriber extends RouteSubscriberBase {
       $route->setDefault('_form', '\Drupal\thron\Form\EntityEmbedDialogOverride');
     }
   }
+  
 }

@@ -54,6 +54,8 @@ abstract class THRONWidgetBase extends WidgetBase {
   protected $THRONApi;
 
   /**
+   * Media type storage
+   * 
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected $mediaTypeStorage;
@@ -76,8 +78,6 @@ abstract class THRONWidgetBase extends WidgetBase {
    *   The Widget Validation Manager service.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   Logger factory.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
-   *   The language manager.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory

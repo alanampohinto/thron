@@ -330,7 +330,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                         $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $context, $metadata['id'], $disguisedToken);
                         $displaySettings['embed_player_code'] = $embed_player_code['item'];
                         $embedCodeId = $embed_player_code['item']['id'];
-                        $res = $this->THRON->setThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template'], $embedCodeId);
+                        $this->THRON->setThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template'], $embedCodeId);
                       }
                     }
                   } else $embedCodeId = false;

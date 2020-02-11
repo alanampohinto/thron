@@ -2,41 +2,51 @@
  * @file thron.throbber.css
  *   Styles for throbber that is used in the THRON Entity Browser widgets.
  */
+
 .overlay-throbber {
-  background: #000;
-  background: rgba(0, 0, 0, 0.85);
-  bottom: 0;
-  height: 100%;
-  left: 0;
-  position: fixed;
-  right: 0;
-  top: 0;
-  width: 100%;
-  z-index: 1000;
+    background: #000;
+    background: rgba(0, 0, 0, 0.85);
+    bottom: 0;
+    height: 100%;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
 }
 
 .overlay-throbber .throbber-spinner {
-  background: transparent url(../images/loading-thron.gif) center center no-repeat;
-  background-size: cover;
-  border-radius: 7px;
-  height: 30px;
-  left: 50%;
-  padding: 4px;
-  position: fixed;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 30px;
-  -webkit-animation: spin 2s linear infinite;
-  -moz-animation: spin 2s linear infinite;
-  animation: spin 2s linear infinite;
+    background: transparent url(../images/loading-thron.gif) center center no-repeat;
+    background-size: cover;
+    border-radius: 7px;
+    height: 30px;
+    left: 50%;
+    padding: 4px;
+    position: fixed;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    -webkit-animation: spin 2s linear infinite;
+    -moz-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
 }
 
 @-moz-keyframes spin {
-  100% { -moz-transform: translate(-50%, -50%) rotate(360deg); }
+    100% {
+        -moz-transform: translate(-50%, -50%) rotate(360deg);
+    }
 }
+
 @-webkit-keyframes spin {
-  100% { -webkit-transform: translate(-50%, -50%) rotate(360deg); }
+    100% {
+        -webkit-transform: translate(-50%, -50%) rotate(360deg);
+    }
 }
+
 @keyframes spin {
-  100% { -webkit-transform: translate(-50%, -50%)rotate(360deg); transform: translate(-50%, -50%) rotate(360deg); }
+    100% {
+        -webkit-transform: translate(-50%, -50%)rotate(360deg);
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
 }

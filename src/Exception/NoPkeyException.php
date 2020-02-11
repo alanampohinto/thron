@@ -11,9 +11,6 @@ class NoPkeyException extends ThronException {
 
   /**
    * Constructs NoPkeyException.
-   *
-   * @param string $bundle
-   *   Name of the bundle.
    */
   public function __construct() {
     $log_message = 'Pkey not present. Check if the  <a target="_blank" href=":url">configuration is set properly</a> or contact <a href=":support">support</a>.';

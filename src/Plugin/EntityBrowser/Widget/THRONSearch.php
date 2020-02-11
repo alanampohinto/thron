@@ -57,6 +57,8 @@ class THRONSearch extends THRONWidgetBase {
   protected $urlGenerator;
 
   /**
+   * The media storage.
+   * 
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected $mediaStorage;
@@ -185,15 +187,15 @@ class THRONSearch extends THRONWidgetBase {
    */
   public function defaultConfiguration() {
     return [
-        'items_per_page' => 15,
-        'tags' => [
-          'enabled' => FALSE,
-          'search_type' => 'default',
-          'chosen_tags' => [],
-          'search_autocomplete_classifications' => [],
-          'search_autocomplete_depth' => 1,
-        ],
-      ] + parent::defaultConfiguration();
+      'items_per_page' => 15,
+      'tags' => [
+        'enabled' => FALSE,
+        'search_type' => 'default',
+        'chosen_tags' => [],
+        'search_autocomplete_classifications' => [],
+        'search_autocomplete_depth' => 1,
+      ],
+    ] + parent::defaultConfiguration();
   }
 
   /**
@@ -316,7 +318,7 @@ class THRONSearch extends THRONWidgetBase {
       '#states' => [
         'visible' => [
           ':input[name="table[' . $widget_uuid . '][form][tags][enabled]"]' => ['checked' => TRUE],
-          ':input[name="table['.$widget_uuid.'][form][tags][search_type]"]' => ['value' => 'default'],
+          ':input[name="table[' . $widget_uuid . '][form][tags][search_type]"]' => ['value' => 'default'],
         ],
       ],
     ];
@@ -334,7 +336,7 @@ class THRONSearch extends THRONWidgetBase {
   /**
    * Retrieve the tags ROOT elements.
    *
-   * @return array
+   * @return array the tag elements
    */
   private function getParentTags() {
     $classifications = $this->config->get('classifications');
@@ -343,7 +345,7 @@ class THRONSearch extends THRONWidgetBase {
       return [];
     }
 
-    $cid = 'search_tags_' .$this->config->get('client_id')."_". join('', $classifications);
+    $cid = 'search_tags_' . $this->config->get('client_id') . "_" . implode('', $classifications);
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
@@ -357,7 +359,7 @@ class THRONSearch extends THRONWidgetBase {
           $subNodeIds = [];
           // Include non-leaf tags.
           foreach ($tag['subNodeIds'] as $subNodeId) {
-            // Populate tags
+            // Populate tags.
             if (isset($tags[$subNodeId])) {
               $locale_data = $this->THRONApi->getSingleLocaleData($tags[$subNodeId]['names']);
               $subNodeIds[$subNodeId] = [
@@ -541,9 +543,7 @@ class THRONSearch extends THRONWidgetBase {
     }
     $page = EntityBrowserPagerElement::getCurrentPage($form_state);
 
-
     // Query begin
-    //====================================
     $query = [
       'limit' => $this->configuration['items_per_page'],
       'page' => $page,
@@ -578,7 +578,7 @@ class THRONSearch extends THRONWidgetBase {
       $show_reset_button = TRUE;
     }
 
-    // other CHOSEN tags:
+    // Other CHOSEN tags:
     if ($selected_tags = $form_state->getValue(['filters', 'tags'])) {
       foreach ($selected_tags as $selected_tag) {
         if (empty($selected_tag)) {

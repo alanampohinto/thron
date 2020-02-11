@@ -139,7 +139,6 @@ class Thronintegration_Api {
         $data["divArea"] = $divArea;
       }
 
-      $params = NULL;
       $headers = ["Content-Type" => "application/json"];
       if (!Thronintegration_Utils::IsNullOrEmptyString($token)) {
         $headers["X-TOKENID"] = $token;
@@ -2061,14 +2060,14 @@ class Thronintegration_Api {
       if ($resp && !Thronintegration_Utils::IsNullOrEmptyString($resp)) {
         $respObj = json_decode($resp, TRUE);
         if (!$respObj || !isset($respObj["resultCode"]) || $respObj["resultCode"] != "OK") {
-          throw new \Exception("Invalid response getMediaContentDetails for client $clientId, content $contentId");
+          throw new \Exception("Invalid response contentSearch for client $clientId");
         }
 
         $res = $respObj;
         $res["resultCode"] = "OK";
       }
       else {
-        throw new \Exception("Invalid response while getMediaContentDetails for $clientId, content $contentId");
+        throw new \Exception("Invalid response for contentSearch for $clientId");
       }
     }
     catch (AppTokenExpiredException $ex) {
