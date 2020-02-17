@@ -1117,8 +1117,8 @@ class Thronintegration_Api {
    * @param bool $filterOnIds
    * @param bool $returnNames
    * @param bool $showSubNodeIds
-   * @param null $depth
-   * @param null $search_text
+   * @param NULL $depth
+   * @param NULL $search_text
    * @param string $lang
    *
    * @return array

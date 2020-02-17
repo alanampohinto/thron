@@ -55,8 +55,8 @@ abstract class ThronException extends \Exception {
    * Constructs BundleNotExistException.
    *
    * @param string $message The message
-   * @param null $admin_message The admin message, if present
-   * @param null $log_message The log message, if present
+   * @param NULL $admin_message The admin message, if present
+   * @param NULL $log_message The log message, if present
    * @param array $log_message_args Arguments for the message
    */
   public function __construct($message, $admin_message = NULL, $log_message = NULL, $log_message_args = []) {

@@ -195,7 +195,7 @@ class Thronintegration_Utils {
           'text/x-scriptzsh'                                                          => 'zsh',
       ];
   
-      return isset($mime_map[$mime]) ? $mime_map[$mime] : false;
+      return isset($mime_map[$mime]) ? $mime_map[$mime] : FALSE;
   }
   
   public static function arrayRecursiveDiff($aArray1, $aArray2) {
@@ -247,7 +247,7 @@ class Thronintegration_Utils {
   }
 
   /*
-   * Returns true if a string is null or empty (or made only of spaces)
+   * Returns TRUE if a string is NULL or empty (or made only of spaces)
    */
 
   public static function IsNullOrEmptyString($text) {
@@ -288,7 +288,7 @@ class Thronintegration_Utils {
   }
 
   /*
-   * Detects if this is a valid token; false otherwise
+   * Detects if this is a valid token; FALSE otherwise
    */
 
   public static function isValidToken($token) {

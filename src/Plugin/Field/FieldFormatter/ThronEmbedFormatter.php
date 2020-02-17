@@ -97,40 +97,43 @@ class ThronEmbedFormatter extends ThronFormatterBase {
         $data = $this->THRON->getVideoPlayerTemplatesList();
         if (!empty($data)) {
           $templates = $data['templates'];
-          $defaultAdded = false;
+          $defaultAdded = FALSE;
 
           $options = [];
 
           if(isset($data['default_templates']['default'])) {
             $options[$data['default_templates']['default']] = $this->t('Default');
-            $defaultAdded = true;
+            $defaultAdded = TRUE;
           }
 
           if(isset($data['default_templates']['noSkin'])) {
             $options[$data['default_templates']['noSkin']] = $this->t('noSkin');
-            $defaultAdded = true;
+            $defaultAdded = TRUE;
           }
 		  
-		  $sepAdded = false;
+		  $sepAdded = FALSE;
           foreach ($templates as $template) {
             if(
               (isset($data['default_templates']['default']) && $template['id'] != $data['default_templates']['default']) &&
               (isset($data['default_templates']['noSkin']) && $template['id'] != $data['default_templates']['noSkin'])
             ) {
               if (isset($options[$template['id']])) {
-				  if($defaultAdded && !$sepAdded) {
-  				    $options['---------'] = []; // separator
-					$sepAdded=true;
-				  }
-				  $options[$template['id']] .= '  ('.$template['name'].')';
+				        if($defaultAdded && !$sepAdded) {
+                  $options['---------'] = []; // separator
+                  $sepAdded=TRUE;
+                }
+    
+                $options[$template['id']] .= '  ('.$template['name'].')';
               }
               else {
-				  if($defaultAdded && !$sepAdded) {
-  				    $options['---------'] = []; // separator
-					$sepAdded=true;
-				  }
-                  $options[$template['id']] = $template['name'];
+                if($defaultAdded && !$sepAdded) {
+                  $options['---------'] = []; // separator
+                  $sepAdded=TRUE;
+                }
+                $options[$template['id']] = $template['name'];
               }
+            } else {
+              $options[$template['id']] = $template['name']; 
             }
           }
         }
@@ -310,30 +313,28 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                     try {
                       $nid = $node->id();
                     } catch(\Exception $ex) {
-                      $nid = false;
+                      $nid = FALSE;
                     }
-                  } else $nid = false;
+                  } else $nid = FALSE;
 				  
                   if($nid) {
                     $embedCodeId = $this->THRON->getThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template']);
                     if(!$embedCodeId) {
-                      if ($disguisedToken = $this->THRON->impersonateApp()) {
-                        // find the label for this template
-                        $template_settings = $this->THRON->getVideoPlayerTemplateData($formatter_settings['embed_template']);
-                        $templateLabel = "unknown";
-                        if($template_settings)
-                          if(isset($template_settings["item"]["name"]))
-                            $templateLabel = $template_settings["item"]["name"];
-                          elseif(isset($template_settings["name"]))
-                            $templateLabel = $template_settings["name"];
-                        $context = $login_data['tracking_context'];
-                        $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $context, $metadata['id'], $disguisedToken);
-                        $displaySettings['embed_player_code'] = $embed_player_code['item'];
-                        $embedCodeId = $embed_player_code['item']['id'];
-                        $this->THRON->setThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template'], $embedCodeId);
-                      }
+                      // find the label for this template
+                      $template_settings = $this->THRON->getVideoPlayerTemplateData($formatter_settings['embed_template']);
+                      $templateLabel = "unknown";
+                      if($template_settings)
+                        if(isset($template_settings["item"]["name"]))
+                          $templateLabel = $template_settings["item"]["name"];
+                        elseif(isset($template_settings["name"]))
+                          $templateLabel = $template_settings["name"];
+                      $context = $login_data['tracking_context'];
+                      $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $context, $metadata['id'], $login_data['token']);
+                      $displaySettings['embed_player_code'] = $embed_player_code['item'];
+                      $embedCodeId = $embed_player_code['item']['id'];
+                      $this->THRON->setThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template'], $embedCodeId);
                     }
-                  } else $embedCodeId = false;
+                  } else $embedCodeId = FALSE;
                           
                   // get the folder pkey from the application's settings
                   $pkey = $login_data['pkey'];

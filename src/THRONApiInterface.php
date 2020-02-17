@@ -36,11 +36,11 @@ interface THRONApiInterface {
 
   /**
    * @param string $xcontentId
-   * @param string|null $divArea
+   * @param string|NULL $divArea
    *
    * @return array
    */
-  public function getContentDetail($xcontentId, $divArea = null);
+  public function getContentDetail($xcontentId, $divArea = NULL);
 
   /**
    * @return array
@@ -138,11 +138,10 @@ interface THRONApiInterface {
    * @param $templateLabel
    * @param $context
    * @param $xcontentId
-   * @param $disguisedToken
    *
    * @return mixed
    */
-  public function insertPlayerEmbedCode($templateId, $templateLabel, $context, $xcontentId, $disguisedToken);
+  public function insertPlayerEmbedCode($templateId, $templateLabel, $context, $xcontentId);
 
   /**
    * @param $array
@@ -210,5 +209,5 @@ interface THRONApiInterface {
   /**
    * Get the breakpoint tags (if present)
    */
-  public function getBreakpointTags($asMediaQueries=false);
+  public function getBreakpointTags($asMediaQueries=FALSE);
 }

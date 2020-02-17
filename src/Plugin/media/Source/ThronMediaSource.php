@@ -287,7 +287,7 @@ class ThronMediaSource extends MediaSourceBase {
 
         $responsiveness = $this->config->get('responsive_pictures_breakpoints');
         if(empty($responsiveness))
-          $responsiveness=$this->THRONApi->getBreakpointTags(true);
+          $responsiveness=$this->THRONApi->getBreakpointTags(TRUE);
 
         if (!empty($responsiveness)) {
           $master_image_set_tag_id = $responsiveness['default'];
@@ -303,7 +303,7 @@ class ThronMediaSource extends MediaSourceBase {
               if ($apiResponse = $this->THRONApi->getContentDetail($content->id)) {
                 $info = $apiResponse->content;
                 if ($info->contentType == 'IMAGE' && !empty($info->itags)) {
-                  $responsiveTag=false;
+                  $responsiveTag=FALSE;
                   foreach($info->itags as $t) {
                     if(isset($responsiveness[$t->id]) && isset($responsiveness[$t->id]['name']) && trim($responsiveness[$t->id]['name']) != "") {
                       $responsiveTag = $responsiveness[$t->id]['name'];
@@ -437,7 +437,7 @@ class ThronMediaSource extends MediaSourceBase {
     $channelTypesRegexps = [[
       "channel" => "STREAMHTTPIOSHD",
       "find" => "/^STREAMHTTPIOSHD.?/",
-      "findNot" => false
+      "findNot" => FALSE
     ], [
       "channel" => "STREAMHTTPIOS",
       "find" => "/^STREAMHTTPIOS.?/",
@@ -445,11 +445,11 @@ class ThronMediaSource extends MediaSourceBase {
     ], [
       "channel" => "WEBFULLHD",
       "find" => "/^WEBFULLHD.?/",
-      "findNot" => false
+      "findNot" => FALSE
     ], [
       "channel" => "WEBHD",
       "find" => "/^WEBHD.?/",
-      "findNot" => false
+      "findNot" => FALSE
     ], [
       "channel" => "WEB",
       "find" => "/^WEB.?/",
@@ -458,15 +458,15 @@ class ThronMediaSource extends MediaSourceBase {
     
     foreach($channelTypesRegexps as $ctre) {
       foreach($deliveryInfo as $channel) {
-        $shouldAdd = false;
+        $shouldAdd = FALSE;
         preg_match($ctre["find"], $channel->channelType, $found);
         if(count($found)>0) {
           if(!$ctre["findNot"]) {
-            $shouldAdd = true;
+            $shouldAdd = TRUE;
           } else {
             preg_match($ctre["findNot"], $channel->channelType, $found);
             if(!$found) {
-              $shouldAdd = true;
+              $shouldAdd = TRUE;
             }
           }
         }

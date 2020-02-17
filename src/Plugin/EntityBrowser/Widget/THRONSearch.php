@@ -673,7 +673,7 @@ class THRONSearch extends THRONWidgetBase {
     else {
       $form['empty_message'] = [
         '#prefix' => '<div class="empty-message">',
-        '#markup' => $this->t('Not assets found for current search criteria.'),
+        '#markup' => $this->t('No assets found for current search criteria.'),
         '#suffix' => '</div>',
         '#weight' => $max_option_weight + 20,
       ];

@@ -187,7 +187,7 @@ class THRONApi implements THRONApiInterface {
     }));
 
     if (count($tracking_context_el) == 0)
-      $tracking_context = false;
+      $tracking_context = FALSE;
     else {
       $vals = array_values($tracking_context_el);
       $tracking_context = array_shift($vals);
@@ -272,7 +272,7 @@ class THRONApi implements THRONApiInterface {
   /**
    * This call is NOT CACHED!
    *
-   * @return array|bool|FALSE|mixed|string|null
+   * @return array|bool|FALSE|mixed|string|NULL
    * @throws \Exception
    */
   public function impersonateApp() {
@@ -303,11 +303,11 @@ class THRONApi implements THRONApiInterface {
 
   /**
    * @param string $xcontentId
-   * @param string|null $divArea
+   * @param string|NULL $divArea
    *
-   * @return array|bool|mixed|null
+   * @return array|bool|mixed|NULL
    */
-  public function getContentDetail($xcontentId, $divArea = null) {
+  public function getContentDetail($xcontentId, $divArea = NULL) {
     $cid = 'xcontent__'.$this->config->get('client_id')."§" . $xcontentId;
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
@@ -339,7 +339,7 @@ class THRONApi implements THRONApiInterface {
   }
 
   /**
-   * @return array|bool|null
+   * @return array|bool|NULL
    *
    * @deprecated no more used.
    */
@@ -462,7 +462,7 @@ class THRONApi implements THRONApiInterface {
    *
    * @param array $filterOn
    * @param int $depth
-   * @param null $search_text
+   * @param NULL $search_text
    *
    * @return mixed|void
    * @throws \Exception
@@ -684,7 +684,7 @@ class THRONApi implements THRONApiInterface {
     }
     $obj = $this->mediaStorage->load(reset($res));
   	try {
-      $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
+      $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, TRUE);
 
       // detect the save format for this field and update it if needed
       if(empty($templateIds)) return FALSE;
@@ -692,7 +692,7 @@ class THRONApi implements THRONApiInterface {
         if(!isset($templateIds[0]["node_id"])) {
           $newTemplates = [];
           foreach($templateIds as $tid=>$eid) {
-            array_push($newTemplates, ["node_id"=>false, "template_id"=>$tid, "embed_code_id"=>$eid]);
+            array_push($newTemplates, ["node_id"=>FALSE, "template_id"=>$tid, "embed_code_id"=>$eid]);
           }
           $templateIds = $newTemplates;
         }
@@ -726,7 +726,7 @@ class THRONApi implements THRONApiInterface {
       return FALSE;
     }
     $obj = $this->mediaStorage->load(reset($res));
-    $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, true);
+    $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, TRUE);
     if(empty($templateIds)) $templateIds=[];
 
     // detect the save format for this field and update it if needed
@@ -734,7 +734,7 @@ class THRONApi implements THRONApiInterface {
       if(!isset($templateIds[0]["node_id"])) {
         $newTemplates = [];
         foreach($templateIds as $tid=>$eid) {
-          array_push($newTemplates, ["node_id"=>false, "template_id"=>$tid, "embed_code_id"=>$eid]);
+          array_push($newTemplates, ["node_id"=>FALSE, "template_id"=>$tid, "embed_code_id"=>$eid]);
         }
         $templateIds = $newTemplates;
 
@@ -749,8 +749,8 @@ class THRONApi implements THRONApiInterface {
     }
 
     $newTemplates=[];
-    $willUpdate=false;
-	  $templateFound=false;
+    $willUpdate=FALSE;
+	  $templateFound=FALSE;
 
     // loop through the templates array
     foreach($templateIds as $template) {
@@ -762,21 +762,21 @@ class THRONApi implements THRONApiInterface {
           if($template["embed_code_id"] === $embedCodeId) {
             // copy this as-is
             array_push($newTemplates, $template);
-		      	$templateFound=true;
+		      	$templateFound=TRUE;
           } else {
             // we can modify this
             $template["embed_code_id"] = $embedCodeId;
             array_push($newTemplates, $template);
-            $willUpdate = true;
-      			$templateFound=true;
+            $willUpdate = TRUE;
+      			$templateFound=TRUE;
           }
 
-        } else if($template["node_id"] == false) {
+        } else if($template["node_id"] == FALSE) {
           // we can modify this
           $template["node_id"] = $node_id;
           array_push($newTemplates, $template);
-          $willUpdate = true;
-	    	  $templateFound=true;
+          $willUpdate = TRUE;
+	    	  $templateFound=TRUE;
         } else {
           // this embed code refers to a different page
           array_push($newTemplates, $template);
@@ -787,7 +787,7 @@ class THRONApi implements THRONApiInterface {
 	
     if(!$templateFound) {
       array_push($newTemplates, ["node_id"=>$node_id, "template_id"=>$templateId, "embed_code_id"=>$embedCodeId]);
-      $willUpdate = true;
+      $willUpdate = TRUE;
     }
 
     if($willUpdate) {
@@ -856,7 +856,7 @@ class THRONApi implements THRONApiInterface {
   /**
    * @param string $templateId
    *
-   * @return array|null
+   * @return array|NULL
    */
   public function getVideoPlayerTemplateData($templateId) {
     $cid = 'player_template__'.$this->config->get('client_id')."_" . $templateId;
@@ -892,19 +892,18 @@ class THRONApi implements THRONApiInterface {
    * @param templateLabel
    * @param context
    * @param $xcontentId
-   * @param $disguisedToken
    *
-   * @return array|mixed|null
+   * @return array|mixed|NULL
    * @throws \Exception
    */
-  public function insertPlayerEmbedCode($templateId, $templateLabel, $context, $xcontentId, $disguisedToken) {
+  public function insertPlayerEmbedCode($templateId, $templateLabel, $context, $xcontentId) {
     $cid = 'player_embedcode__'.$this->config->get('client_id')."_${templateId}__" . preg_replace('/-/', '_', $xcontentId);
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
 
     try {
-      if (!$this->getLoginData()) {
+      if (!$login_data = $this->getLoginData()) {
         throw new \Exception('LoginApp error');
       }
 
@@ -921,7 +920,7 @@ class THRONApi implements THRONApiInterface {
       else
         $embedName = "Drupal embed (template $templateLabel)";
 
-      $data = Thronintegration_Api::insertEmbedCode($this->config->get('client_id'), $disguisedToken, $embedName, $source, $context, $templateId, 'CUSTOM', $values, $skipPkeyCreation);
+      $data = Thronintegration_Api::insertEmbedCode($this->config->get('client_id'), $login_data['token'], $embedName, $source, $context, $templateId, 'CUSTOM', $values, $skipPkeyCreation);
       if ($data['resultCode'] !== 'OK') {
         throw new \Exception($data['errorDescription']);
       }
@@ -930,7 +929,7 @@ class THRONApi implements THRONApiInterface {
       return $data;
     }
     catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('insertPlayerEmbedCode', NULL, $ex, [$templateId, $templateLabel, $context, $xcontentId, $disguisedToken]);
+      return $this->refreshAndRecall('insertPlayerEmbedCode', NULL, $ex, [$templateId, $templateLabel, $context, $xcontentId, $login_data['token']]);
     }
     catch (\Exception $e) {
       $this->logger->error($e->getMessage());
@@ -996,7 +995,7 @@ class THRONApi implements THRONApiInterface {
   /**
    * @param $properties
    *
-   * @return array|mixed|null
+   * @return array|mixed|NULL
    */
   public function contentFindByProperties($properties) {
     try {
@@ -1088,7 +1087,7 @@ class THRONApi implements THRONApiInterface {
    * Returns the details about media.
    *
    * @param $content_id
-   * @param null $key
+   * @param NULL $key
    *
    * @return array|FALSE
    */
@@ -1158,7 +1157,7 @@ class THRONApi implements THRONApiInterface {
   /**
    * Get the breakpoint tags (if present)
    */
-  public function getBreakpointTags($asMediaQueries=false) {
+  public function getBreakpointTags($asMediaQueries=FALSE) {
     try {
       $obj = [];
       if (!$login_data = $this->getLoginData()) {
@@ -1192,7 +1191,7 @@ class THRONApi implements THRONApiInterface {
       } else
         return $obj;
     } catch(\Exception $ex) {
-      return false;
+      return FALSE;
     }
   }
 }
