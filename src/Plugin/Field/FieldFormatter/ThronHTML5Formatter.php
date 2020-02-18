@@ -29,6 +29,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
     return [
       'embed_image_as_webp' => 0,
       'embed_imageset' => 0,
+      'embed_channel' => NULL,
       'embed_resizing' => 'fixed',
       'embed_resizing_fixed_width' => NULL,
       'embed_resizing_fixed_height' => NULL,
@@ -108,6 +109,21 @@ class ThronHTML5Formatter extends ThronFormatterBase {
               '#type' => 'hidden',
               '#value' => '1',
             ];
+          }
+        } elseif($metadata['contentType'] == 'VIDEO') {
+          // get the channels for this content
+          $elements['embed_channel'] = [
+            '#type' => 'select',
+            '#title' => $this->t('Channel to embed'),
+            '#required' => TRUE,
+            '#default_value' => $this->getSetting('embed_channel') ?: "all",
+            '#options' => [
+              'all' => $this->t('All channels (let browser decide)'),
+            ],
+          ];
+
+          foreach (array_keys($metadata["sources"]) as $ch) {
+            $elements['embed_channel']['#options'][$ch] = $ch;
           }
         }
 
@@ -392,6 +408,19 @@ class ThronHTML5Formatter extends ThronFormatterBase {
                     }
                   }
                   $metadata['imageset'] = $new_imageset;
+                }
+              } elseif($metadata['contentType'] == 'VIDEO') {
+                $this->privateTempStore->set('embed_channel', $formatter_settings['embed_channel']);
+                if($formatter_settings['embed_channel'] && trim($formatter_settings['embed_channel']) != "" && $formatter_settings['embed_channel'] != "all") {
+                  $sources = [];
+                  foreach($metadata["sources"] as $ch=>$source) {
+                    if($ch == $formatter_settings['embed_channel']) {
+                      $sources[$ch] = $source;
+                      break;
+                    }
+                  }
+
+                  $metadata["sources"] = $sources;
                 }
               }
 

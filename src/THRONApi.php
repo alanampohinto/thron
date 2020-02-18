@@ -771,7 +771,7 @@ class THRONApi implements THRONApiInterface {
       			$templateFound=TRUE;
           }
 
-        } else if($template["node_id"] == FALSE) {
+        } elseif($template["node_id"] == FALSE) {
           // we can modify this
           $template["node_id"] = $node_id;
           array_push($newTemplates, $template);
