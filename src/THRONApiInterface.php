@@ -44,20 +44,6 @@ interface THRONApiInterface {
 
   /**
    * @return array
-   * @throws \Exception
-   */
-  public function getContents();
-
-  /**
-   * @param string|int $timestamp
-   *
-   * @return array
-   * @throws \Exception
-   */
-  public function getUpdatedContents($timestamp);
-
-  /**
-   * @return array
    */
   public function getClassifications();
 
@@ -129,7 +115,7 @@ interface THRONApiInterface {
    *
    * @return array
    */
-  public function contentFindByProperties($properties);
+  public function contentSearch($properties);
 
   /**
    * Creates an embed code on the fly

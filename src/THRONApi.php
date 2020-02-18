@@ -339,123 +339,6 @@ class THRONApi implements THRONApiInterface {
   }
 
   /**
-   * @return array|bool|NULL
-   *
-   * @deprecated no more used.
-   */
-  public function getContents() {
-    $cid = 'syncExport_contents_'.$this->config->get('client_id');
-    if ($cache = $this->cache->get($cid)) {
-      return $cache->data;
-    }
-
-    try {
-      if (!$login_data = $this->getLoginData()) {
-        throw new \Exception('LoginApp error');
-      }
-
-      $contents = [];
-      $next_page = NULL;
-      do {
-        $data = Thronintegration_Api::syncExport($this->config->get('client_id'), $login_data['token'], [$login_data['rootCategoryId']], [], 0, $next_page);
-
-        if (!isset($data->resultCode) || $data->resultCode !== 'OK') {
-          $this->logger->error($data->errorDescription);
-          return FALSE;
-        }
-
-        foreach ($data->items as $item) {
-          $locales = array_filter($item->content->locales, function ($obj) {
-            return $obj->locale == 'EN';
-          });
-          $first_locale = !empty($locales) ? reset($locales) : reset($item->content->locales);
-          $contents[] = [
-            'id' => $item->content->id,
-            'name' => $first_locale->name,
-            'description' => isset($first_locale->description) ? $first_locale->description : '',
-            'tags' => $this->filterTagsDefinitions($item->itagDefinitions),
-          ];
-        }
-
-        // Check if there are more results.
-        $next_page = isset($data->nextPage) ? $data->nextPage : NULL;
-
-      } while (isset($next_page));
-
-      $this->cache->set($cid, $contents, $this->time->getRequestTime() + $this->getCacheInterval());
-      return $contents;
-    }
-    catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('getContents', FALSE, $ex);
-    }
-    catch (\Exception $ex) {
-      $this->logger->error($ex->getMessage());
-      return FALSE;
-    }
-  }
-
-  /**
-   * @param int $timestamp
-   *
-   * @return array|bool
-   *
-   * @deprecated No more used.
-   */
-  public function getUpdatedContents($timestamp) {
-    $contents = [];
-    $fromDate = $this->dateFormatter->format($timestamp, 'custom', 'c');
-
-    try {
-      if (!$login_data = $this->getLoginData()) {
-        throw new \Exception('LoginApp error');
-      }
-
-      $next_page = NULL;
-      do {
-        $data = Thronintegration_Api::syncUpdatedContent($this->config->get('client_id'), $login_data['token'], $fromDate, NULL, [$login_data['rootCategoryId']], [], 0, $next_page);
-
-        if (!isset($data->resultCode) || $data->resultCode !== 'OK') {
-          $this->logger->error($data->errorDescription);
-          return FALSE;
-        }
-
-        foreach ($data->items as $item) {
-          $locales = array_filter($item->content->locales, function ($obj) {
-            return $obj->locale == 'EN';
-          });
-          $first_locale = !empty($locales) ? reset($locales) : reset($item->content->locales);
-
-          $is_categorized = FALSE;
-          foreach ($item->linkedCategories as $linkedCategory) {
-            $is_categorized = $linkedCategory->id == $login_data['rootCategoryId'] || $is_categorized;
-          }
-
-          $contents[] = [
-            'id' => $item->content->id,
-            'name' => $first_locale ? $first_locale->name : $item->content->id,
-            'description' => $first_locale && isset($first_locale->description) ? $first_locale->description : '',
-            'removed' => $item->removed || !$is_categorized,
-            'tags' => $this->filterTagsDefinitions($item->itagDefinitions),
-          ];
-        }
-        // Check if there are more results.
-        $next_page = isset($data->nextPage) ? $data->nextPage : NULL;
-
-      }
-      while (isset($next_page));
-
-      return $contents;
-    }
-    catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('getUpdatedContents', FALSE, $ex, [$timestamp]);
-    }
-    catch(\Exception $ex) {
-      $this->logger->error($ex->getMessage());
-      return FALSE;
-    }
-  }
-
-  /**
    * Recursive function that iterates tags of a classification and gets in plain array
    *
    * @param $classification
@@ -997,7 +880,7 @@ class THRONApi implements THRONApiInterface {
    *
    * @return array|mixed|NULL
    */
-  public function contentFindByProperties($properties) {
+  public function contentSearch($properties) {
     try {
       if (!$login_data = $this->getLoginData()) {
         throw new \Exception('LoginApp error');
@@ -1006,12 +889,11 @@ class THRONApi implements THRONApiInterface {
       $currentLanguage = $this->languageManager->getCurrentLanguage();
 
       // Call the API endpoint.
-      $data = Thronintegration_Api::contentsFindByProperties(
+      $data = Thronintegration_Api::contentSearch(
         $this->config->get('client_id'),
         $login_data['token'],
         $login_data['rootCategoryId'],
-        isset($properties['limit']) && isset($properties['page']) ? $properties['limit'] * ($properties['page'] - 1) : 0,
-        isset($properties['limit']) ? $properties['limit'] : NULL,
+        isset($properties['nextPage']) ? $properties['nextPage'] : NULL,
         !empty($properties['contentType']) ? $properties['contentType'] : FALSE,
         isset($properties['divArea']) ? $properties['divArea'] : FALSE,
         isset($properties['tags']) ? $properties['tags'] : FALSE,
@@ -1027,7 +909,7 @@ class THRONApi implements THRONApiInterface {
       return $data;
     }
     catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('contentFindByProperties', NULL, $ex, [$properties]);
+      return $this->refreshAndRecall('contentSearch', NULL, $ex, [$properties]);
     }
     catch (\Exception $ex) {
       $this->logger->error($ex->getMessage());
@@ -1112,7 +994,7 @@ class THRONApi implements THRONApiInterface {
         ]
       ];
 
-      $data = Thronintegration_Api::contentSearch($this->config->get('client_id'), $login_data['token'], $search_param);
+      $data = Thronintegration_Api::contentSearchLite($this->config->get('client_id'), $login_data['token'], $search_param);
       $ret = [];
       if ($key) {
         $ret = array_map(function($obj) use($key) {

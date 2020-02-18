@@ -22,7 +22,7 @@ class Thronintegration_Api {
 
   private static $protocol = "https:";
 
-  private static $port = 443;
+  private static $port = NULL;
 
   private static $domainNamingConvention = "%s-view.thron.com";
 
@@ -40,7 +40,10 @@ class Thronintegration_Api {
       return FALSE;
     }
 
-    $url = sprintf("%s//%s:%d/api/%s/resources/", $protocol, sprintf(Thronintegration_Api::$domainNamingConvention, $clientId), $port, $module);
+    if(isset($port))
+      $url = sprintf("%s//%s:%d/api/%s/resources/", $protocol, sprintf(Thronintegration_Api::$domainNamingConvention, $clientId), $port, $module);
+    else
+      $url = sprintf("%s//%s/api/%s/resources/", $protocol, sprintf(Thronintegration_Api::$domainNamingConvention, $clientId), $module);
     return $url;
   }
 
@@ -299,24 +302,25 @@ class Thronintegration_Api {
    * @return mixed
    * @throws \Drupal\thron\Exception\AppTokenExpiredException
    */
-  public static function contentsFindByProperties($clientId, $token, $categoryId, $offset, $numberOfresults = THRON_RESULTS_PER_PAGE, $contentType = FALSE, $divArea = FALSE, $tagSearch = FALSE, $textSearch = FALSE, $orderBy = FALSE, $cascade = FALSE, $locale = FALSE) {
+  public static function contentSearch($clientId, $token, $categoryId, $nextPageToken = NULL, $contentType = FALSE, $divArea = FALSE, $tagSearch = FALSE, $textSearch = FALSE, $orderBy = FALSE, $cascade = FALSE, $locale = FALSE) {
     try {
-      $url = Thronintegration_Api::getThronEndpoint($clientId, 'xcontents') . 'content/findByProperties';
+      $url = Thronintegration_Api::getThronEndpoint($clientId, 'xcontents') . 'content/search/'.$clientId;
 
       $body = new \stdClass();
-      $body->client = new \stdClass();
-      $body->client->clientId = $clientId;
       $body->criteria = new \stdClass();
-      $body->criteria->weeboStatus = 'PUBLISHED';
+
+      //var_dump($nextPageToken); exit();
+
+      if($nextPageToken)
+        $body->pageToken = $nextPageToken;
+
       if (!Thronintegration_Utils::IsNullOrEmptyString($categoryId)) {
-        if ($cascade) {
-          $body->criteria->linkedCategoryOp = new \stdClass();
-          $body->criteria->linkedCategoryOp->linkedCategoryIds = [$categoryId];
-          $body->criteria->linkedCategoryOp->cascade = TRUE;
-        }
-        else {
-          $body->criteria->linkedCategories = [$categoryId];
-        }
+        $body->criteria->linkedCategories = new \stdClass();
+        $body->criteria->linkedCategories->haveAtLeastOne = [];
+        $lcObj = new \stdClass();
+        $lcObj->cascade = $cascade;
+        $lcObj->id = $categoryId;
+        array_push($body->criteria->linkedCategories->haveAtLeastOne, $lcObj);
       }
 
       if (is_array($contentType) && count($contentType)) {
@@ -328,70 +332,88 @@ class Thronintegration_Api {
         }
       }
 
-      $body->orderBy = 'lastUpdate_D';
+      $body->responseOptions = new \stdClass();
+      $body->responseOptions->returnDetailsFields = [
+        "locales",
+        "author",
+        "owner",
+        "lastUpdate",
+        "prettyIds",
+        "playlistDetails",
+        "userSpecificValues",
+        "aclInfo",
+        "publishingStatus",
+        "highlights",
+        "availableChannels",
+        "linkedContent",
+        "source",
+        "itags",
+        "linkedCategoryIds",
+        "properties",
+        "imetadata",
+        "externalIds"
+      ];
+
+      $body->responseOptions->orderBy = 'lastUpdate_d';
       if ($orderBy && !Thronintegration_Utils::IsNullOrEmptyString($orderBy)) {
-        $body->orderBy = $orderBy;
+        $body->responseOptions->orderBy = $orderBy;
       }
 
-      $body->divArea = '320x0';
+      $body->responseOptions->thumbsOptions = [];
+
+      $askForDivArea = '320x0';
       if ($divArea && !Thronintegration_Utils::IsNullOrEmptyString($divArea)) {
-        $body->divArea = $divArea;
+        $askForDivArea = $divArea;
       }
 
+      $thumbsOptsObj = new \stdClass();
+      $thumbsOptsObj->divArea = $askForDivArea;
+      $thumbsOptsObj->id = $askForDivArea;
+
+      array_push($body->responseOptions->thumbsOptions, $thumbsOptsObj);
+      
       if ($locale && !Thronintegration_Utils::IsNullOrEmptyString($locale)) {
-        $body->locale = strtoupper($locale);
-        // $body->criteria->locale = strtoupper($locale);
+        $body->criteria->lang = strtoupper($locale);
       }
 
       if ($textSearch && !Thronintegration_Utils::IsNullOrEmptyString($textSearch)) {
-        $body->criteria->locale = strtoupper($locale);
-        $body->criteria->textSearch = new \stdClass();
-        $body->criteria->textSearch->searchKey = $textSearch;
-        $body->criteria->textSearch->searchOnFields = ['NAME', 'DESCRIPTION'];
-        $body->criteria->textSearch->searchKeyOption = 'EXACT_MATCH';
+        $body->criteria->lang = strtoupper($locale);
+        $body->criteria->lemma = new \stdClass();
+        $body->criteria->lemma->text = $textSearch;
+        $body->criteria->lemma->textMatch = 'EXACT_MATCH';
+        $body->criteria->lemma->lang = strtoupper($locale);
       }
 
-      $body->contentFieldOption = new \stdClass();
-      $body->contentFieldOption->returnThumbnailUrl = TRUE;
-      $body->contentFieldOption->returnItags = TRUE;
-      $body->contentFieldOption->returnImetadata = TRUE;
-      $body->contentFieldOption->returnLinkedContents = TRUE;
-
       if ($tagSearch && is_array($tagSearch) && count($tagSearch) > 0) {
-        $body->criteria->itagOp = new \stdClass();
-        $body->criteria->itagOp->itags = [];
+        $body->criteria->itag = new \stdClass();
+        $body->criteria->itag->haveAll = [];
 
         foreach ($tagSearch as $tag) {
           if (is_array($tag)) {
-            $body->criteria->itagOp->itags[] = $tag;
+            $body->criteria->itag->haveAll[] = $tag;
           }
           elseif (!Thronintegration_Utils::IsNullOrEmptyString($tag)) {
-            $body->criteria->itagOp->itags[] = [
+            $body->criteria->itag->haveAll[] = [
+              "cascade" => TRUE,
+              "classificationId" => $tag, // TODO THIS IS DEFINITELY WRONG!
               'id' => $tag,
             ];
           }
         }
-
-        if (count($tagSearch) > 1) {
-          $body->criteria->itagOp->operation = 'AND';
-        }
-        else {
-          $body->criteria->itagOp->operation = 'OR';
-        }
       }
-      $body->offset = $offset;
-      $body->numberOfresults = $numberOfresults;
 
-      $findByPropertiesResp = Thronintegration_HTTP::doHTTP('JSON_POST', $url, $body, ['X-TOKENID' => $token]);
-
-      if (!$findByPropertiesResp) {
+      $contentSearchRes = Thronintegration_HTTP::doHTTP('JSON_POST', $url, $body, ['X-TOKENID' => $token]);
+      
+      if (!$contentSearchRes) {
         throw new \Exception(sprintf('Cannot find contents for client %s!', $clientId));
       }
 
-      $data = json_decode($findByPropertiesResp, FALSE);
+      $data = json_decode($contentSearchRes, FALSE);
       $res['resultCode'] = 'OK';
-      $res['total'] = $data->totalResults;
-      $res['contents'] = $data->contents;
+      $res['total'] = $data->estimatedTotalResults;
+      $res['contents'] = $data->items;
+      $res['nextPageToken'] = $data->nextPageToken;
+      $res['prevPageToken'] = $nextPageToken;
 
     }
     catch (AppTokenExpiredException $ex) {
@@ -2050,7 +2072,7 @@ class Thronintegration_Api {
    * @return array|mixed
    * @throws \Drupal\thron\Exception\AppTokenExpiredException
    */
-  public static function contentSearch($clientId, $tokenId, $search_param) {
+  public static function contentSearchLite($clientId, $tokenId, $search_param) {
     $res = ["resultCode" => "ERROR", "errorDescription" => ""];
 
     try {
