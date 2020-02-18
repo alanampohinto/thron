@@ -99,36 +99,8 @@ function thron_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_cron().
  *
- * Runs the Media updates from the THRON DAM via THRONApi
  */
 function thron_cron() {
-  $configs = \Drupal::config('thron.settings');
-  if ($configs->get('app_key') && $configs->get('app_id') && $configs->get('client_id')) {
-    $last_update = \Drupal::state()->get(THRONApi::THRON_LAST_UPDATE_STATE_KEY, strtotime("-2 months"));
-    if (($last_update + \Drupal::config('default')->get('cache_lifetime')) < \Drupal::time()->getRequestTime()) {
-      try {
-        $ret = \Drupal::service('thron_api')->updateMedia($last_update);
-        \Drupal::logger('thron')
-          ->info(t('Updated the medias through the THRON API: %result', [
-            '%result' => json_encode($ret),
-          ]));
-      }
-      catch (\Exception $exception) {
-        \Drupal::logger('thron')
-          ->error(t('Unable to update THRON caches. Check your <a href=":url">connection configuration</a>.', [
-            ':url' => Url::fromRoute('thron.configuration_form')->toString(),
-          ]));
-      }
-    }
-    else {
-      \Drupal::logger('thron')
-        ->notice(t('Update time limit has not expired yet'));
-    }
-  }
-  else {
-    \Drupal::logger('thron')
-      ->notice(t('Thron is not configured to use.'));
-  }
 }
 
 /**
