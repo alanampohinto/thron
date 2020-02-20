@@ -324,13 +324,10 @@ class Thronintegration_Api {
         "owner",
         "lastUpdate",
         "prettyIds",
-        "playlistDetails",
         "userSpecificValues",
-        "aclInfo",
         "publishingStatus",
         "highlights",
         "availableChannels",
-        "linkedContent",
         "source",
         "itags",
         "linkedCategoryIds",
@@ -362,7 +359,6 @@ class Thronintegration_Api {
       }
 
       if ($textSearch && !Thronintegration_Utils::IsNullOrEmptyString($textSearch)) {
-        $body->criteria->lang = strtoupper($locale);
         $body->criteria->lemma = new \stdClass();
         $body->criteria->lemma->text = $textSearch;
         $body->criteria->lemma->textMatch = 'EXACT_MATCH';
@@ -397,7 +393,11 @@ class Thronintegration_Api {
       $res['resultCode'] = 'OK';
       $res['total'] = $data->estimatedTotalResults;
       $res['contents'] = $data->items;
-      $res['nextPageToken'] = $data->nextPageToken;
+      if(isset($data->nextPageToken))
+        $res['nextPageToken'] = $data->nextPageToken;
+      else
+        $res['nextPageToken'] = NULL;
+      
       $res['prevPageToken'] = $nextPageToken;
 
     }
@@ -737,7 +737,7 @@ class Thronintegration_Api {
       $detailTagResponse = Thronintegration_HTTP::doHTTP("GET", $url, FALSE, ["X-TOKENID" => $token]);
       if (!$detailTagResponse) {
         // error while updating app... TODO notify!
-        throw new \Exception(sprintf("Could not get the tag detail for tag %s on %s", $tagId, $clientId));
+        throw new \Exception(sprintf("Could not get the tag detail for tag %s, classification $s on %s", $tagId, $classificationId, $clientId));
       }
       $detailTagObj = json_decode($detailTagResponse, TRUE);
       if (!isset($detailTagObj["resultCode"]) || $detailTagObj["resultCode"] != "OK") {
@@ -1161,7 +1161,7 @@ class Thronintegration_Api {
         $criteria['lang'] = strtoupper($lang);
       }
 
-      if ($depth !== NULL) {
+      if ($depth && $depth !== NULL) {
         $criteria['excludeLevelHigherThan'] = intval($depth);
       }
 

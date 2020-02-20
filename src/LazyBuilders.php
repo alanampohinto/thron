@@ -35,4 +35,17 @@ class LazyBuilders {
     $this->api = $thron_api;
     $this->renderer = $renderer;
   }
+
+  /**
+   * Builds the extension markup
+   *
+   * @param string $content_id
+   *   the id of thron media being processed.
+   *
+   * @return array|NULL
+   *   A renderable array containing the cart form.
+   */
+  public function mediaContentExtension($content_id) {
+    var_dump($content_id); exit();
+  }
 }

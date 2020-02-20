@@ -630,10 +630,6 @@ class THRONSearch extends THRONWidgetBase {
     }
 
     $page_token = NULL;
-    /*ini_set('xdebug.var_display_max_depth', 7);
-    ini_set('xdebug.var_display_max_children', 256);
-    ini_set('xdebug.var_display_max_data', 4096);
-    var_dump($page);*/
     try {
       $page_token = $form_state->get('thron_media_list_page_'.($page));
     } catch(\Exception $ex) {} 

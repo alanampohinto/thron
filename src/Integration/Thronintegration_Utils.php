@@ -198,7 +198,7 @@ class Thronintegration_Utils {
       if($getMime) {
         // we have the extension and need the mime data
         foreach ( $mime_map as $key => $ext ) {
-          if ( $ext == $mime ) {
+          if ( $ext == $mimeOrExt ) {
             return $key;
           }
         }

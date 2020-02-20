@@ -17,6 +17,7 @@ use Drupal\thron\Utils\THRONApiUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Drupal\thron\Integration\Thronintegration_Utils;
 
 /**
  * Provides media source plugin for THRON.
@@ -240,14 +241,13 @@ class ThronMediaSource extends MediaSourceBase {
    * Returns the metadata assoc array for given data structure.
    *
    * @param mixed $data
-   * @param mixed $contentDtail
+   * @param mixed $contentDetail
    * @param string $langcode
    *
    * @return mixed
    */
   public function buildMetadata($data, $contentDetail, $langcode) {
     $metadata = [];
-    //var_dump($data); exit();
     if (!empty($data)) {
       $metadata['id'] = $data["id"];
       $metadata['contentType'] = $data["contentType"];
@@ -258,9 +258,16 @@ class ThronMediaSource extends MediaSourceBase {
       $metadata['created'] = $this->THRONApi->getValueOrDefault($data["creationDate"], FALSE);
       $metadata['modified'] = $this->THRONApi->getValueOrDefault($data["details"]["lastUpdate"], FALSE);
       $metadata['default_name'] = $this->THRONApi->getValueOrDefault($data["details"]["locales"][0]["name"], '');
-      $metadata['default_description'] = $this->THRONApi->getValueOrDefault($data["details"]["locales"][0]["description"], '');
-      $metadata['default_pretty_name'] = $this->THRONApi->getValueOrDefault($data["details"]["prettyIds"][0]["id"], Html::cleanCssIdentifier($metadata['default_name']));
-      
+      if(count($data["details"]["locales"])>0 && isset($data["details"]["locales"][0]["description"]) && !empty($data["details"]["locales"][0]["description"]))
+        $metadata['default_description'] = $data["details"]["locales"][0]["description"];
+      else
+        $metadata['default_description'] = '';
+
+      if(count($data["details"]["prettyIds"])>0 && isset($data["details"]["prettyIds"][0]["id"]) && !empty($data["details"]["prettyIds"][0]["id"]))
+        $metadata['default_pretty_name'] = $data["details"]["prettyIds"][0]["id"];
+      else
+        $metadata['default_pretty_name'] = Html::cleanCssIdentifier($metadata['default_name']);
+
       // Locale data.
       $metadata['locales'] = json_decode(json_encode($data["details"]["locales"]), TRUE);
       foreach ($metadata['locales'] as $locale_data) {
@@ -276,7 +283,10 @@ class ThronMediaSource extends MediaSourceBase {
         }
       }
       $tags = $this->buildTagsData($data["details"]["itags"], $langcode);
-      $metadata['tags'] = array_column($tags, 'name');
+      $metadata['tags'] = [];
+      foreach(array_values($tags) as $t)
+        if(trim($t["name"]) != "")
+          array_push($metadata['tags'], $t["name"]);
 
       $clientId = $this->config->get("client_id");
       $login_data = $this->THRONApi->getLoginData();
@@ -310,8 +320,8 @@ class ThronMediaSource extends MediaSourceBase {
         if (!empty($responsiveness)) {
           $master_image_set_tag_id = $responsiveness['default'];
 
-          $itags = array_filter($data->itags, function($itag) use ($master_image_set_tag_id) {
-            return $itag->id == $master_image_set_tag_id;
+          $itags = array_filter($data["details"]["itags"], function($itag) use ($master_image_set_tag_id) {
+            return $itag["id"] == $master_image_set_tag_id;
           });
           $is_media_imgset_master_tagged = count($itags) === 1;
 
@@ -361,11 +371,8 @@ class ThronMediaSource extends MediaSourceBase {
 
       // Video specific data.
       elseif ($metadata['contentType'] == 'VIDEO') {
-        // TODO FIX!
         $metadata['aspect_ratio'] = $contentDetail->deliverySize->aspectRatio;
-
         $mimetype = Thronintegration_Utils::getExtensionFromMimeType($data["details"]["source"]["extension"], TRUE);
-       
         $sources = [];
         $filteredChannels = $this->getchannels($contentDetail->deliveryInfo);
         $channelsList = [];
@@ -411,20 +418,20 @@ class ThronMediaSource extends MediaSourceBase {
    * @return array
    */
   public function buildTagsData($itags, $langcode) {
-    $tags = $this->THRONApi->filterTagsDefinitions($itags, $langcode);
+    // get the tags definitions for the requested tags
+    $tagsForClassifications=[];
+    foreach($itags as $t) {
+      if(!isset($tagsForClassifications[$t["classificationId"]]))
+        $tagsForClassifications[$t["classificationId"]] = [];
+      array_push($tagsForClassifications[$t["classificationId"]], $t["id"]);
+    }
 
-    foreach ($tags as $id => $tag) {
-      if (!empty($tag['name'])) {
-        continue;
+    $tags = [];
+    foreach($tagsForClassifications as $classification_id => $tag_ids) {
+      $retrieved_tags = $this->THRONApi->getTagsListByClassification($classification_id, $tag_ids, FALSE, FALSE);
+      foreach ($retrieved_tags as $key => $tag) {
+        $tags[$tag["id"]] = ["name" => $tag["name"], "classificationId" => $key];
       }
-
-      $definition = $this->THRONApi->getTagDefinitionDetail($tag);
-      if (!$definition) {
-        continue;
-      }
-
-      $name = $this->THRONApi->getSingleLocaleData($definition['names'], $langcode);
-      $tags[$id]['name'] = isset($name['label']) ? $name['label'] : '';
     }
 
     return $tags;

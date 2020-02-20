@@ -367,7 +367,7 @@ class THRONApi implements THRONApiInterface {
       return $data->content;
     }
     catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('contentDetail', FALSE, $ex, [$xcontentId, $divArea]);
+      return $this->refreshAndRecall('getContentDetail', FALSE, $ex, [$xcontentId, $divArea]);
     }
     catch (\Exception $ex) {
       $this->logger->error($ex->getMessage());
@@ -457,6 +457,7 @@ class THRONApi implements THRONApiInterface {
 
     $tags = [];
     foreach ($tagDefinitions as $tagDefinition) {
+      if(!isset($tagDefinition->classificationId)) $tagDefinition=json_decode(json_encode($tagDefinition), FALSE);
       if ($classifications[$tagDefinition->classificationId]) {
         if (isset($tagDefinition->names)) {
           foreach ($tagDefinition->names as $name) {
@@ -1164,6 +1165,6 @@ class THRONApi implements THRONApiInterface {
    * Get the element's value or the default
    */
   public function getValueOrDefault($el, $default) {
-    return isset($el) ? $el : $default;
+    return empty($el) ? $default : $el;
   }
 }
