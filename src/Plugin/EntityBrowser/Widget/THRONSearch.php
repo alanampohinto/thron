@@ -676,17 +676,7 @@ class THRONSearch extends THRONWidgetBase {
         ];
 
         if (in_array(strtoupper($media['type']), ['IMAGE', 'VIDEO', 'OTHER', 'AUDIO'])) {
-          $form['thumbnails']['thumbnail-' . $media_id]['image']['#extension'] = [
-            '#type' => 'html_tag',
-            '#tag' => 'span',
-            '#attributes' => [
-              'thron-media-id' => $media_id,
-            ],
-            /* Not used because works only the first load (BigPipe issue? Works as designed?).
-            '#lazy_builder' => ['thron.lazy_builders:mediaContentExtension', [$media_id]],
-            '#create_placeholder' => TRUE,
-            */
-          ];
+          $form['thumbnails']['thumbnail-' . $media_id]['image']['#extension'] = strtoupper($media['extension']);
         }
       }
 
@@ -807,7 +797,7 @@ class THRONSearch extends THRONWidgetBase {
           'name' => isset($localized_data['name']) ? $localized_data['name'] : '',
           'description' => isset($localized_data['description']) ? $localized_data['description'] : '',
           'thumb' => $thumbnail_url,
-          'owner' => $item->ownerFullname,
+          'owner' => $item->details->owner->ownerFullName,
           'created' => $item->creationDate,
           'extension' => isset($item->details->source->extension) ? $item->details->source->extension : '',
           'availableChannels' => $item->details->availableChannels,

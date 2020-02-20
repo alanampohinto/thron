@@ -307,6 +307,43 @@ class THRONApi implements THRONApiInterface {
    *
    * @return array|bool|mixed|NULL
    */
+  public function getContentDetailViaContentSearch($xcontentId, $divArea = NULL) {
+    $cid = 'xcontent_search__'.$this->config->get('client_id')."§" . $xcontentId;
+    if ($cache = $this->cache->get($cid)) {
+      return $cache->data;
+    }
+
+    try {
+      if (!$login_data = $this->getLoginData()) {
+        throw new \Exception('LoginApp error');
+      }
+
+      $data = Thronintegration_Api::getContentDetailViaContentSearch($this->config->get('client_id'), $login_data['token'], $xcontentId, $divArea);
+      if ($data->resultCode != 'OK') {
+        if(isset($data->errorDescription))
+          throw new \Exception($data->errorDescription);
+        else
+          throw new \Exception("An unknown problem occurred while invoking getContentDetailViaContentSearch");
+      }
+
+      $this->cache->set($cid, $data, $this->time->getRequestTime() + $this->getCacheInterval());
+      return $data;
+    }
+    catch (AppTokenExpiredException $ex) {
+      return $this->refreshAndRecall('getContentDetailViaContentSearch', FALSE, $ex, [$xcontentId, $divArea]);
+    }
+    catch (\Exception $ex) {
+      $this->logger->error($ex->getMessage());
+      return FALSE;
+    }
+  }
+
+  /**
+   * @param string $xcontentId
+   * @param string|NULL $divArea
+   *
+   * @return array|bool|mixed|NULL
+   */
   public function getContentDetail($xcontentId, $divArea = NULL) {
     $cid = 'xcontent__'.$this->config->get('client_id')."§" . $xcontentId;
     if ($cache = $this->cache->get($cid)) {
@@ -318,19 +355,19 @@ class THRONApi implements THRONApiInterface {
         throw new \Exception('LoginApp error');
       }
 
-      $data = Thronintegration_Api::getContentDetail($this->config->get('client_id'), $login_data['token'], $login_data['pkey'], $xcontentId, $divArea);
+      $data = Thronintegration_Api::contentDetail($this->config->get('client_id'), $login_data['token'], $xcontentId, $divArea);
       if ($data->resultCode != 'OK') {
         if(isset($data->errorDescription))
           throw new \Exception($data->errorDescription);
         else
-          throw new \Exception("An unknown problem occurred while invoking getContentDetail");
+          throw new \Exception("An unknown problem occurred while invoking contentDetail");
       }
 
-      $this->cache->set($cid, $data, $this->time->getRequestTime() + $this->getCacheInterval());
-      return $data;
+      $this->cache->set($cid, $data->content, $this->time->getRequestTime() + $this->getCacheInterval());
+      return $data->content;
     }
     catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('getContentDetail', FALSE, $ex, [$xcontentId]);
+      return $this->refreshAndRecall('contentDetail', FALSE, $ex, [$xcontentId, $divArea]);
     }
     catch (\Exception $ex) {
       $this->logger->error($ex->getMessage());
@@ -852,24 +889,62 @@ class THRONApi implements THRONApiInterface {
    * {@inheritdoc}
    */
   public function getContentRealType($content) {
+    if(!isset($content->contentType))
+      $content=json_decode(json_encode($content), TRUE);
+
     if ($content->contentType == 'PLAYLIST') {
       $is_gallery = FALSE;
       $is_360 = FALSE;
-      foreach ($content->metadatas as $metadata) {
-        if ($metadata->name == '_PLAYLISTTEMPLATE_' && $metadata->value == 'IMAGE') {
-          $is_gallery = TRUE;
+      if(isset($content->metadatas)) {
+        foreach ($content->metadatas as $metadata) {
+          if ($metadata->name == '_PLAYLISTTEMPLATE_' && $metadata->value == 'IMAGE') {
+            $is_gallery = TRUE;
 
+          }
+          elseif ($metadata->name == '_VIEWMODE_' && $metadata->value == '360') {
+            $is_360 = TRUE;
+          }
         }
-        elseif ($metadata->name == '_VIEWMODE_' && $metadata->value == '360') {
-          $is_360 = TRUE;
+        // Return real type.
+        if ($is_gallery) {
+          if ($is_360) {
+            return '360';
+          }
+          return 'GALLERY';
         }
-      }
-      // Return real type.
-      if ($is_gallery) {
-        if ($is_360) {
-          return '360';
+      } else {
+        // TODO get the content details if false
+        if(isset($content->details->playlistDetails)) {
+          $els = array_filter($content->details->playlistDetails, function($obj) {
+            return $obj->name == "_PLAYLISTTEMPLATE_";
+          });
+
+          if(count($els)>0) {
+            $els = array_values($els);
+            $meta_value = $els[0]->value;
+            if($meta_value == "IMAGE")
+              $is_gallery = TRUE;
+          }
+
+          $els = array_filter($content->details->playlistDetails, function($obj) {
+            return $obj->name == "_VIEWMODE_";
+          });
+
+          if(count($els)>0) {
+            $els = array_values($els);
+            $meta_value = $els[0]->value;
+            if($meta_value == "360")
+              $is_360 = TRUE;
+          }
+
+          // Return real type.
+          if ($is_gallery) {
+            if ($is_360) {
+              return '360';
+            }
+            return 'GALLERY';
+          }
         }
-        return 'GALLERY';
       }
     }
     return $content->contentType;
@@ -973,7 +1048,7 @@ class THRONApi implements THRONApiInterface {
    *
    * @return array|FALSE
    */
-  public function getMediaDetails($content_id, $key = NULL) {
+  public function getMediaDetails($content_id, $key = NULL, $divArea = NULL) {
     $cid = 'mediaDetails_'.$this->config->get('client_id')."_". md5($content_id);
     if ($key) { $cid .= ':' . $key; }
     if ($cache = $this->cache->get($cid)) {
@@ -993,6 +1068,14 @@ class THRONApi implements THRONApiInterface {
           "returnDetailsFields" => ["locales", "author", "owner", "lastUpdate", "prettyIds", "playlistDetails", "userSpecificValues", "aclInfo", "publishingStatus", "highlights", "availableChannels", "linkedContent", "source", "itags", "linkedCategoryIds", "properties", "imetadata", "externalIds"]
         ]
       ];
+
+      if($divArea && trim($divArea) != "")
+        $search_param["responseOptions"]["thumbsOptions"] = [
+          [
+            "divArea" => $divArea,
+            "id" => $divArea
+          ]
+        ];
 
       $data = Thronintegration_Api::contentSearchLite($this->config->get('client_id'), $login_data['token'], $search_param);
       $ret = [];
@@ -1075,5 +1158,12 @@ class THRONApi implements THRONApiInterface {
     } catch(\Exception $ex) {
       return FALSE;
     }
+  }
+
+  /**
+   * Get the element's value or the default
+   */
+  public function getValueOrDefault($el, $default) {
+    return isset($el) ? $el : $default;
   }
 }

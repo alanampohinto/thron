@@ -26,8 +26,6 @@ class Thronintegration_Api {
 
   private static $domainNamingConvention = "%s-view.thron.com";
 
-  private static $cache = FALSE;
-
   /*
    * Get the THRON application endpoint
    */
@@ -123,44 +121,31 @@ class Thronintegration_Api {
   }
 
   /*
-   * THRON integration: invokes the delivery/getContentDetail function
+   * THRON integration: invokes the content/search function for a specific content
    */
-  public static function getContentDetail($clientId, $token, $pkey, $xcontentId, $anticache = FALSE, $divArea = FALSE) {
-    try {
-      $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "delivery/getContentDetail";
-      $data = [
-        "clientId" => $clientId,
-        "xcontentId" => $xcontentId,
-        "linkedUserAgent" => "desktop",
+  public static function getContentDetailViaContentSearch($clientId, $token, $xcontentId, $anticache = FALSE, $divArea = FALSE) {
+    if(!$divArea) $divArea = "320x0";
+    $search_param = [
+      "criteria" => [
+        "ids" => [$content_id]
+      ],
+      "responseOptions" => [
+        "returnDetailsFields" => ["locales", "author", "owner", "lastUpdate", "prettyIds", "playlistDetails", "userSpecificValues", "aclInfo", "publishingStatus", "highlights", "availableChannels", "linkedContent", "source", "itags", "linkedCategoryIds", "properties", "imetadata", "externalIds"]
+      ]
+    ];
+
+    if($divArea && trim($divArea) != "")
+      $search_param["responseOptions"]["thumbsOptions"] = [
+        [
+          "divArea" => $divArea,
+          "id" => $divArea
+        ]
       ];
-      if ($anticache) {
-        $data["ac"] = Thronintegration_Utils::generateRandomString();
-      }
-
-      $data["divArea"] = '320x0';
-      if ($divArea && !Thronintegration_Utils::IsNullOrEmptyString($divArea)) {
-        $data["divArea"] = $divArea;
-      }
-
-      $headers = ["Content-Type" => "application/json"];
-      if (!Thronintegration_Utils::IsNullOrEmptyString($token)) {
-        $headers["X-TOKENID"] = $token;
-      }
-      if (!Thronintegration_Utils::IsNullOrEmptyString($pkey)) {
-        $data["pkey"] = $pkey;
-      }
-
-      $contentDetailJson = Thronintegration_HTTP::doHTTP("GET", $url, $data, $headers);
-      if (!$contentDetailJson) {
-        throw new \Exception(sprintf("Unreadable content for %s, id %s", $clientId, $xcontentId));
-      }
-      return json_decode($contentDetailJson, FALSE);
-
-    } catch (AppTokenExpiredException $ex) {
-      throw $ex;
-    } catch (\Exception $ex) {
-      return FALSE;
-    }
+     
+    $resp = Thronintegration_Api::contentSearchLite($this->config->get('client_id'), $login_data['token'], $search_param);
+    if(count($resp["items"])>0)
+      return $resp["items"][0];
+    return [];
   }
 
   /*
@@ -1471,28 +1456,34 @@ class Thronintegration_Api {
     }
   }
 
-  public static function contentDetail($clientId, $token, $contentId) {
-    $res = ["status" => "ERROR", "errorDescription" => ""];
+  public static function contentDetail($clientId, $token, $contentId, $divArea=FALSE) {
+    $res = new \stdClass();
+    $res->resultCode = "ERROR";
+    $res->errorDescription = "";
+    $res->content = NULL;
 
     try {
       Thronintegration_Api::validateContentDetail($clientId, $token, $contentId);
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "delivery/getContentDetail?clientId=$clientId&xcontentId=$contentId";
+      if($divArea && trim($divArea) != "")
+        $url .= "&divArea=$divArea";
+
       $contentDetailResp = Thronintegration_HTTP::doHTTP("GET", $url, FALSE, ["X-TOKENID" => $token]);
       if ($contentDetailResp && !Thronintegration_Utils::IsNullOrEmptyString($contentDetailResp)) {
-        $contentDetailObj = json_decode($contentDetailResp, TRUE);
-        if (!$contentDetailObj || !isset($contentDetailObj["resultCode"]) || $contentDetailObj["resultCode"] != "OK") {
+        $contentDetailObj = json_decode($contentDetailResp, false);
+        if (!$contentDetailObj || !isset($contentDetailObj->resultCode) || $contentDetailObj->resultCode != "OK") {
           throw new \Exception("Invalid response while getting content detail for client $clientId, content $contentId");
         }
 
-        $res["content"] = $contentDetailObj["content"];
-        $res["status"] = "OK";
+        $res->content = $contentDetailObj->content;
+        $res->resultCode = "OK";
       }
       else {
         throw new \Exception("Invalid response while getting content detail for client $clientId, content $contentId");
       }
     } catch (\Exception $ex) {
-      $res["status"] = "ERROR";
-      $res["errorDescription"] = $ex->getMessage();
+      $res->resultCode = "ERROR";
+      $res->errorDescription = $ex->getMessage();
     }
     return $res;
   }

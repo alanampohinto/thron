@@ -12,7 +12,7 @@ class Thronintegration_Utils {
    * Array utilities: calculate the difference between two arrays in a recursive fashion
    */
 
-  public static function getExtensionFromMimeType($mime) {
+  public static function getExtensionFromMimeType($mimeOrExt, $getMime = FALSE) {
       $mime_map = [
           'video/3gpp2'                                                               => '3g2',
           'video/3gp'                                                                 => '3gp',
@@ -195,7 +195,17 @@ class Thronintegration_Utils {
           'text/x-scriptzsh'                                                          => 'zsh',
       ];
   
-      return isset($mime_map[$mime]) ? $mime_map[$mime] : FALSE;
+      if($getMime) {
+        // we have the extension and need the mime data
+        foreach ( $mime_map as $key => $ext ) {
+          if ( $ext == $mime ) {
+            return $key;
+          }
+        }
+        return FALSE;
+      } else {
+        return isset($mime_map[$mimeOrExt]) ? $mime_map[$mimeOrExt] : FALSE;
+      }
   }
   
   public static function arrayRecursiveDiff($aArray1, $aArray2) {

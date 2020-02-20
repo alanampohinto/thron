@@ -40,6 +40,14 @@ interface THRONApiInterface {
    *
    * @return array
    */
+  public function getContentDetailViaContentSearch($xcontentId, $divArea = NULL);
+
+  /**
+   * @param string $xcontentId
+   * @param string|NULL $divArea
+   *
+   * @return array
+   */
   public function getContentDetail($xcontentId, $divArea = NULL);
 
   /**
@@ -196,4 +204,9 @@ interface THRONApiInterface {
    * Get the breakpoint tags (if present)
    */
   public function getBreakpointTags($asMediaQueries=FALSE);
+
+  /**
+   * Get the element's value or the default
+   */
+  public function getValueOrDefault($el, $default);
 }

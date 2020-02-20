@@ -120,6 +120,7 @@ class EntityEmbedDialogOverride extends EntityEmbedDialog {
     $source = $entity instanceof Media ? $entity->getSource() : NULL;
     if ($source instanceof ThronMediaSource) {
       $metadata = $source->getMetadata($entity);
+      var_dump($metadata); exit();
       $form['attributes']['data-entity-embed-display']['#options'] = [
         'entity_reference:thron_embedded' => 'THRON Player',
         'entity_reference:thron_html5' => 'HTML5 Tag',

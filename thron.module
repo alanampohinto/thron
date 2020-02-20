@@ -161,6 +161,7 @@ function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
           /** @var \Drupal\thron\THRONApiInterface $thron_api */
           $thron_api = \Drupal::service('thron_api');
           $metadata = $form_state->get('metadata');
+          var_dump($metadata); exit();
           $ext = '';
           $sourceFiles = $thron_api->getMediaDetails($metadata['id'], 'source');
 
