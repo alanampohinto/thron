@@ -262,7 +262,7 @@ class THRONApi implements THRONApiInterface {
       return $default_return;
     }
 
-    if (!$this->getLoginData(TRUE)) {
+    if (!$login_data = $this->getLoginData(TRUE)) {
       return $default_return;
     }
 
