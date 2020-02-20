@@ -262,7 +262,7 @@ class THRONApi implements THRONApiInterface {
       return $default_return;
     }
 
-    if (!$this->getLoginData(TRUE)) {
+    if (!$login_data = $this->getLoginData(TRUE)) {
       return $default_return;
     }
 
@@ -890,7 +890,7 @@ class THRONApi implements THRONApiInterface {
    */
   public function getContentRealType($content) {
     if(!isset($content->contentType))
-      $content=json_decode(json_encode($content), TRUE);
+      $content=json_decode(json_encode($content), FALSE);
 
     if ($content->contentType == 'PLAYLIST') {
       $is_gallery = FALSE;
