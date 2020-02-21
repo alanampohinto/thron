@@ -417,9 +417,7 @@ class THRONSearch extends THRONWidgetBase {
     }
 
     $form['#attached']['library'][] = 'thron/search_view';
-    $form['#attached']['drupalSettings']['thron']['media_extension']['basepath'] = Url::fromRoute('thron.media_extension')
-      ->toString();
-
+    
     $form['filters'] = [
       '#type' => 'container',
       '#tree' => TRUE,

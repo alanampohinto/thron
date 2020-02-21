@@ -6,9 +6,10 @@ use Drupal\Component\Render\FormattableMarkup;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Template\Attribute;
-use Drupal\thron\Plugin\media\Source\ThronMediaSource;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\thron\Plugin\media\Source\ThronMediaSource;
+use Drupal\thron\Integration\Thronintegration_Utils;
 
 /**
  * Plugin implementation of the 'THRON Embedded' formatter.
@@ -95,8 +96,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
         }
 
         if ($metadata['contentType'] == 'IMAGE') {
-          $ext = $this->getMediaContentExtension($metadata['id']);
-          if ($ext == 'webp') {
+          if ($metadata["extension"] == 'webp') {
             $elements['embed_image_as_webp'] = [
               '#type' => 'checkbox',
               '#title' => $this->t('Embed image as WEBP'),
@@ -385,7 +385,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
 
               if ($metadata['contentType'] == 'IMAGE') {
                 $this->privateTempStore->set('embed_image_as_webp', $formatter_settings['embed_image_as_webp']);
-                $ext = $this->getMediaContentExtension($metadata['id']);
+                $ext = $metadata["extension"];
                 if ($ext == 'webp' && $formatter_settings['embed_image_as_webp']) {
                   $metadata['content_url'] .= '?format=webp';
                 }
@@ -403,7 +403,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
                       $new_imageset[$media_key] = [
                         'srcset' => $url,
                         'media' => $this->getImageSetValueByMediaName($responsiveness, $media_key),
-                        'type' => 'image/' . $ext,
+                        'type' => Thronintegration_Utils::getExtensionFromMimeType($ext, TRUE),
                       ];
                     }
                   }
