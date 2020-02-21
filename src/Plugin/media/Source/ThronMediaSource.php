@@ -17,6 +17,7 @@ use Drupal\thron\Utils\THRONApiUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Drupal\thron\Integration\Thronintegration_Utils;
 
 /**
  * Provides media source plugin for THRON.
@@ -46,11 +47,18 @@ class ThronMediaSource extends MediaSourceBase {
   protected $urlGenerator;
 
   /**
-   * Statically cached API response for a given asset.
+   * Statically cached API response for a given asset (for content/search invocations).
    *
    * @var array
    */
   protected $apiResponse;
+
+  /**
+   * Statically cached API response for a given asset (for delivery/contentDetail invocations).
+   *
+   * @var array
+   */
+  protected $apiResponseContentDetail;
 
   /**
    * The logger channel.
@@ -164,38 +172,43 @@ class ThronMediaSource extends MediaSourceBase {
       return $xcontentId;
     }
 
+//    var_dump($media);exit();
+
     if (!isset($this->apiResponse)) {
-      $this->apiResponse = $this->THRONApi->getContentDetail($xcontentId, $divArea);
-      if (!$this->apiResponse) {
+      $apiResponse = $this->THRONApi->getMediaDetails($xcontentId, NULL, $divArea);
+      if (!$apiResponse)
         return FALSE;
-      }
+      else
+        $this->apiResponse = $apiResponse[0];
+    }
+
+    if(!isset($this->apiResponseContentDetail)) {
+      $this->apiResponseContentDetail = $this->THRONApi->getContentDetail($xcontentId, $divArea);
     }
 
     switch ($name) {
       case 'thumbnail_uri':
-        if (!empty($this->apiResponse->content->dynThumbService)) {
-          if ($file = system_retrieve_file($this->apiResponse->content->dynThumbService, NULL, TRUE)) {
-            return $file->getFileUri();
-          }
+        if ($file = system_retrieve_file($this->apiResponseContentDetail->dynThumbService, NULL, TRUE)) {
+          return $file->getFileUri();
         }
         return parent::getMetadata($media, 'thumbnail_uri');
 
       case 'created':
-        return isset($this->apiResponse->content->creationDate) ? $this->apiResponse->content->creationDate : FALSE;
+        return isset($this->apiResponse["creationDate"]) ? $this->apiResponse["creationDate"] : FALSE;
 
       case 'modified':
-        return isset($this->apiResponse->content->lastUpdate) ? $this->apiResponse->content->lastUpdate : FALSE;
+        return isset($this->apiResponse["details"]["lastUpdate"]) ? $this->apiResponse["details"]["lastUpdate"] : FALSE;
 
       case 'default_name':
-        return isset($this->apiResponse->content->locales[0]->name) ? $this->apiResponse->content->locales[0]->name : parent::getMetadata($media, 'default_name');
+        return isset($this->apiResponse["details"]["locales"][0]["name"]) ? $this->apiResponse["details"]["locales"][0]["name"] : parent::getMetadata($media, 'default_name');
 
       default:
-        if (isset($this->apiResponse->content->{$name})) {
-          return $this->apiResponse->content->{$name};
+        if(trim($name) != "" && isset($this->apiResponse["details"][$name])) {
+          return $this->apiResponse["details"][$name];
         }
     }
 
-    $metadata = $this->buildMetadata($this->apiResponse->content, $langcode);
+    $metadata = $this->buildMetadata($this->apiResponse, $this->apiResponseContentDetail, $langcode);
 
     if (!empty($metadata) && empty($name)) {
       return $metadata;
@@ -228,38 +241,52 @@ class ThronMediaSource extends MediaSourceBase {
    * Returns the metadata assoc array for given data structure.
    *
    * @param mixed $data
+   * @param mixed $contentDetail
    * @param string $langcode
    *
    * @return mixed
    */
-  public function buildMetadata($data, $langcode) {
+  public function buildMetadata($data, $contentDetail, $langcode) {
     $metadata = [];
     if (!empty($data)) {
-      $metadata['id'] = $data->id;
-      $metadata['contentType'] = $data->contentType;
+      $metadata['id'] = $data["id"];
+      $metadata['contentType'] = $data["contentType"];
       $metadata['contentTypeFull'] = $this->THRONApi->getContentRealType($data);
-      $metadata['owner'] = $data->owner;
-      $metadata['created'] = isset($data->creationDate) ? $data->creationDate : FALSE;
-      $metadata['modified'] = isset($data->lastUpdate) ? $data->lastUpdate : FALSE;
-      $metadata['default_name'] = isset($data->locales[0]->name) ? $data->locales[0]->name : '';
-      $metadata['default_description'] = isset($data->locales[0]->description) ? $data->locales[0]->description : '';
-      $metadata['default_pretty_name'] = isset($data->prettyIds[0]->id) ? $data->prettyIds[0]->id : Html::cleanCssIdentifier($metadata['default_name']);
+      $metadata['extension'] = $data["details"]["source"]["extension"];
+      $metadata['channels'] = $data["details"]["availableChannels"];
+      $metadata['owner'] = $data["details"]["owner"]["ownerFullName"];
+      $metadata['created'] = $this->THRONApi->getValueOrDefault($data["creationDate"], FALSE);
+      $metadata['modified'] = $this->THRONApi->getValueOrDefault($data["details"]["lastUpdate"], FALSE);
+      $metadata['default_name'] = $this->THRONApi->getValueOrDefault($data["details"]["locales"][0]["name"], '');
+      if(count($data["details"]["locales"])>0 && isset($data["details"]["locales"][0]["description"]) && !empty($data["details"]["locales"][0]["description"]))
+        $metadata['default_description'] = $data["details"]["locales"][0]["description"];
+      else
+        $metadata['default_description'] = '';
+
+      if(count($data["details"]["prettyIds"])>0 && isset($data["details"]["prettyIds"][0]["id"]) && !empty($data["details"]["prettyIds"][0]["id"]))
+        $metadata['default_pretty_name'] = $data["details"]["prettyIds"][0]["id"];
+      else
+        $metadata['default_pretty_name'] = Html::cleanCssIdentifier($metadata['default_name']);
+
       // Locale data.
-      $metadata['locales'] = json_decode(json_encode($data->locales), TRUE);
+      $metadata['locales'] = json_decode(json_encode($data["details"]["locales"]), TRUE);
       foreach ($metadata['locales'] as $locale_data) {
         if ($locale_data['locale'] == $langcode) {
           $metadata['name'] = $locale_data['name'];
           $metadata['description'] = isset($locale_data['description']) ? $locale_data['description'] : '';
         }
       }
-      $metadata['prettyIds'] = json_decode(json_encode($data->prettyIds), TRUE);
+      $metadata['prettyIds'] = json_decode(json_encode($data["details"]["prettyIds"]), TRUE);
       foreach ($metadata['prettyIds'] as $prettyId) {
         if ($prettyId['locale'] == $langcode) {
           $metadata['pretty_name'] = $prettyId['id'];
         }
       }
-      $tags = $this->buildTagsData($data->itags, $langcode);
-      $metadata['tags'] = array_column($tags, 'name');
+      $tags = $this->buildTagsData($data["details"]["itags"], $langcode);
+      $metadata['tags'] = [];
+      foreach(array_values($tags) as $t)
+        if(trim($t["name"]) != "")
+          array_push($metadata['tags'], $t["name"]);
 
       $clientId = $this->config->get("client_id");
       $login_data = $this->THRONApi->getLoginData();
@@ -267,22 +294,23 @@ class ThronMediaSource extends MediaSourceBase {
 
       // Image specific data.
       if ($metadata['contentType'] == 'IMAGE') {
-        $metadata['width']  = $data->deliverySize->maxWidth;
-        $metadata['height'] = $data->deliverySize->maxHeight;
-        $metadata['aspect_ratio'] = $data->deliverySize->aspectRatio;
+        // TODO we don't have the delivery size in the response!
+        $metadata['width']  = $contentDetail->deliverySize->maxWidth;
+        $metadata['height'] = $contentDetail->deliverySize->maxHeight;
+        $metadata['aspect_ratio'] = $contentDetail->deliverySize->aspectRatio;
 
-        $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/0x0/";
+        $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data["id"]}/$pkey/std/0x0/";
         $metadata['thumbnail_url'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
 
         $divArea = implode('x', [
           $metadata['width'],
           $metadata['height'],
         ]);
-        $metadata['content_url'] = "//$clientId-cdn.thron.com/delivery/public/image/$clientId/{$data->id}/$pkey/std/$divArea/";
+        $metadata['content_url'] = "//$clientId-cdn.thron.com/delivery/public/image/$clientId/{$data["id"]}/$pkey/std/$divArea/";
         $metadata['content_url'] .= isset($metadata['pretty_name']) ?
           $metadata['pretty_name'] :
-          (isset($metadata['default_pretty_name']) && $metadata['default_pretty_name'] != '_' ? $metadata['default_pretty_name'] : $data->id);
-        $metadata['content_url_pattern'] = "//$clientId-cdn.thron.com/delivery/public/image/$clientId/{$data->id}/$pkey/std/@divArea/";
+          (isset($metadata['default_pretty_name']) && $metadata['default_pretty_name'] != '_' ? $metadata['default_pretty_name'] : $data["id"]);
+        $metadata['content_url_pattern'] = "//$clientId-cdn.thron.com/delivery/public/image/$clientId/{$data["id"]}/$pkey/std/@divArea/";
         $metadata['content_url_pattern'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
 
         $responsiveness = $this->config->get('responsive_pictures_breakpoints');
@@ -292,21 +320,21 @@ class ThronMediaSource extends MediaSourceBase {
         if (!empty($responsiveness)) {
           $master_image_set_tag_id = $responsiveness['default'];
 
-          $itags = array_filter($data->itags, function($itag) use ($master_image_set_tag_id) {
-            return $itag->id == $master_image_set_tag_id;
+          $itags = array_filter($data["details"]["itags"], function($itag) use ($master_image_set_tag_id) {
+            return $itag["id"] == $master_image_set_tag_id;
           });
           $is_media_imgset_master_tagged = count($itags) === 1;
 
-          if ($is_media_imgset_master_tagged && !empty($data->linkedContents)) {
+          if ($is_media_imgset_master_tagged && !empty($data["details"]["linkedContent"])) {
             $imageset = [];
-            foreach ($data->linkedContents as $content) {
-              if ($apiResponse = $this->THRONApi->getContentDetail($content->id)) {
-                $info = $apiResponse->content;
-                if ($info->contentType == 'IMAGE' && !empty($info->itags)) {
+            foreach ($data["details"]["linkedContent"] as $content) {
+              if ($apiResponse = $this->THRONApi->getContentDetail($content["id"])) {
+                $info = $apiResponse["details"];
+                if ($info["contentType"] == 'IMAGE' && !empty($info["itags"])) {
                   $responsiveTag=FALSE;
-                  foreach($info->itags as $t) {
-                    if(isset($responsiveness[$t->id]) && isset($responsiveness[$t->id]['name']) && trim($responsiveness[$t->id]['name']) != "") {
-                      $responsiveTag = $responsiveness[$t->id]['name'];
+                  foreach($info["itags"] as $t) {
+                    if(isset($responsiveness[$t["id"]]) && isset($responsiveness[$t["id"]]['name']) && trim($responsiveness[$t["id"]]['name']) != "") {
+                      $responsiveTag = $responsiveness[$t["id"]]['name'];
                       break;
                     }
                   }
@@ -314,25 +342,19 @@ class ThronMediaSource extends MediaSourceBase {
                   if($responsiveTag) {
                     $tag_pretty_id = $responsiveTag;
                     $divArea = implode('x', [
-                      $info->deliverySize->maxWidth,
-                      $info->deliverySize->maxHeight,
+                      $contentDetail->deliverySize->maxWidth,
+                      $contentDetail->deliverySize->maxHeight,
                     ]);
                    
-                    $content_url = "//$clientId-cdn.thron.com/delivery/public/image/$clientId/{$info->id}/$pkey/std/$divArea/";
-                    if (property_exists($info, 'prettyIds') && !empty($info->prettyIds)) {
-                      $content_url .= $info->prettyIds[0]->id;
+                    $content_url = "//$clientId-cdn.thron.com/delivery/public/image/$clientId/{$info["id"]}/$pkey/std/$divArea/";
+                    if (isset($info['prettyIds']) && !count($info["prettyIds"])>0) {
+                      $content_url .= $info["prettyIds"][0]["id"];
                     }
                     else {
-                      $content_url .= $info->id;
+                      $content_url .= $info["id"];
                     }
 
-                    $mimetype = array_filter($info->metadatas, function($item) {
-                      return $item->name == '_SOURCE_MIMETYPE_';
-                    });
-                    $mimetype = reset($mimetype);
-
-                    $ext = Thronintegration_Utils::getExtensionFromMimeType($mimetype->value);
-                    $content_url .= '.' .$ext;
+                    $content_url .= '.' .$info["source"]["extension"];
 
                     $imageset[$tag_pretty_id] = $content_url;
                   }
@@ -349,18 +371,10 @@ class ThronMediaSource extends MediaSourceBase {
 
       // Video specific data.
       elseif ($metadata['contentType'] == 'VIDEO') {
-        $metadata['aspect_ratio'] = $data->deliverySize->aspectRatio;
-
-        $mimetype = NULL;
-        foreach ($data->metadatas as $meta) {
-          if ($meta->name === "_SOURCE_MIMETYPE_") {
-            $mimetype = $meta->value;
-            break;
-          }
-        }
-
+        $metadata['aspect_ratio'] = $contentDetail->deliverySize->aspectRatio;
+        $mimetype = Thronintegration_Utils::getExtensionFromMimeType($data["details"]["source"]["extension"], TRUE);
         $sources = [];
-        $filteredChannels = $this->getchannels($data->deliveryInfo);
+        $filteredChannels = $this->getchannels($contentDetail->deliveryInfo);
         $channelsList = [];
         foreach ($filteredChannels as $channelName => $fc) {
           if(count($fc)>0)
@@ -380,18 +394,18 @@ class ThronMediaSource extends MediaSourceBase {
         }
         $metadata['sources'] = $sources;
 
-        $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/1920x0/";
+        $metadata['thumbnail_url'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data["id"]}/$pkey/std/1920x0/";
         $metadata['thumbnail_url'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
 
-        $metadata['content_url'] = "//$clientId-cdn.thron.com/delivery/public/video/$clientId/{$data->id}/$pkey/WEBHD/";
+        $metadata['content_url'] = "//$clientId-cdn.thron.com/delivery/public/video/$clientId/{$data["id"]}/$pkey/WEBHD/";
         $metadata['content_url'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
       }
       else {
-        $metadata['aspect_ratio'] = $data->deliverySize->aspectRatio;
-        $metadata['thumbnail_url'] = $data->dynThumbService;
+        $metadata['aspect_ratio'] = $contentDetail->deliverySize->aspectRatio;
+        $metadata['thumbnail_url'] = $contentDetail->dynThumbService;
       }
 
-      $metadata['thumbnail_url_pattern'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data->id}/$pkey/std/@divArea/";
+      $metadata['thumbnail_url_pattern'] = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$data["id"]}/$pkey/std/@divArea/";
       $metadata['thumbnail_url_pattern'] .= isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name'];
     }
     return $metadata;
@@ -404,20 +418,20 @@ class ThronMediaSource extends MediaSourceBase {
    * @return array
    */
   public function buildTagsData($itags, $langcode) {
-    $tags = $this->THRONApi->filterTagsDefinitions($itags, $langcode);
+    // get the tags definitions for the requested tags
+    $tagsForClassifications=[];
+    foreach($itags as $t) {
+      if(!isset($tagsForClassifications[$t["classificationId"]]))
+        $tagsForClassifications[$t["classificationId"]] = [];
+      array_push($tagsForClassifications[$t["classificationId"]], $t["id"]);
+    }
 
-    foreach ($tags as $id => $tag) {
-      if (!empty($tag['name'])) {
-        continue;
+    $tags = [];
+    foreach($tagsForClassifications as $classification_id => $tag_ids) {
+      $retrieved_tags = $this->THRONApi->getTagsListByClassification($classification_id, $tag_ids, FALSE, FALSE);
+      foreach ($retrieved_tags as $key => $tag) {
+        $tags[$tag["id"]] = ["name" => $tag["name"], "classificationId" => $key];
       }
-
-      $definition = $this->THRONApi->getTagDefinitionDetail($tag);
-      if (!$definition) {
-        continue;
-      }
-
-      $name = $this->THRONApi->getSingleLocaleData($definition['names'], $langcode);
-      $tags[$id]['name'] = isset($name['label']) ? $name['label'] : '';
     }
 
     return $tags;

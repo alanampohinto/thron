@@ -40,21 +40,15 @@ interface THRONApiInterface {
    *
    * @return array
    */
-  public function getContentDetail($xcontentId, $divArea = NULL);
+  public function getContentDetailViaContentSearch($xcontentId, $divArea = NULL);
 
   /**
-   * @return array
-   * @throws \Exception
-   */
-  public function getContents();
-
-  /**
-   * @param string|int $timestamp
+   * @param string $xcontentId
+   * @param string|NULL $divArea
    *
    * @return array
-   * @throws \Exception
    */
-  public function getUpdatedContents($timestamp);
+  public function getContentDetail($xcontentId, $divArea = NULL);
 
   /**
    * @return array
@@ -129,7 +123,7 @@ interface THRONApiInterface {
    *
    * @return array
    */
-  public function contentFindByProperties($properties);
+  public function contentSearch($properties);
 
   /**
    * Creates an embed code on the fly
@@ -210,4 +204,9 @@ interface THRONApiInterface {
    * Get the breakpoint tags (if present)
    */
   public function getBreakpointTags($asMediaQueries=FALSE);
+
+  /**
+   * Get the element's value or the default
+   */
+  public function getValueOrDefault($el, $default);
 }

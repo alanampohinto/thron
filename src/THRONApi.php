@@ -307,6 +307,43 @@ class THRONApi implements THRONApiInterface {
    *
    * @return array|bool|mixed|NULL
    */
+  public function getContentDetailViaContentSearch($xcontentId, $divArea = NULL) {
+    $cid = 'xcontent_search__'.$this->config->get('client_id')."§" . $xcontentId;
+    if ($cache = $this->cache->get($cid)) {
+      return $cache->data;
+    }
+
+    try {
+      if (!$login_data = $this->getLoginData()) {
+        throw new \Exception('LoginApp error');
+      }
+
+      $data = Thronintegration_Api::getContentDetailViaContentSearch($this->config->get('client_id'), $login_data['token'], $xcontentId, $divArea);
+      if ($data->resultCode != 'OK') {
+        if(isset($data->errorDescription))
+          throw new \Exception($data->errorDescription);
+        else
+          throw new \Exception("An unknown problem occurred while invoking getContentDetailViaContentSearch");
+      }
+
+      $this->cache->set($cid, $data, $this->time->getRequestTime() + $this->getCacheInterval());
+      return $data;
+    }
+    catch (AppTokenExpiredException $ex) {
+      return $this->refreshAndRecall('getContentDetailViaContentSearch', FALSE, $ex, [$xcontentId, $divArea]);
+    }
+    catch (\Exception $ex) {
+      $this->logger->error($ex->getMessage());
+      return FALSE;
+    }
+  }
+
+  /**
+   * @param string $xcontentId
+   * @param string|NULL $divArea
+   *
+   * @return array|bool|mixed|NULL
+   */
   public function getContentDetail($xcontentId, $divArea = NULL) {
     $cid = 'xcontent__'.$this->config->get('client_id')."§" . $xcontentId;
     if ($cache = $this->cache->get($cid)) {
@@ -318,138 +355,21 @@ class THRONApi implements THRONApiInterface {
         throw new \Exception('LoginApp error');
       }
 
-      $data = Thronintegration_Api::getContentDetail($this->config->get('client_id'), $login_data['token'], $login_data['pkey'], $xcontentId, $divArea);
+      $data = Thronintegration_Api::contentDetail($this->config->get('client_id'), $login_data['token'], $xcontentId, $divArea);
       if ($data->resultCode != 'OK') {
         if(isset($data->errorDescription))
           throw new \Exception($data->errorDescription);
         else
-          throw new \Exception("An unknown problem occurred while invoking getContentDetail");
+          throw new \Exception("An unknown problem occurred while invoking contentDetail");
       }
 
-      $this->cache->set($cid, $data, $this->time->getRequestTime() + $this->getCacheInterval());
-      return $data;
+      $this->cache->set($cid, $data->content, $this->time->getRequestTime() + $this->getCacheInterval());
+      return $data->content;
     }
     catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('getContentDetail', FALSE, $ex, [$xcontentId]);
+      return $this->refreshAndRecall('getContentDetail', FALSE, $ex, [$xcontentId, $divArea]);
     }
     catch (\Exception $ex) {
-      $this->logger->error($ex->getMessage());
-      return FALSE;
-    }
-  }
-
-  /**
-   * @return array|bool|NULL
-   *
-   * @deprecated no more used.
-   */
-  public function getContents() {
-    $cid = 'syncExport_contents_'.$this->config->get('client_id');
-    if ($cache = $this->cache->get($cid)) {
-      return $cache->data;
-    }
-
-    try {
-      if (!$login_data = $this->getLoginData()) {
-        throw new \Exception('LoginApp error');
-      }
-
-      $contents = [];
-      $next_page = NULL;
-      do {
-        $data = Thronintegration_Api::syncExport($this->config->get('client_id'), $login_data['token'], [$login_data['rootCategoryId']], [], 0, $next_page);
-
-        if (!isset($data->resultCode) || $data->resultCode !== 'OK') {
-          $this->logger->error($data->errorDescription);
-          return FALSE;
-        }
-
-        foreach ($data->items as $item) {
-          $locales = array_filter($item->content->locales, function ($obj) {
-            return $obj->locale == 'EN';
-          });
-          $first_locale = !empty($locales) ? reset($locales) : reset($item->content->locales);
-          $contents[] = [
-            'id' => $item->content->id,
-            'name' => $first_locale->name,
-            'description' => isset($first_locale->description) ? $first_locale->description : '',
-            'tags' => $this->filterTagsDefinitions($item->itagDefinitions),
-          ];
-        }
-
-        // Check if there are more results.
-        $next_page = isset($data->nextPage) ? $data->nextPage : NULL;
-
-      } while (isset($next_page));
-
-      $this->cache->set($cid, $contents, $this->time->getRequestTime() + $this->getCacheInterval());
-      return $contents;
-    }
-    catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('getContents', FALSE, $ex);
-    }
-    catch (\Exception $ex) {
-      $this->logger->error($ex->getMessage());
-      return FALSE;
-    }
-  }
-
-  /**
-   * @param int $timestamp
-   *
-   * @return array|bool
-   *
-   * @deprecated No more used.
-   */
-  public function getUpdatedContents($timestamp) {
-    $contents = [];
-    $fromDate = $this->dateFormatter->format($timestamp, 'custom', 'c');
-
-    try {
-      if (!$login_data = $this->getLoginData()) {
-        throw new \Exception('LoginApp error');
-      }
-
-      $next_page = NULL;
-      do {
-        $data = Thronintegration_Api::syncUpdatedContent($this->config->get('client_id'), $login_data['token'], $fromDate, NULL, [$login_data['rootCategoryId']], [], 0, $next_page);
-
-        if (!isset($data->resultCode) || $data->resultCode !== 'OK') {
-          $this->logger->error($data->errorDescription);
-          return FALSE;
-        }
-
-        foreach ($data->items as $item) {
-          $locales = array_filter($item->content->locales, function ($obj) {
-            return $obj->locale == 'EN';
-          });
-          $first_locale = !empty($locales) ? reset($locales) : reset($item->content->locales);
-
-          $is_categorized = FALSE;
-          foreach ($item->linkedCategories as $linkedCategory) {
-            $is_categorized = $linkedCategory->id == $login_data['rootCategoryId'] || $is_categorized;
-          }
-
-          $contents[] = [
-            'id' => $item->content->id,
-            'name' => $first_locale ? $first_locale->name : $item->content->id,
-            'description' => $first_locale && isset($first_locale->description) ? $first_locale->description : '',
-            'removed' => $item->removed || !$is_categorized,
-            'tags' => $this->filterTagsDefinitions($item->itagDefinitions),
-          ];
-        }
-        // Check if there are more results.
-        $next_page = isset($data->nextPage) ? $data->nextPage : NULL;
-
-      }
-      while (isset($next_page));
-
-      return $contents;
-    }
-    catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('getUpdatedContents', FALSE, $ex, [$timestamp]);
-    }
-    catch(\Exception $ex) {
       $this->logger->error($ex->getMessage());
       return FALSE;
     }
@@ -537,6 +457,7 @@ class THRONApi implements THRONApiInterface {
 
     $tags = [];
     foreach ($tagDefinitions as $tagDefinition) {
+      if(!isset($tagDefinition->classificationId)) $tagDefinition=json_decode(json_encode($tagDefinition), FALSE);
       if ($classifications[$tagDefinition->classificationId]) {
         if (isset($tagDefinition->names)) {
           foreach ($tagDefinition->names as $name) {
@@ -969,24 +890,62 @@ class THRONApi implements THRONApiInterface {
    * {@inheritdoc}
    */
   public function getContentRealType($content) {
+    if(!isset($content->contentType))
+      $content=json_decode(json_encode($content), FALSE);
+
     if ($content->contentType == 'PLAYLIST') {
       $is_gallery = FALSE;
       $is_360 = FALSE;
-      foreach ($content->metadatas as $metadata) {
-        if ($metadata->name == '_PLAYLISTTEMPLATE_' && $metadata->value == 'IMAGE') {
-          $is_gallery = TRUE;
+      if(isset($content->metadatas)) {
+        foreach ($content->metadatas as $metadata) {
+          if ($metadata->name == '_PLAYLISTTEMPLATE_' && $metadata->value == 'IMAGE') {
+            $is_gallery = TRUE;
 
+          }
+          elseif ($metadata->name == '_VIEWMODE_' && $metadata->value == '360') {
+            $is_360 = TRUE;
+          }
         }
-        elseif ($metadata->name == '_VIEWMODE_' && $metadata->value == '360') {
-          $is_360 = TRUE;
+        // Return real type.
+        if ($is_gallery) {
+          if ($is_360) {
+            return '360';
+          }
+          return 'GALLERY';
         }
-      }
-      // Return real type.
-      if ($is_gallery) {
-        if ($is_360) {
-          return '360';
+      } else {
+        // TODO get the content details if false
+        if(isset($content->details->playlistDetails)) {
+          $els = array_filter($content->details->playlistDetails, function($obj) {
+            return $obj->name == "_PLAYLISTTEMPLATE_";
+          });
+
+          if(count($els)>0) {
+            $els = array_values($els);
+            $meta_value = $els[0]->value;
+            if($meta_value == "IMAGE")
+              $is_gallery = TRUE;
+          }
+
+          $els = array_filter($content->details->playlistDetails, function($obj) {
+            return $obj->name == "_VIEWMODE_";
+          });
+
+          if(count($els)>0) {
+            $els = array_values($els);
+            $meta_value = $els[0]->value;
+            if($meta_value == "360")
+              $is_360 = TRUE;
+          }
+
+          // Return real type.
+          if ($is_gallery) {
+            if ($is_360) {
+              return '360';
+            }
+            return 'GALLERY';
+          }
         }
-        return 'GALLERY';
       }
     }
     return $content->contentType;
@@ -997,7 +956,7 @@ class THRONApi implements THRONApiInterface {
    *
    * @return array|mixed|NULL
    */
-  public function contentFindByProperties($properties) {
+  public function contentSearch($properties) {
     try {
       if (!$login_data = $this->getLoginData()) {
         throw new \Exception('LoginApp error');
@@ -1006,12 +965,11 @@ class THRONApi implements THRONApiInterface {
       $currentLanguage = $this->languageManager->getCurrentLanguage();
 
       // Call the API endpoint.
-      $data = Thronintegration_Api::contentsFindByProperties(
+      $data = Thronintegration_Api::contentSearch(
         $this->config->get('client_id'),
         $login_data['token'],
         $login_data['rootCategoryId'],
-        isset($properties['limit']) && isset($properties['page']) ? $properties['limit'] * ($properties['page'] - 1) : 0,
-        isset($properties['limit']) ? $properties['limit'] : NULL,
+        isset($properties['nextPage']) ? $properties['nextPage'] : NULL,
         !empty($properties['contentType']) ? $properties['contentType'] : FALSE,
         isset($properties['divArea']) ? $properties['divArea'] : FALSE,
         isset($properties['tags']) ? $properties['tags'] : FALSE,
@@ -1027,7 +985,7 @@ class THRONApi implements THRONApiInterface {
       return $data;
     }
     catch (AppTokenExpiredException $ex) {
-      return $this->refreshAndRecall('contentFindByProperties', NULL, $ex, [$properties]);
+      return $this->refreshAndRecall('contentSearch', NULL, $ex, [$properties]);
     }
     catch (\Exception $ex) {
       $this->logger->error($ex->getMessage());
@@ -1091,7 +1049,7 @@ class THRONApi implements THRONApiInterface {
    *
    * @return array|FALSE
    */
-  public function getMediaDetails($content_id, $key = NULL) {
+  public function getMediaDetails($content_id, $key = NULL, $divArea = NULL) {
     $cid = 'mediaDetails_'.$this->config->get('client_id')."_". md5($content_id);
     if ($key) { $cid .= ':' . $key; }
     if ($cache = $this->cache->get($cid)) {
@@ -1112,7 +1070,15 @@ class THRONApi implements THRONApiInterface {
         ]
       ];
 
-      $data = Thronintegration_Api::contentSearch($this->config->get('client_id'), $login_data['token'], $search_param);
+      if($divArea && trim($divArea) != "")
+        $search_param["responseOptions"]["thumbsOptions"] = [
+          [
+            "divArea" => $divArea,
+            "id" => $divArea
+          ]
+        ];
+
+      $data = Thronintegration_Api::contentSearchLite($this->config->get('client_id'), $login_data['token'], $search_param);
       $ret = [];
       if ($key) {
         $ret = array_map(function($obj) use($key) {
@@ -1193,5 +1159,12 @@ class THRONApi implements THRONApiInterface {
     } catch(\Exception $ex) {
       return FALSE;
     }
+  }
+
+  /**
+   * Get the element's value or the default
+   */
+  public function getValueOrDefault($el, $default) {
+    return empty($el) ? $default : $el;
   }
 }

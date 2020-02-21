@@ -46,23 +46,6 @@ class LazyBuilders {
    *   A renderable array containing the cart form.
    */
   public function mediaContentExtension($content_id) {
-    $media_info = $this->api->getMediaDetails($content_id, 'source');
-    if (!empty($media_info)) {
-      $first = reset($media_info);
-      $extension = $first['extension'];
-      if($first['extension'] && trim($first['extension']) != '') {
-		  $extension = $first['extension'];
-		  return [
-			'#plain_text' => strtoupper($extension),
-		  ];
-	  } else {
-			return [
-			'#plain_text' => "",
-		  ];
-	  }
-      
-    }
-    return NULL;
+    var_dump($content_id); exit();
   }
-
 }
