@@ -367,10 +367,11 @@ class Thronintegration_Api {
             $body->criteria->itag->haveAll[] = $tag;
           }
           elseif (!Thronintegration_Utils::IsNullOrEmptyString($tag)) {
+            $tag_els = explode("_", $tag);
             $body->criteria->itag->haveAll[] = [
               "cascade" => TRUE,
-              "classificationId" => $tag->classificationId, // TODO correct!
-              'id' => $tag->id,
+              "classificationId" => $tag_els[0],
+              'id' => $tag_els[1],
             ];
           }
         }
