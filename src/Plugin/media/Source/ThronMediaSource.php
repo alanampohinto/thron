@@ -381,7 +381,7 @@ class ThronMediaSource extends MediaSourceBase {
         foreach ($channelsList as $deliveryInfo) {
           $sources[$deliveryInfo->channelType] = [
             'poster' => $deliveryInfo->defaultThumbUrl,
-            'src' => "//$clientId-cdn.thron.com/delivery/public/video/$clientId/{$data["id"]}/$pkey/$deliveryInfo->channelType}/".(isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name']),
+            'src' => "//$clientId-cdn.thron.com/delivery/public/video/$clientId/{$data["id"]}/$pkey/$deliveryInfo->channelType/".(isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name']),
             'mime' => $mimetype,
           ];
 
