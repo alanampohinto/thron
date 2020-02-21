@@ -172,8 +172,6 @@ class ThronMediaSource extends MediaSourceBase {
       return $xcontentId;
     }
 
-//    var_dump($media);exit();
-
     if (!isset($this->apiResponse)) {
       $apiResponse = $this->THRONApi->getMediaDetails($xcontentId, NULL, $divArea);
       if (!$apiResponse)
@@ -294,7 +292,6 @@ class ThronMediaSource extends MediaSourceBase {
 
       // Image specific data.
       if ($metadata['contentType'] == 'IMAGE') {
-        // TODO we don't have the delivery size in the response!
         $metadata['width']  = $contentDetail->deliverySize->maxWidth;
         $metadata['height'] = $contentDetail->deliverySize->maxHeight;
         $metadata['aspect_ratio'] = $contentDetail->deliverySize->aspectRatio;
@@ -384,7 +381,7 @@ class ThronMediaSource extends MediaSourceBase {
         foreach ($channelsList as $deliveryInfo) {
           $sources[$deliveryInfo->channelType] = [
             'poster' => $deliveryInfo->defaultThumbUrl,
-            'src' => (isset($deliveryInfo->contentDescriptorUrl) && trim($deliveryInfo->contentDescriptorUrl))?$deliveryInfo->contentDescriptorUrl:$deliveryInfo->contentUrl,
+            'src' => "//$clientId-cdn.thron.com/delivery/public/video/$clientId/{$data["id"]}/$pkey/$deliveryInfo->channelType}/".(isset($metadata['pretty_name']) ? $metadata['pretty_name'] : $metadata['default_pretty_name']),
             'mime' => $mimetype,
           ];
 

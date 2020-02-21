@@ -197,9 +197,7 @@ class Thronintegration_Api {
     } catch (AppTokenExpiredException $ex) {
       throw $ex;
     } catch (\Exception $ex) {
-      //var_dump($ex);
       throw $ex;
-      exit();
     }
   }
 
@@ -263,9 +261,7 @@ class Thronintegration_Api {
       throw $ex;
     }
     catch (\Exception $ex) {
-      //var_dump($ex);
       throw $ex;
-      exit();
     }
   }
 
@@ -293,8 +289,6 @@ class Thronintegration_Api {
 
       $body = new \stdClass();
       $body->criteria = new \stdClass();
-
-      //var_dump($nextPageToken); exit();
 
       if($nextPageToken)
         $body->pageToken = $nextPageToken;
@@ -361,8 +355,7 @@ class Thronintegration_Api {
       if ($textSearch && !Thronintegration_Utils::IsNullOrEmptyString($textSearch)) {
         $body->criteria->lemma = new \stdClass();
         $body->criteria->lemma->text = $textSearch;
-        $body->criteria->lemma->textMatch = 'EXACT_MATCH';
-        $body->criteria->lemma->lang = strtoupper($locale);
+        $body->criteria->lemma->textMatch = 'any_word_match';
       }
 
       if ($tagSearch && is_array($tagSearch) && count($tagSearch) > 0) {
@@ -376,8 +369,8 @@ class Thronintegration_Api {
           elseif (!Thronintegration_Utils::IsNullOrEmptyString($tag)) {
             $body->criteria->itag->haveAll[] = [
               "cascade" => TRUE,
-              "classificationId" => $tag, // TODO THIS IS DEFINITELY WRONG!
-              'id' => $tag,
+              "classificationId" => $tag->classificationId, // TODO correct!
+              'id' => $tag->id,
             ];
           }
         }
@@ -423,10 +416,6 @@ class Thronintegration_Api {
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xadmin") . "apps/appDetail";
       // update this app
       $appDetailResp = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $param, ["X-TOKENID" => $token]);
-      /*var_dump($url);
-                   var_dump($param);
-                    var_dump($appDetailResp); exit;*/
-
       if (!$appDetailResp) {
         // error while updating app... TODO notify!
         throw new \Exception(sprintf("Could not get the app's detail on %s, appId %s", $clientId, $appId));
@@ -627,7 +616,6 @@ class Thronintegration_Api {
 
       return json_decode($listAclResp, TRUE);
     } catch (\Exception $ex) {
-      //var_dump($ex);
       // TODO notify this error
       return FALSE;
     }
@@ -664,7 +652,6 @@ class Thronintegration_Api {
     ];
 
     // take care of the children
-    //var_dump($category);exit;
     if (isset($category["linkedCategories"]) && count($category["linkedCategories"]) > 0) {
       $resObj["childrens"] = [];
     }
@@ -901,7 +888,6 @@ class Thronintegration_Api {
         throw new \Exception(sprintf("Could not insert the metadata to the classification %s on %s", $classificationId, $clientId));
       }
       $metaResponseObj = json_decode($metaResponse, TRUE);
-      //var_dump($metaResponseObj);
       if (!isset($metaResponseObj["resultCode"]) || $metaResponseObj["resultCode"] != "OK") {
         throw new \Exception(sprintf("Could not insert the metadata on %s: invalid result", $clientId));
       }
@@ -1185,7 +1171,6 @@ class Thronintegration_Api {
             $ended = TRUE;
           }
           else {
-            //var_dump($tagRespObj["items"]);
             if (count($tagRespObj["items"]) == 0) {
               $ended = TRUE;
             }
@@ -1698,7 +1683,6 @@ class Thronintegration_Api {
       ];
 
       $getContextList = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $params, ["X-TOKENID" => $tokenId]);
-      //var_dump($getContextList);
       if ($getContextList && !Thronintegration_Utils::IsNullOrEmptyString($getContextList)) {
         $getContextListObj = json_decode($getContextList, TRUE);
         if (!$getContextListObj || !isset($getContextListObj["resultCode"]) || $getContextListObj["resultCode"] != "OK") {
@@ -1872,7 +1856,6 @@ class Thronintegration_Api {
       ];
       //echo json_encode($params);exit;
       $removeEmbedCode = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $params, ["X-TOKENID" => $tokenId]);
-      //var_dump($removeEmbedCode);exit;
       if ($removeEmbedCode && !Thronintegration_Utils::IsNullOrEmptyString($removeEmbedCode)) {
         $removeEmbedCodeObj = json_decode($removeEmbedCode, TRUE);
         if (!$removeEmbedCodeObj || !isset($removeEmbedCodeObj["resultCode"]) || $removeEmbedCodeObj["resultCode"] != "OK") {
@@ -1916,7 +1899,6 @@ class Thronintegration_Api {
       ];
       //echo json_encode($params);
       $updateEmbedCode = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $params, ["X-TOKENID" => $tokenId]);
-      //var_dump(json_encode($updateEmbedCode));exit;
       if ($updateEmbedCode && !Thronintegration_Utils::IsNullOrEmptyString($updateEmbedCode)) {
         $updateEmbedCodeObj = json_decode($updateEmbedCode, TRUE);
         if (!$updateEmbedCodeObj || !isset($updateEmbedCodeObj["resultCode"]) || $updateEmbedCodeObj["resultCode"] != "OK") {

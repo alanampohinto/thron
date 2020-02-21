@@ -27,14 +27,6 @@ interface THRONApiInterface {
   public function getLoginData($skip_cache = FALSE);
 
   /**
-   * Logins the Application as Platform User Impersonation
-   * obtaining so the new `pkey`
-   *
-   * @return mixed|FALSE
-   */
-  public function impersonateApp();
-
-  /**
    * @param string $xcontentId
    * @param string|NULL $divArea
    *

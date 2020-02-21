@@ -198,7 +198,6 @@ class THRONApi implements THRONApiInterface {
       'token' => $res->appUserTokenId,
       'pkey' => $pkey,
       'tracking_context' => $tracking_context,
-      'disguise_username' => $res->app->canDisguise ? reset($res->app->disguiseData->usersWhiteList) : FALSE,
       'rootCategoryId' => isset($res->app->rootCategoryId) ? $res->app->rootCategoryId : '',
     ];
 	
@@ -267,38 +266,6 @@ class THRONApi implements THRONApiInterface {
     }
 
     return call_user_func_array([$this, $method_name], $params);
-  }
-
-  /**
-   * This call is NOT CACHED!
-   *
-   * @return array|bool|FALSE|mixed|string|NULL
-   * @throws \Exception
-   */
-  public function impersonateApp() {
-    try {
-      if (!$login_data = $this->getLoginData()) {
-        throw new \Exception('LoginApp error');
-      }
-
-      $res = Thronintegration_Api::performAppSu($this->config->get('client_id'), $this->config->get('app_id'), $this->config->get('app_key'), $login_data['disguise_username']);
-
-      if ($res) {
-        if (preg_match('/[a-f0-9]{8}\-[a-f0-9]{4}\-4[a-f0-9]{3}\-[a-f0-9]{4}\-[a-f0-9]{12}/', $res)) {
-          return $res;
-        }
-
-        $this->logger->error('App impersonation error: @error', ['@error' => $res]);
-        return FALSE;
-      }
-
-      $this->logger->error('App impersonation error: @error', ['@error' => 'Something went wrong!']);
-      return FALSE;
-    }
-    catch (\Exception $ex) {
-      $this->logger->error($ex->getMessage());
-      return FALSE;
-    }
   }
 
   /**
@@ -914,7 +881,6 @@ class THRONApi implements THRONApiInterface {
           return 'GALLERY';
         }
       } else {
-        // TODO get the content details if false
         if(isset($content->details->playlistDetails)) {
           $els = array_filter($content->details->playlistDetails, function($obj) {
             return $obj->name == "_PLAYLISTTEMPLATE_";
