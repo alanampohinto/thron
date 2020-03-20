@@ -41,13 +41,6 @@ class Thronintegration_HTTP {
   private static function callCurl($method, $url, $data = FALSE, $headers = FALSE, $returnResponseHeaders = FALSE) {
     try {
       set_time_limit(30);
-      /* echo "*******************************\n";
-        var_dump($method);
-        var_dump($url);
-        var_dump($data);
-        var_dump($headers);
-        echo "*******************************\n"; */
-
       $curlHeaders = [];
 
       if ($headers) {

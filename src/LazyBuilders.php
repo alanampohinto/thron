@@ -35,34 +35,4 @@ class LazyBuilders {
     $this->api = $thron_api;
     $this->renderer = $renderer;
   }
-
-  /**
-   * Builds the extension markup
-   *
-   * @param string $content_id
-   *   the id of thron media being processed.
-   *
-   * @return array|NULL
-   *   A renderable array containing the cart form.
-   */
-  public function mediaContentExtension($content_id) {
-    $media_info = $this->api->getMediaDetails($content_id, 'source');
-    if (!empty($media_info)) {
-      $first = reset($media_info);
-      $extension = $first['extension'];
-      if($first['extension'] && trim($first['extension']) != '') {
-		  $extension = $first['extension'];
-		  return [
-			'#plain_text' => strtoupper($extension),
-		  ];
-	  } else {
-			return [
-			'#plain_text' => "",
-		  ];
-	  }
-      
-    }
-    return NULL;
-  }
-
 }

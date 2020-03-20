@@ -161,15 +161,11 @@ function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
           /** @var \Drupal\thron\THRONApiInterface $thron_api */
           $thron_api = \Drupal::service('thron_api');
           $metadata = $form_state->get('metadata');
-          $ext = '';
-          $sourceFiles = $thron_api->getMediaDetails($metadata['id'], 'source');
-
-          if (!empty($sourceFiles)) {
-            $first = reset($sourceFiles);
-            $extension = $first['extension'];
-			if($extension && trim($extension) != '')
-				$ext = ' / ' . strtoupper($extension);
-          }
+          $extStr = $metadata["contentType"];
+          
+          if(isset($metadata["extension"]) && trim($metadata["extension"]) != '')
+            $extStr = ' / ' . strtoupper($metadata["extension"]);
+              
           $content_types_labels = $thron_api->getContentTypes();
           $type = $metadata['contentType'];
           $real_type = $metadata['contentTypeFull'];
@@ -177,7 +173,7 @@ function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
           $form['entity']['#markup'] .= new FormattableMarkup(' (@type@extension)', [
             '@type' => $content_types_labels[$final_type],
-            '@extension' => $ext,
+            '@extension' => $extStr,
           ]);
 
           // Change formatter select title.

@@ -386,6 +386,15 @@ class THRONSearch extends THRONWidgetBase {
   }
 
   /**
+   * Unset the pagination-specific values from a search request (to understand if such parameters change in time)
+   */
+  function getSearchParamsExcludingPagination($query) {
+    $tmpRes = json_decode(json_encode($query), TRUE);
+    unset($tmpRes["limit"], $tmpRes["page"], $tmpRes["total"], $tmpRes["nextPage"]);
+    return $tmpRes;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getForm(array &$original_form, FormStateInterface $form_state, array $additional_widget_parameters) {
@@ -408,9 +417,7 @@ class THRONSearch extends THRONWidgetBase {
     }
 
     $form['#attached']['library'][] = 'thron/search_view';
-    $form['#attached']['drupalSettings']['thron']['media_extension']['basepath'] = Url::fromRoute('thron.media_extension')
-      ->toString();
-
+    
     $form['filters'] = [
       '#type' => 'container',
       '#tree' => TRUE,
@@ -503,10 +510,10 @@ class THRONSearch extends THRONWidgetBase {
       '#title' => $this->t('Order by'),
       '#type' => 'select',
       '#options' => [
-        'lastUpdate_D' => $this->t('Last update - Desc'),
-        'lastUpdate_A' => $this->t('Last update - Asc'),
-        'contentName_A' => $this->t('Name - Asc'),
-        'contentName_D' => $this->t('Name - Desc'),
+        'lastUpdate_d' => $this->t('Last update - Desc'),
+        'lastUpdate_a' => $this->t('Last update - Asc'),
+        'creationDate_d' => $this->t('Creation date - Desc'),
+        'creationDate_a' => $this->t('Creation date - Asc'),
       ],
       '#multiple' => FALSE,
       '#weight' => $max_option_weight + 5,
@@ -608,12 +615,32 @@ class THRONSearch extends THRONWidgetBase {
       $form['filters_actions']['reset_search_button']['#access'] = TRUE;
     }
 
+    // has the query changed? if so, we're back to page 1
+    $old_hash = $form_state->get('thron_media_list_hash');
+
+    // the hash is calculated on the search parameters, not on the pagination!
+    $queryForHash=$this->getSearchParamsExcludingPagination($query);
+    $key_hash = md5($this->THRONApi->gluey($queryForHash));
+    if($old_hash != NULL && $old_hash != $key_hash) {
+      // the search parameters have changed; return to page 1
+      $form_state->set('thron_media_list_page_'.($page), NULL);
+      $page=1;
+    }
+
+    $page_token = NULL;
+    try {
+      $page_token = $form_state->get('thron_media_list_page_'.($page));
+    } catch(\Exception $ex) {} 
+    $query["nextPage"] = $page_token;
+
     $media_list = [];
     try {
       $media_list = $this->doSearch($query);
-      $key_hash = $this->THRONApi->gluey($query);
-      $form_state->set('thron_media_list', $media_list);
-      $form_state->set('thron_media_list_hash', md5($key_hash));
+      $form_state->set('thron_media_list_hash', $key_hash);
+      if(isset($media_list["nextPageToken"]) && trim($media_list["nextPageToken"]) != "")
+        $form_state->set('thron_media_list_page_'.($page+1), $media_list["nextPageToken"]);
+      else
+        $form_state->set('thron_media_list_page_'.($page+1), "");
     }
     catch (Exception $e) {
       (new UnableToConnectException())->logException()->displayMessage();
@@ -643,17 +670,7 @@ class THRONSearch extends THRONWidgetBase {
         ];
 
         if (in_array(strtoupper($media['type']), ['IMAGE', 'VIDEO', 'OTHER', 'AUDIO'])) {
-          $form['thumbnails']['thumbnail-' . $media_id]['image']['#extension'] = [
-            '#type' => 'html_tag',
-            '#tag' => 'span',
-            '#attributes' => [
-              'thron-media-id' => $media_id,
-            ],
-            /* Not used because works only the first load (BigPipe issue? Works as designed?).
-            '#lazy_builder' => ['thron.lazy_builders:mediaContentExtension', [$media_id]],
-            '#create_placeholder' => TRUE,
-            */
-          ];
+          $form['thumbnails']['thumbnail-' . $media_id]['image']['#extension'] = strtoupper($media['extension']);
         }
       }
 
@@ -735,19 +752,22 @@ class THRONSearch extends THRONWidgetBase {
         $query['contentType'][] = $query['type'];
       }
     }
-    $data = $this->THRONApi->contentFindByProperties($query);
-
+    $data = $this->THRONApi->contentSearch($query);
+    
     // Init results
     $results = [
       'items' => [],
       'total' => $data['total'],
+      'nextPageToken' => $data['nextPageToken'],
+      'prevPageToken' => $data['prevPageToken'],
     ];
+
     if (count($data['contents'])) {
       $content_types = $this->THRONApi->getContentTypes();
       $removed = 0;
-      foreach ($data['contents'] as $key => $item) {
-        $type = $item->content->contentType;
-        $real_type = $this->THRONApi->getContentRealType($item->content);
+      foreach (array_values($data['contents']) as $item) {
+        $type = $item->contentType;
+        $real_type = $this->THRONApi->getContentRealType($item);
         $final_type = $type != $real_type ? $type . '_' . $real_type : $type;
         // Filter contents.
         if (isset($filterType[$type])) {
@@ -757,22 +777,24 @@ class THRONSearch extends THRONWidgetBase {
           }
         }
 
-        $localized_data = $this->THRONApi->getSingleLocaleData($item->content->locales, NULL, 'locale');
+        $localized_data = $this->THRONApi->getSingleLocaleData($item->details->locales, NULL, 'locale');
 
         $clientId = $this->config->get('client_id');
         $pkey = $this->THRONApi->getLoginData()['pkey'];
 
-        $thumbnail_url = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$item->content->id}/$pkey/std/320x0/";
+        $thumbnail_url = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$item->id}/$pkey/std/320x0/";
         $thumbnail_url .= "preview.jpg";
 
         $results['items'][] = [
-          'id' => $item->content->id,
+          'id' => $item->id,
           'type' => isset($content_types[$final_type]) ? $content_types[$final_type] : $real_type,
           'name' => isset($localized_data['name']) ? $localized_data['name'] : '',
           'description' => isset($localized_data['description']) ? $localized_data['description'] : '',
-          'thumb' => $thumbnail_url, //isset($item->dynThumbService) ? $item->dynThumbService : '',
-          'owner' => isset($item->ownerFullname) ? $item->ownerFullname : $item->content->owner,
-          'created' => $item->content->creationDate,
+          'thumb' => $thumbnail_url,
+          'owner' => $item->details->owner->ownerFullName,
+          'created' => $item->creationDate,
+          'extension' => isset($item->details->source->extension) ? $item->details->source->extension : '',
+          'availableChannels' => $item->details->availableChannels,
         ];
       }
 

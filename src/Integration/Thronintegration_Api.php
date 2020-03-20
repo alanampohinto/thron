@@ -22,11 +22,9 @@ class Thronintegration_Api {
 
   private static $protocol = "https:";
 
-  private static $port = 443;
+  private static $port = NULL;
 
   private static $domainNamingConvention = "%s-view.thron.com";
-
-  private static $cache = FALSE;
 
   /*
    * Get the THRON application endpoint
@@ -40,7 +38,10 @@ class Thronintegration_Api {
       return FALSE;
     }
 
-    $url = sprintf("%s//%s:%d/api/%s/resources/", $protocol, sprintf(Thronintegration_Api::$domainNamingConvention, $clientId), $port, $module);
+    if(isset($port))
+      $url = sprintf("%s//%s:%d/api/%s/resources/", $protocol, sprintf(Thronintegration_Api::$domainNamingConvention, $clientId), $port, $module);
+    else
+      $url = sprintf("%s//%s/api/%s/resources/", $protocol, sprintf(Thronintegration_Api::$domainNamingConvention, $clientId), $module);
     return $url;
   }
 
@@ -120,44 +121,31 @@ class Thronintegration_Api {
   }
 
   /*
-   * THRON integration: invokes the delivery/getContentDetail function
+   * THRON integration: invokes the content/search function for a specific content
    */
-  public static function getContentDetail($clientId, $token, $pkey, $xcontentId, $anticache = FALSE, $divArea = FALSE) {
-    try {
-      $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "delivery/getContentDetail";
-      $data = [
-        "clientId" => $clientId,
-        "xcontentId" => $xcontentId,
-        "linkedUserAgent" => "desktop",
+  public static function getContentDetailViaContentSearch($clientId, $token, $xcontentId, $anticache = FALSE, $divArea = FALSE) {
+    if(!$divArea) $divArea = "320x0";
+    $search_param = [
+      "criteria" => [
+        "ids" => [$content_id]
+      ],
+      "responseOptions" => [
+        "returnDetailsFields" => ["locales", "author", "owner", "lastUpdate", "prettyIds", "playlistDetails", "userSpecificValues", "aclInfo", "publishingStatus", "highlights", "availableChannels", "linkedContent", "source", "itags", "linkedCategoryIds", "properties", "imetadata", "externalIds"]
+      ]
+    ];
+
+    if($divArea && trim($divArea) != "")
+      $search_param["responseOptions"]["thumbsOptions"] = [
+        [
+          "divArea" => $divArea,
+          "id" => $divArea
+        ]
       ];
-      if ($anticache) {
-        $data["ac"] = Thronintegration_Utils::generateRandomString();
-      }
-
-      $data["divArea"] = '320x0';
-      if ($divArea && !Thronintegration_Utils::IsNullOrEmptyString($divArea)) {
-        $data["divArea"] = $divArea;
-      }
-
-      $headers = ["Content-Type" => "application/json"];
-      if (!Thronintegration_Utils::IsNullOrEmptyString($token)) {
-        $headers["X-TOKENID"] = $token;
-      }
-      if (!Thronintegration_Utils::IsNullOrEmptyString($pkey)) {
-        $data["pkey"] = $pkey;
-      }
-
-      $contentDetailJson = Thronintegration_HTTP::doHTTP("GET", $url, $data, $headers);
-      if (!$contentDetailJson) {
-        throw new \Exception(sprintf("Unreadable content for %s, id %s", $clientId, $xcontentId));
-      }
-      return json_decode($contentDetailJson, FALSE);
-
-    } catch (AppTokenExpiredException $ex) {
-      throw $ex;
-    } catch (\Exception $ex) {
-      return FALSE;
-    }
+     
+    $resp = Thronintegration_Api::contentSearchLite($this->config->get('client_id'), $login_data['token'], $search_param);
+    if(count($resp["items"])>0)
+      return $resp["items"][0];
+    return [];
   }
 
   /*
@@ -209,9 +197,7 @@ class Thronintegration_Api {
     } catch (AppTokenExpiredException $ex) {
       throw $ex;
     } catch (\Exception $ex) {
-      //var_dump($ex);
       throw $ex;
-      exit();
     }
   }
 
@@ -275,9 +261,7 @@ class Thronintegration_Api {
       throw $ex;
     }
     catch (\Exception $ex) {
-      //var_dump($ex);
       throw $ex;
-      exit();
     }
   }
 
@@ -299,24 +283,23 @@ class Thronintegration_Api {
    * @return mixed
    * @throws \Drupal\thron\Exception\AppTokenExpiredException
    */
-  public static function contentsFindByProperties($clientId, $token, $categoryId, $offset, $numberOfresults = THRON_RESULTS_PER_PAGE, $contentType = FALSE, $divArea = FALSE, $tagSearch = FALSE, $textSearch = FALSE, $orderBy = FALSE, $cascade = FALSE, $locale = FALSE) {
+  public static function contentSearch($clientId, $token, $categoryId, $nextPageToken = NULL, $contentType = FALSE, $divArea = FALSE, $tagSearch = FALSE, $textSearch = FALSE, $orderBy = FALSE, $cascade = FALSE, $locale = FALSE) {
     try {
-      $url = Thronintegration_Api::getThronEndpoint($clientId, 'xcontents') . 'content/findByProperties';
+      $url = Thronintegration_Api::getThronEndpoint($clientId, 'xcontents') . 'content/search/'.$clientId;
 
       $body = new \stdClass();
-      $body->client = new \stdClass();
-      $body->client->clientId = $clientId;
       $body->criteria = new \stdClass();
-      $body->criteria->weeboStatus = 'PUBLISHED';
+
+      if($nextPageToken)
+        $body->pageToken = $nextPageToken;
+
       if (!Thronintegration_Utils::IsNullOrEmptyString($categoryId)) {
-        if ($cascade) {
-          $body->criteria->linkedCategoryOp = new \stdClass();
-          $body->criteria->linkedCategoryOp->linkedCategoryIds = [$categoryId];
-          $body->criteria->linkedCategoryOp->cascade = TRUE;
-        }
-        else {
-          $body->criteria->linkedCategories = [$categoryId];
-        }
+        $body->criteria->linkedCategories = new \stdClass();
+        $body->criteria->linkedCategories->haveAtLeastOne = [];
+        $lcObj = new \stdClass();
+        $lcObj->cascade = $cascade;
+        $lcObj->id = $categoryId;
+        array_push($body->criteria->linkedCategories->haveAtLeastOne, $lcObj);
       }
 
       if (is_array($contentType) && count($contentType)) {
@@ -328,70 +311,88 @@ class Thronintegration_Api {
         }
       }
 
-      $body->orderBy = 'lastUpdate_D';
+      $body->responseOptions = new \stdClass();
+      $body->responseOptions->returnDetailsFields = [
+        "locales",
+        "author",
+        "owner",
+        "lastUpdate",
+        "prettyIds",
+        "userSpecificValues",
+        "publishingStatus",
+        "highlights",
+        "availableChannels",
+        "source",
+        "itags",
+        "linkedCategoryIds",
+        "properties",
+        "imetadata",
+        "externalIds"
+      ];
+
+      $body->responseOptions->orderBy = 'lastUpdate_d';
       if ($orderBy && !Thronintegration_Utils::IsNullOrEmptyString($orderBy)) {
-        $body->orderBy = $orderBy;
+        $body->responseOptions->orderBy = $orderBy;
       }
 
-      $body->divArea = '320x0';
+      $body->responseOptions->thumbsOptions = [];
+
+      $askForDivArea = '320x0';
       if ($divArea && !Thronintegration_Utils::IsNullOrEmptyString($divArea)) {
-        $body->divArea = $divArea;
+        $askForDivArea = $divArea;
       }
 
+      $thumbsOptsObj = new \stdClass();
+      $thumbsOptsObj->divArea = $askForDivArea;
+      $thumbsOptsObj->id = $askForDivArea;
+
+      array_push($body->responseOptions->thumbsOptions, $thumbsOptsObj);
+      
       if ($locale && !Thronintegration_Utils::IsNullOrEmptyString($locale)) {
-        $body->locale = strtoupper($locale);
-        // $body->criteria->locale = strtoupper($locale);
+        $body->criteria->lang = strtoupper($locale);
       }
 
       if ($textSearch && !Thronintegration_Utils::IsNullOrEmptyString($textSearch)) {
-        $body->criteria->locale = strtoupper($locale);
-        $body->criteria->textSearch = new \stdClass();
-        $body->criteria->textSearch->searchKey = $textSearch;
-        $body->criteria->textSearch->searchOnFields = ['NAME', 'DESCRIPTION'];
-        $body->criteria->textSearch->searchKeyOption = 'EXACT_MATCH';
+        $body->criteria->lemma = new \stdClass();
+        $body->criteria->lemma->text = $textSearch;
+        $body->criteria->lemma->textMatch = 'any_word_match';
       }
 
-      $body->contentFieldOption = new \stdClass();
-      $body->contentFieldOption->returnThumbnailUrl = TRUE;
-      $body->contentFieldOption->returnItags = TRUE;
-      $body->contentFieldOption->returnImetadata = TRUE;
-      $body->contentFieldOption->returnLinkedContents = TRUE;
-
       if ($tagSearch && is_array($tagSearch) && count($tagSearch) > 0) {
-        $body->criteria->itagOp = new \stdClass();
-        $body->criteria->itagOp->itags = [];
+        $body->criteria->itag = new \stdClass();
+        $body->criteria->itag->haveAll = [];
 
         foreach ($tagSearch as $tag) {
           if (is_array($tag)) {
-            $body->criteria->itagOp->itags[] = $tag;
+            $body->criteria->itag->haveAll[] = $tag;
           }
           elseif (!Thronintegration_Utils::IsNullOrEmptyString($tag)) {
-            $body->criteria->itagOp->itags[] = [
-              'id' => $tag,
+            $tag_els = explode("_", $tag);
+            $body->criteria->itag->haveAll[] = [
+              "cascade" => TRUE,
+              "classificationId" => $tag_els[0],
+              'id' => $tag_els[1],
             ];
           }
         }
-
-        if (count($tagSearch) > 1) {
-          $body->criteria->itagOp->operation = 'AND';
-        }
-        else {
-          $body->criteria->itagOp->operation = 'OR';
-        }
       }
-      $body->offset = $offset;
-      $body->numberOfresults = $numberOfresults;
 
-      $findByPropertiesResp = Thronintegration_HTTP::doHTTP('JSON_POST', $url, $body, ['X-TOKENID' => $token]);
-
-      if (!$findByPropertiesResp) {
+      $contentSearchRes = Thronintegration_HTTP::doHTTP('JSON_POST', $url, $body, ['X-TOKENID' => $token]);
+      
+      if (!$contentSearchRes) {
         throw new \Exception(sprintf('Cannot find contents for client %s!', $clientId));
       }
 
-      $data = json_decode($findByPropertiesResp, FALSE);
+      $data = json_decode($contentSearchRes, FALSE);
       $res['resultCode'] = 'OK';
-      $res['total'] = $data->totalResults;
-      $res['contents'] = $data->contents;
+      $res['total'] = $data->estimatedTotalResults;
+      $res['contents'] = $data->items;
+      if(isset($data->nextPageToken))
+        $res['nextPageToken'] = $data->nextPageToken;
+      else
+        $res['nextPageToken'] = NULL;
+      
+      $res['prevPageToken'] = $nextPageToken;
 
     }
     catch (AppTokenExpiredException $ex) {
@@ -416,10 +417,6 @@ class Thronintegration_Api {
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xadmin") . "apps/appDetail";
       // update this app
       $appDetailResp = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $param, ["X-TOKENID" => $token]);
-      /*var_dump($url);
-                   var_dump($param);
-                    var_dump($appDetailResp); exit;*/
-
       if (!$appDetailResp) {
         // error while updating app... TODO notify!
         throw new \Exception(sprintf("Could not get the app's detail on %s, appId %s", $clientId, $appId));
@@ -620,7 +617,6 @@ class Thronintegration_Api {
 
       return json_decode($listAclResp, TRUE);
     } catch (\Exception $ex) {
-      //var_dump($ex);
       // TODO notify this error
       return FALSE;
     }
@@ -657,7 +653,6 @@ class Thronintegration_Api {
     ];
 
     // take care of the children
-    //var_dump($category);exit;
     if (isset($category["linkedCategories"]) && count($category["linkedCategories"]) > 0) {
       $resObj["childrens"] = [];
     }
@@ -730,7 +725,7 @@ class Thronintegration_Api {
       $detailTagResponse = Thronintegration_HTTP::doHTTP("GET", $url, FALSE, ["X-TOKENID" => $token]);
       if (!$detailTagResponse) {
         // error while updating app... TODO notify!
-        throw new \Exception(sprintf("Could not get the tag detail for tag %s on %s", $tagId, $clientId));
+        throw new \Exception(sprintf("Could not get the tag detail for tag %s, classification $s on %s", $tagId, $classificationId, $clientId));
       }
       $detailTagObj = json_decode($detailTagResponse, TRUE);
       if (!isset($detailTagObj["resultCode"]) || $detailTagObj["resultCode"] != "OK") {
@@ -894,7 +889,6 @@ class Thronintegration_Api {
         throw new \Exception(sprintf("Could not insert the metadata to the classification %s on %s", $classificationId, $clientId));
       }
       $metaResponseObj = json_decode($metaResponse, TRUE);
-      //var_dump($metaResponseObj);
       if (!isset($metaResponseObj["resultCode"]) || $metaResponseObj["resultCode"] != "OK") {
         throw new \Exception(sprintf("Could not insert the metadata on %s: invalid result", $clientId));
       }
@@ -1154,7 +1148,7 @@ class Thronintegration_Api {
         $criteria['lang'] = strtoupper($lang);
       }
 
-      if ($depth !== NULL) {
+      if ($depth && $depth !== NULL) {
         $criteria['excludeLevelHigherThan'] = intval($depth);
       }
 
@@ -1178,7 +1172,6 @@ class Thronintegration_Api {
             $ended = TRUE;
           }
           else {
-            //var_dump($tagRespObj["items"]);
             if (count($tagRespObj["items"]) == 0) {
               $ended = TRUE;
             }
@@ -1449,28 +1442,34 @@ class Thronintegration_Api {
     }
   }
 
-  public static function contentDetail($clientId, $token, $contentId) {
-    $res = ["status" => "ERROR", "errorDescription" => ""];
+  public static function contentDetail($clientId, $token, $contentId, $divArea=FALSE) {
+    $res = new \stdClass();
+    $res->resultCode = "ERROR";
+    $res->errorDescription = "";
+    $res->content = NULL;
 
     try {
       Thronintegration_Api::validateContentDetail($clientId, $token, $contentId);
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "delivery/getContentDetail?clientId=$clientId&xcontentId=$contentId";
+      if($divArea && trim($divArea) != "")
+        $url .= "&divArea=$divArea";
+
       $contentDetailResp = Thronintegration_HTTP::doHTTP("GET", $url, FALSE, ["X-TOKENID" => $token]);
       if ($contentDetailResp && !Thronintegration_Utils::IsNullOrEmptyString($contentDetailResp)) {
-        $contentDetailObj = json_decode($contentDetailResp, TRUE);
-        if (!$contentDetailObj || !isset($contentDetailObj["resultCode"]) || $contentDetailObj["resultCode"] != "OK") {
+        $contentDetailObj = json_decode($contentDetailResp, false);
+        if (!$contentDetailObj || !isset($contentDetailObj->resultCode) || $contentDetailObj->resultCode != "OK") {
           throw new \Exception("Invalid response while getting content detail for client $clientId, content $contentId");
         }
 
-        $res["content"] = $contentDetailObj["content"];
-        $res["status"] = "OK";
+        $res->content = $contentDetailObj->content;
+        $res->resultCode = "OK";
       }
       else {
         throw new \Exception("Invalid response while getting content detail for client $clientId, content $contentId");
       }
     } catch (\Exception $ex) {
-      $res["status"] = "ERROR";
-      $res["errorDescription"] = $ex->getMessage();
+      $res->resultCode = "ERROR";
+      $res->errorDescription = $ex->getMessage();
     }
     return $res;
   }
@@ -1685,7 +1684,6 @@ class Thronintegration_Api {
       ];
 
       $getContextList = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $params, ["X-TOKENID" => $tokenId]);
-      //var_dump($getContextList);
       if ($getContextList && !Thronintegration_Utils::IsNullOrEmptyString($getContextList)) {
         $getContextListObj = json_decode($getContextList, TRUE);
         if (!$getContextListObj || !isset($getContextListObj["resultCode"]) || $getContextListObj["resultCode"] != "OK") {
@@ -1859,7 +1857,6 @@ class Thronintegration_Api {
       ];
       //echo json_encode($params);exit;
       $removeEmbedCode = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $params, ["X-TOKENID" => $tokenId]);
-      //var_dump($removeEmbedCode);exit;
       if ($removeEmbedCode && !Thronintegration_Utils::IsNullOrEmptyString($removeEmbedCode)) {
         $removeEmbedCodeObj = json_decode($removeEmbedCode, TRUE);
         if (!$removeEmbedCodeObj || !isset($removeEmbedCodeObj["resultCode"]) || $removeEmbedCodeObj["resultCode"] != "OK") {
@@ -1903,7 +1900,6 @@ class Thronintegration_Api {
       ];
       //echo json_encode($params);
       $updateEmbedCode = Thronintegration_HTTP::doHTTP("JSON_POST", $url, $params, ["X-TOKENID" => $tokenId]);
-      //var_dump(json_encode($updateEmbedCode));exit;
       if ($updateEmbedCode && !Thronintegration_Utils::IsNullOrEmptyString($updateEmbedCode)) {
         $updateEmbedCodeObj = json_decode($updateEmbedCode, TRUE);
         if (!$updateEmbedCodeObj || !isset($updateEmbedCodeObj["resultCode"]) || $updateEmbedCodeObj["resultCode"] != "OK") {
@@ -2050,7 +2046,7 @@ class Thronintegration_Api {
    * @return array|mixed
    * @throws \Drupal\thron\Exception\AppTokenExpiredException
    */
-  public static function contentSearch($clientId, $tokenId, $search_param) {
+  public static function contentSearchLite($clientId, $tokenId, $search_param) {
     $res = ["resultCode" => "ERROR", "errorDescription" => ""];
 
     try {

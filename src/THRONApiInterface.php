@@ -27,12 +27,12 @@ interface THRONApiInterface {
   public function getLoginData($skip_cache = FALSE);
 
   /**
-   * Logins the Application as Platform User Impersonation
-   * obtaining so the new `pkey`
+   * @param string $xcontentId
+   * @param string|NULL $divArea
    *
-   * @return mixed|FALSE
+   * @return array
    */
-  public function impersonateApp();
+  public function getContentDetailViaContentSearch($xcontentId, $divArea = NULL);
 
   /**
    * @param string $xcontentId
@@ -41,20 +41,6 @@ interface THRONApiInterface {
    * @return array
    */
   public function getContentDetail($xcontentId, $divArea = NULL);
-
-  /**
-   * @return array
-   * @throws \Exception
-   */
-  public function getContents();
-
-  /**
-   * @param string|int $timestamp
-   *
-   * @return array
-   * @throws \Exception
-   */
-  public function getUpdatedContents($timestamp);
 
   /**
    * @return array
@@ -129,7 +115,7 @@ interface THRONApiInterface {
    *
    * @return array
    */
-  public function contentFindByProperties($properties);
+  public function contentSearch($properties);
 
   /**
    * Creates an embed code on the fly
@@ -210,4 +196,9 @@ interface THRONApiInterface {
    * Get the breakpoint tags (if present)
    */
   public function getBreakpointTags($asMediaQueries=FALSE);
+
+  /**
+   * Get the element's value or the default
+   */
+  public function getValueOrDefault($el, $default);
 }
