@@ -385,7 +385,11 @@ class Thronintegration_Api {
 
       $data = json_decode($contentSearchRes, FALSE);
       $res['resultCode'] = 'OK';
-      $res['total'] = $data->estimatedTotalResults;
+      if(isset($data->estimatedTotalResults))
+        $res['total'] = $data->estimatedTotalResults;
+      else
+        $res['total'] = count($data->items);
+      
       $res['contents'] = $data->items;
       if(isset($data->nextPageToken))
         $res['nextPageToken'] = $data->nextPageToken;

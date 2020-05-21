@@ -250,7 +250,11 @@ class ThronMediaSource extends MediaSourceBase {
       $metadata['id'] = $data["id"];
       $metadata['contentType'] = $data["contentType"];
       $metadata['contentTypeFull'] = $this->THRONApi->getContentRealType($data);
-      $metadata['extension'] = $data["details"]["source"]["extension"];
+      if(isset($data["details"]["source"]) && isset($data["details"]["source"]["extension"]))
+        $metadata['extension'] = $data["details"]["source"]["extension"];
+      else
+        $metadata['extension'] = "";
+        
       $metadata['channels'] = $data["details"]["availableChannels"];
       $metadata['owner'] = $data["details"]["owner"]["ownerFullName"];
       $metadata['created'] = $this->THRONApi->getValueOrDefault($data["creationDate"], FALSE);

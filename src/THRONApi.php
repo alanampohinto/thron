@@ -372,6 +372,9 @@ class THRONApi implements THRONApiInterface {
       $plain_data = [];
       $showChilds = $depth === -1 || $depth > 0;
       $upper_language = strtoupper($this->languageManager->getCurrentLanguage()->getId());
+      if(strpos($upper_language, "_") != false) {
+        $upper_language = explode("_", $upper_language)[0];
+      }
 
       $data = Thronintegration_Api::tagDefinitionList($this->config->get('client_id'), $login_data['token'], $classification, $filterOn, TRUE, $showChilds, $depth, $search_text, $upper_language);
 
@@ -847,7 +850,7 @@ class THRONApi implements THRONApiInterface {
       'AUDIO' => $this->t('Audio')->__toString(),
       'PLAYLIST_GALLERY' => $this->t('Gallery')->__toString(),
       'PLAYLIST_360' => $this->t('360° Gallery')->__toString(),
-	  'PLAYLIST' => $this->t('Gallery')->__toString(),
+	    'PLAYLIST' => $this->t('Gallery')->__toString(),
       'URL' => $this->t('Url')->__toString(),
       'PAGELET' => $this->t('Pagelet')->__toString(),
     ];
@@ -928,7 +931,11 @@ class THRONApi implements THRONApiInterface {
         throw new \Exception('LoginApp error');
       }
 
-      $currentLanguage = $this->languageManager->getCurrentLanguage();
+      $upper_language = strtoupper($this->languageManager->getCurrentLanguage()->getId());
+      if(strpos($upper_language, "_") != false) {
+        $upper_language = explode("_", $upper_language)[0];
+      }
+
 
       // Call the API endpoint.
       $data = Thronintegration_Api::contentSearch(
@@ -942,7 +949,7 @@ class THRONApi implements THRONApiInterface {
         isset($properties['keyword']) ? $properties['keyword'] : FALSE,
         isset($properties['orderBy']) ? $properties['orderBy'] : FALSE,
         TRUE,
-        isset($properties['langcode']) ? $properties['langcode'] : $currentLanguage->getId()
+        isset($properties['langcode']) ? $properties['langcode'] : $upper_language
       );
       if ($data['resultCode'] !== 'OK') {
         throw new \Exception($data['errorDescription']);

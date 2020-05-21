@@ -573,6 +573,10 @@ class THRONSearch extends THRONWidgetBase {
             $query['tags'][] = $main_imageset_tag;
           }
         }
+      } elseif($content_type == "PLAYLIST_GALLERY") {
+        $query['type'] = "PLAYLIST";
+      } elseif($content_type == "PLAYLIST_360") {
+        $query['type'] = "PLAYLIST";
       }
       else {
         $query['type'] = $content_type;
