@@ -130,7 +130,7 @@ class Thronintegration_Api {
         "ids" => [$content_id]
       ],
       "responseOptions" => [
-        "returnDetailsFields" => ["locales", "author", "owner", "lastUpdate", "prettyIds", "playlistDetails", "userSpecificValues", "aclInfo", "publishingStatus", "highlights", "availableChannels", "linkedContent", "source", "itags", "linkedCategoryIds", "properties", "imetadata", "externalIds"]
+        "returnDetailsFields" => ["locales", "author", "owner", "lastUpdate", "prettyIds", "playlistDetails", "userSpecificValues", "aclInfo", "publishingStatus", "highlights", "availableChannels", "linkedContent", "source", "itags", "linkedCategoryIds", "properties", "imetadata", "externalIds", "playlistDetails"]
       ]
     ];
 
@@ -327,7 +327,8 @@ class Thronintegration_Api {
         "linkedCategoryIds",
         "properties",
         "imetadata",
-        "externalIds"
+        "externalIds",
+        "playlistDetails"
       ];
 
       $body->responseOptions->orderBy = 'lastUpdate_d';
