@@ -1150,7 +1150,7 @@ class Thronintegration_Api {
           'searchKeyOption' => 'EXACT_MATCH',
           'searchOnFields' => [ 'LABEL' ],
         ];
-        $criteria['lang'] = strtoupper($lang);
+        $criteria['lang'] = $lang;
       }
 
       if ($depth && $depth !== NULL) {
@@ -1797,7 +1797,6 @@ class Thronintegration_Api {
     $res = ["status" => "ERROR", "errorDescription" => ""];
 
     try {
-      //Thronintegration_Api::validateInsertContextList($clientId, $tokenId,$contextName,$lang);
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "playerembedcode/insert/$clientId";
       //echo $url;
       $params = [
@@ -1849,7 +1848,6 @@ class Thronintegration_Api {
     $res = ["status" => "ERROR", "errorDescription" => ""];
 
     try {
-      //Thronintegration_Api::validateInsertContextList($clientId, $tokenId,$contextName,$lang);
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "playerembedcode/remove/$clientId";
       //echo $url;
       $params = [
@@ -1884,7 +1882,6 @@ class Thronintegration_Api {
     $res = ["status" => "ERROR", "errorDescription" => ""];
 
     try {
-      //Thronintegration_Api::validateInsertContextList($clientId, $tokenId,$contextName,$lang);
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "playerembedcode/update/$clientId";
       //echo $url;
       $params = [
@@ -1927,7 +1924,6 @@ class Thronintegration_Api {
     $res = ["status" => "ERROR", "errorDescription" => ""];
 
     try {
-      //Thronintegration_Api::validateInsertContextList($clientId, $tokenId,$contextName,$lang);
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "playerembedcode/update/$clientId";
       //echo $url;
       $params = [
@@ -1965,7 +1961,6 @@ class Thronintegration_Api {
     $res = ["status" => "ERROR", "errorDescription" => ""];
 
     try {
-      //Thronintegration_Api::validateInsertContextList($clientId, $tokenId,$contextName,$lang);
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "playerembedcode/list/$clientId";
       //echo $url;
       $params = [

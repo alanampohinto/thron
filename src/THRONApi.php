@@ -386,14 +386,12 @@ class THRONApi implements THRONApiInterface {
       // Retrieve tags.
       foreach ($data['tags'] as $tag_id => $tag) {
         // base tag definition.
-        $names = array_filter($tag['names'], function($item) {
-          $upper_language = strtoupper(\Drupal::languageManager()
-            ->getCurrentLanguage()->getId());
-          return $item['lang'] == $upper_language;
+        $names = array_filter($tag['names'], function($item) use($upper_language) {
+          return strtoupper($item['lang']) == $upper_language;
         });
         if (empty($names)) {
           $names = array_filter($tag['names'], function($item) {
-            return $item['lang'] == 'EN';
+            return strtoupper($item['lang']) == 'EN';
           });
         }
         $plain_data[$tag_id] = [
