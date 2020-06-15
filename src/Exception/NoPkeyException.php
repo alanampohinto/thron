@@ -7,7 +7,7 @@ use Drupal\Core\Url;
 /**
  * Exception indicating that the Pkey is not present in login data.
  */
-class NoPkeyException extends ThronException {
+class NoPkeyException extends THRONException {
 
   /**
    * Constructs NoPkeyException.

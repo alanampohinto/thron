@@ -5,7 +5,7 @@ namespace Drupal\thron\Exception;
 /**
  * Exception indicating that the User doesn't have upload permissions.
  */
-class UploadPermissionException extends ThronException {
+class UploadPermissionException extends THRONException {
 
   /**
    * Constructs UploadFailedException.

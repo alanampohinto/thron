@@ -7,7 +7,7 @@ use Drupal\Core\Url;
 /**
  * Exception indicating that the selected bundle does not exist.
  */
-class BundleNotExistException extends ThronException {
+class BundleNotExistException extends THRONException {
 
   /**
    * {@inheritdoc}

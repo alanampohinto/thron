@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\thron\Events;
+use Drupal\entity_browser\Events\EventBase;
 
 /**
  * Represents entity selection as event.

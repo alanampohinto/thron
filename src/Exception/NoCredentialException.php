@@ -7,7 +7,7 @@ use Drupal\Core\Url;
 /**
  * Exception indicating that the given credentials couldn't not be used with this module.
  */
-class NoCredentialException extends ThronException {
+class NoCredentialException extends THRONException {
 
   /**
    * Constructs UnableToConnectException.

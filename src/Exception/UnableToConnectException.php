@@ -7,7 +7,7 @@ use Drupal\Core\Url;
 /**
  * Exception indicating that an attempt to connect to Thron failed.
  */
-class UnableToConnectException extends ThronException {
+class UnableToConnectException extends THRONException {
 
   /**
    * Constructs UnableToConnectException.

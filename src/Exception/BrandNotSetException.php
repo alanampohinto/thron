@@ -7,7 +7,7 @@ use Drupal\Core\Url;
 /**
  * Exception indicating that the brand is not configured on upload widget.
  */
-class BrandNotSetException extends ThronException {
+class BrandNotSetException extends THRONException {
 
   /**
    * Constructs BrandNotSetException.

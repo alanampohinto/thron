@@ -58,7 +58,7 @@ class EntityEmbedDialogOverride extends EntityEmbedDialog {
     $entity = $form_state->get('entity');
     $values = $form_state->getValues();
 
-    $form['#title'] = $this->t('Embed @type', ['@type' => $entity->getEntityType()->getLowercaseLabel()]);
+    $form['#title'] = $this->t('Embed @type', ['@type' => $entity->getEntityType()->getSingularLabel()]);
 
     $entity_label = $entity->label();
 

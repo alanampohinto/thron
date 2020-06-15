@@ -16,7 +16,7 @@ use Drupal\thron\Exception\AppTokenExpiredException;
 use Drupal\thron\Exception\InvalidCredentialException;
 use Drupal\thron\Exception\NoCredentialException;
 use Drupal\thron\Exception\NoPkeyException;
-use Drupal\thron\Exception\ThronException;
+use Drupal\thron\Exception\THRONException;
 use Drupal\thron\Exception\UnableToConnectException;
 use Drupal\thron\Integration\Thronintegration_Api;
 
@@ -236,7 +236,7 @@ class THRONApi implements THRONApiInterface {
       $this->cache->set($cid, $login_data, $this->time->getRequestTime() + $this->getCacheInterval('login'));
       return $login_data;
 
-    } catch (ThronException $ex) {
+    } catch (THRONException $ex) {
       $ex->displayMessage();
       $ex->logException();
       $this->cache->delete($cid);
@@ -247,7 +247,7 @@ class THRONApi implements THRONApiInterface {
   /**
    * @param string $method_name
    * @param mixed $default_return
-   * @param \Drupal\thron\Exception\ThronException $exception
+   * @param \Drupal\thron\Exception\THRONException $exception
    * @param array $params
    *
    * @return mixed
@@ -933,7 +933,6 @@ class THRONApi implements THRONApiInterface {
       if(strpos($upper_language, "_") != false) {
         $upper_language = explode("_", $upper_language)[0];
       }
-
 
       // Call the API endpoint.
       $data = Thronintegration_Api::contentSearch(

@@ -9,7 +9,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 /**
  * Base exception class for THRON.
  */
-abstract class ThronException extends \Exception {
+abstract class THRONException extends \Exception {
 
   use LoggerChannelTrait;
   use MessengerTrait;
@@ -54,12 +54,16 @@ abstract class ThronException extends \Exception {
   /**
    * Constructs BundleNotExistException.
    *
-   * @param string $message The message
-   * @param NULL $admin_message The admin message, if present
-   * @param NULL $log_message The log message, if present
-   * @param array $log_message_args Arguments for the message
+   * @param string $message
+   *   The message to print.
+   * @param null $admin_message
+   *   (optional) The admin message, if present.
+   * @param null $log_message
+   *   (optional) The log message, if present.
+   * @param array $log_message_args
+   *   Arguments for the message.
    */
-  public function __construct($message, $admin_message = NULL, $log_message = NULL, $log_message_args = []) {
+  public function __construct($message, $admin_message = NULL, $log_message = NULL, array $log_message_args = []) {
     parent::__construct($message);
     $this->adminMessage = $admin_message ?: $message;
     $this->logMessage = $log_message ?: $this->adminMessage;
@@ -81,7 +85,7 @@ abstract class ThronException extends \Exception {
   /**
    * Logs exception into Drupal's log.
    *
-   * @return \Drupal\thron\Exception\ThronException
+   * @return \Drupal\thron\Exception\THRONException
    *   This exception.
    */
   public function logException() {

@@ -7,7 +7,7 @@ use Drupal\Core\Url;
 /**
  * Exception indicating there was an error fetching tags from the Tag Search Service.
  */
-class TagSearchException extends ThronException {
+class TagSearchException extends THRONException {
 
   /**
    * Constructs TagSearchException.

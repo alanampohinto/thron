@@ -2,7 +2,7 @@ name: THRON
 description: 'THRON digital asset management system integration.'
 type: module
 package: Media
-core: 8.x
+core_version_requirement: ^8.8 || ^9
 configure: thron.configuration_form
 
 dependencies:
@@ -11,4 +11,3 @@ dependencies:
   - entity_browser:entity_browser
   - media_entity_browser:media_entity_browser (>=8.x-2.0-alpha2)
   - media_entity_browser:media_entity_browser_media_library (>=8.x-2.0-alpha2)
-  

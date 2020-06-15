@@ -11,7 +11,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\media\MediaInterface;
 use Drupal\media\MediaSourceBase;
-use Drupal\thron\Exception\ThronException;
+use Drupal\thron\Exception\THRONException;
 use Drupal\thron\THRONApiInterface;
 use Drupal\thron\Utils\THRONApiUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -226,7 +226,7 @@ class ThronMediaSource extends MediaSourceBase {
     try {
       $this->THRONApi->loginApp();
     }
-    catch (ThronException $ex) {
+    catch (THRONException $ex) {
       $ex->displayMessage();
       $ex->logException();
       return FALSE;
@@ -254,7 +254,6 @@ class ThronMediaSource extends MediaSourceBase {
         $metadata['extension'] = $data["details"]["source"]["extension"];
       else
         $metadata['extension'] = "";
-        
       $metadata['channels'] = $data["details"]["availableChannels"];
       $metadata['owner'] = $data["details"]["owner"]["ownerFullName"];
       $metadata['created'] = $this->THRONApi->getValueOrDefault($data["creationDate"], FALSE);

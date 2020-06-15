@@ -5,7 +5,7 @@ namespace Drupal\thron\Exception;
 /**
  * Exception indicating that the usage can't be deleted for the THRON asset.
  */
-class UnableToDeleteUsageException extends ThronException {
+class UnableToDeleteUsageException extends THRONException {
 
   /**
    * Constructs UnableToDeleteUsageException.

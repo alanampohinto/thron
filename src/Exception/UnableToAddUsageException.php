@@ -5,7 +5,7 @@ namespace Drupal\thron\Exception;
 /**
  * Exception indicating that the usage can't be added for the THRON asset.
  */
-class UnableToAddUsageException extends ThronException {
+class UnableToAddUsageException extends THRONException {
 
   /**
    * Constructs UnableToAddUsageException.

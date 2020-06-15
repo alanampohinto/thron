@@ -5,7 +5,7 @@ namespace Drupal\thron\Exception;
 /**
  * Exception indicating that the upload to THRON failed.
  */
-class UploadFailedException extends ThronException {
+class UploadFailedException extends THRONException {
 
   /**
    * Constructs UploadFailedException.
@@ -16,7 +16,7 @@ class UploadFailedException extends ThronException {
   public function __construct($original_message) {
     $log_message = 'Unable to upload files to THRON: @message';
     $log_message_args = ['@message' => $original_message];
-    $admin_message = $this->t($log_message, $log_message_args);
+    $admin_message = $this->t('Unable to upload files to THRON: @message', $log_message_args);
     $message = $this->t(
       'Upload to THRON failed. Please contact the site administrator.'
     );

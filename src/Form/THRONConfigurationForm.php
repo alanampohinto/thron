@@ -9,7 +9,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\State\StateInterface;
-use Drupal\thron\Exception\ThronException;
+use Drupal\thron\Exception\THRONException;
 use Drupal\thron\THRONApiInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -386,7 +386,7 @@ class THRONConfigurationForm extends ConfigFormBase {
     try {
       $this->THRONApi->loginApp($credentials);
     }
-    catch (ThronException $e) {
+    catch (THRONException $e) {
       $e->displayMessage();
       $e->logException();
       return;

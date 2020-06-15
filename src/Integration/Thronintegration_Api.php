@@ -127,10 +127,10 @@ class Thronintegration_Api {
     if(!$divArea) $divArea = "320x0";
     $search_param = [
       "criteria" => [
-        "ids" => [$content_id]
+        "ids" => [$xcontentId]
       ],
       "responseOptions" => [
-        "returnDetailsFields" => ["locales", "author", "owner", "lastUpdate", "prettyIds", "playlistDetails", "userSpecificValues", "aclInfo", "publishingStatus", "highlights", "availableChannels", "linkedContent", "source", "itags", "linkedCategoryIds", "properties", "imetadata", "externalIds", "playlistDetails"]
+        "returnDetailsFields" => ["locales", "author", "owner", "lastUpdate", "prettyIds", "playlistDetails", "userSpecificValues", "aclInfo", "publishingStatus", "highlights", "availableChannels", "linkedContent", "source", "itags", "linkedCategoryIds", "properties", "imetadata", "externalIds"]
       ]
     ];
 
@@ -142,7 +142,7 @@ class Thronintegration_Api {
         ]
       ];
      
-    $resp = Thronintegration_Api::contentSearchLite($this->config->get('client_id'), $login_data['token'], $search_param);
+    $resp = Thronintegration_Api::contentSearchLite($clientId, $token, $search_param);
     if(count($resp["items"])>0)
       return $resp["items"][0];
     return [];
@@ -1961,6 +1961,7 @@ class Thronintegration_Api {
     $res = ["status" => "ERROR", "errorDescription" => ""];
 
     try {
+      //Thronintegration_Api::validateInsertContextList($clientId, $tokenId,$contextName,$lang);
       $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "playerembedcode/list/$clientId";
       //echo $url;
       $params = [

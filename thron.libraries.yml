@@ -79,7 +79,7 @@ search_config:
   dependencies:
     - core/jquery
     - core/jquery.once
-    - core/jquery.ui.sortable
+    - core/sortable
     - core/drupal
 
 autocomplete:

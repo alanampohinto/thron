@@ -30,7 +30,7 @@ services:
       - { name: access_check, applies_to: _thron_media_access }
   thron.media_add_access_checker:
     class: Drupal\thron\Access\MediaThronAddAccessCheck
-    arguments: ['@entity.manager']
+    arguments: ['@entity_type.manager']
     tags:
       - { name: access_check, applies_to: _thron_media_add_access }
   thron.lazy_builders:
