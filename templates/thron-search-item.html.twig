@@ -9,12 +9,16 @@
  * - type: Type of the THRON asset.
  * - owner: Owner of the THRON asset.
  * - created: Creation date of the THRON asset.
+ * - updated: Last update date of the THRON asset.
  */
 #}
 <img src="{{ thumbnail_uri }}" alt="{{ name }}"/>
 <div class="more-info">
     {% if created %}
         <div class="created">{{ 'Created'|t }}: {{ created | date("d/m/Y H:i:s") }}</div>
+    {% endif %}
+    {% if updated %}
+        <div class="updated">{{ 'Last updated'|t }}: {{ updated | date("d/m/Y H:i:s") }}</div>
     {% endif %}
     <small class="type">
       {% if type %}({{ type }}{% if extension %} / {{ extension }}){% else %}){% endif %}{% endif %}

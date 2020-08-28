@@ -58,7 +58,7 @@ class THRONSearch extends THRONWidgetBase {
 
   /**
    * The media storage.
-   * 
+   *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected $mediaStorage;
@@ -417,7 +417,7 @@ class THRONSearch extends THRONWidgetBase {
     }
 
     $form['#attached']['library'][] = 'thron/search_view';
-    
+
     $form['filters'] = [
       '#type' => 'container',
       '#tree' => TRUE,
@@ -545,7 +545,8 @@ class THRONSearch extends THRONWidgetBase {
       '#attributes' => ['id' => 'thumbnails', 'class' => 'grid'],
     ];
 
-    if ($form_state->getTriggeringElement()['#name'] == 'search_submit') {
+    $triggering_element = $form_state->getTriggeringElement();
+    if ($triggering_element && $triggering_element['#name'] == 'search_submit') {
       EntityBrowserPagerElement::setCurrentPage($form_state);
     }
     $page = EntityBrowserPagerElement::getCurrentPage($form_state);
@@ -606,6 +607,7 @@ class THRONSearch extends THRONWidgetBase {
       $show_reset_button = TRUE;
     }
 
+    $query['orderBy'] = NULL;
     if ($form_state->getValue(['filters', 'ordering'])) {
       $query['orderBy'] = $form_state->getValue(['filters', 'ordering']);
       $show_reset_button = TRUE;
@@ -630,7 +632,7 @@ class THRONSearch extends THRONWidgetBase {
     $page_token = NULL;
     try {
       $page_token = $form_state->get('thron_media_list_page_'.($page));
-    } catch(\Exception $ex) {} 
+    } catch(\Exception $ex) {}
     $query["nextPage"] = $page_token;
 
     $media_list = [];
@@ -647,6 +649,10 @@ class THRONSearch extends THRONWidgetBase {
       $form['actions']['submit']['#access'] = FALSE;
       return $form;
     }
+
+    // Determines the date to show in media list
+    $showCreated = strpos($query['orderBy'], 'creationDate') !== FALSE;
+    $showLastUpdated = !$showCreated;
 
     if (!empty($media_list['items'])) {
       foreach ($media_list['items'] as $media) {
@@ -665,7 +671,8 @@ class THRONSearch extends THRONWidgetBase {
           '#thumbnail_uri' => $media['thumb'],
           '#name' => $media['name'],
           '#type' => $media['type'],
-          '#created' => $media['created'],
+          '#created' => $showCreated ? $media['created'] : NULL,
+          '#updated' => $showLastUpdated ? $media['lastUpdate'] : NULL,
           '#owner' => $media['owner'],
         ];
 
@@ -753,7 +760,7 @@ class THRONSearch extends THRONWidgetBase {
       }
     }
     $data = $this->THRONApi->contentSearch($query);
-    
+
     // Init results
     $results = [
       'items' => [],
@@ -793,6 +800,7 @@ class THRONSearch extends THRONWidgetBase {
           'thumb' => $thumbnail_url,
           'owner' => $item->details->owner->ownerFullName,
           'created' => $item->creationDate,
+          'lastUpdate' => $item->details->lastUpdate,
           'extension' => isset($item->details->source->extension) ? $item->details->source->extension : '',
           'availableChannels' => $item->details->availableChannels,
         ];

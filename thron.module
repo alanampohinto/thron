@@ -7,10 +7,8 @@
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Url;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\cache\CachePluginBase;
-use Drupal\thron\THRONApi;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\RenderElement;
@@ -70,6 +68,7 @@ function thron_theme($existing, $type, $theme, $path) {
         'type' => '',
         'extension' => '',
         'created' => NULL,
+        'updated' => NULL,
       ],
     ],
     'thron_content_embedded' => [
@@ -118,7 +117,7 @@ function thron_views_post_render(ViewExecutable $view, &$output, CachePluginBase
 
 function thron_preprocess_thron_select_sortable_widget(&$variables) {
   $element = $variables['element'];
-  
+
   $variables['available_tags'] = $element['#available_tags'];
   $variables['selected_tags'] = $element['#selected_tags'];
 
@@ -162,10 +161,10 @@ function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
           $thron_api = \Drupal::service('thron_api');
           $metadata = $form_state->get('metadata');
           $extStr = $metadata["contentType"];
-          
+
           if(isset($metadata["extension"]) && trim($metadata["extension"]) != '')
             $extStr = ' / ' . strtoupper($metadata["extension"]);
-              
+
           $content_types_labels = $thron_api->getContentTypes();
           $type = $metadata['contentType'];
           $real_type = $metadata['contentTypeFull'];
