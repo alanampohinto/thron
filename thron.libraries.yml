@@ -68,6 +68,7 @@ formatter:
   dependencies:
     - core/jquery
     - core/drupal
+    - thron/universal_player
 
 search_config:
   version: VERSION
@@ -100,3 +101,15 @@ embed_button:
   css:
     theme:
       css/thron.embed_button.css: { preprocess: false }
+
+crop:
+  version: VERSION
+  js:
+    js/thron.crop.js: {}
+  css:
+    theme:
+      css/thron.crop.css: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal

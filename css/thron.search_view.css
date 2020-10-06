@@ -123,7 +123,8 @@
     margin: 0 0.5em 0.5em 0.5em;
 }
 
-.grid-item .more-info .created {
+.grid-item .more-info .created,
+.grid-item .more-info .updated {
     margin: 0.5em 0.5em 0 0.5em;
 }
 

@@ -72,7 +72,7 @@ class Thronintegration_Api {
       // if this app can't disguise throw an error.
       $res = json_decode($tokenResp);
 
-      if (!$res->app) {
+      if (!isset($res->app) || !$res->app) {
         throw new \Exception(sprintf("%s: invalid app for %s!", $appId, $clientId));
       }
       return $res;
@@ -141,7 +141,7 @@ class Thronintegration_Api {
           "id" => $divArea
         ]
       ];
-     
+
     $resp = Thronintegration_Api::contentSearchLite($clientId, $token, $search_param);
     if(count($resp["items"])>0)
       return $resp["items"][0];
@@ -279,11 +279,12 @@ class Thronintegration_Api {
    * @param bool $orderBy
    * @param bool $cascade
    * @param bool $locale
+   * @param string $id
    *
    * @return mixed
    * @throws \Drupal\thron\Exception\AppTokenExpiredException
    */
-  public static function contentSearch($clientId, $token, $categoryId, $nextPageToken = NULL, $contentType = FALSE, $divArea = FALSE, $tagSearch = FALSE, $textSearch = FALSE, $orderBy = FALSE, $cascade = FALSE, $locale = FALSE) {
+  public static function contentSearch($clientId, $token, $categoryId, $nextPageToken = NULL, $contentType = FALSE, $divArea = FALSE, $tagSearch = FALSE, $textSearch = FALSE, $orderBy = FALSE, $cascade = FALSE, $locale = FALSE , $id = NULL) {
     try {
       $url = Thronintegration_Api::getThronEndpoint($clientId, 'xcontents') . 'content/search/'.$clientId;
 
@@ -348,12 +349,14 @@ class Thronintegration_Api {
       $thumbsOptsObj->id = $askForDivArea;
 
       array_push($body->responseOptions->thumbsOptions, $thumbsOptsObj);
-      
+
       if ($locale && !Thronintegration_Utils::IsNullOrEmptyString($locale)) {
         $body->criteria->lang = strtoupper($locale);
       }
-
-      if ($textSearch && !Thronintegration_Utils::IsNullOrEmptyString($textSearch)) {
+      if (!Thronintegration_Utils::IsNullOrEmptyString($id)) {
+        $body->criteria->ids = $id;
+      }
+      if ($textSearch && !Thronintegration_Utils::IsNullOrEmptyString($textSearch) && !isset($id)) {
         $body->criteria->lemma = new \stdClass();
         $body->criteria->lemma->text = $textSearch;
         $body->criteria->lemma->textMatch = 'any_word_match';
@@ -379,7 +382,7 @@ class Thronintegration_Api {
       }
 
       $contentSearchRes = Thronintegration_HTTP::doHTTP('JSON_POST', $url, $body, ['X-TOKENID' => $token]);
-      
+
       if (!$contentSearchRes) {
         throw new \Exception(sprintf('Cannot find contents for client %s!', $clientId));
       }
@@ -390,13 +393,13 @@ class Thronintegration_Api {
         $res['total'] = $data->estimatedTotalResults;
       else
         $res['total'] = count($data->items);
-      
+
       $res['contents'] = $data->items;
       if(isset($data->nextPageToken))
         $res['nextPageToken'] = $data->nextPageToken;
       else
         $res['nextPageToken'] = NULL;
-      
+
       $res['prevPageToken'] = $nextPageToken;
 
     }

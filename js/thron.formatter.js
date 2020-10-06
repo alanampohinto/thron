@@ -5,7 +5,7 @@
 (function ($, Drupal) {
 
     'use strict';
-    
+
     // Enables the THRON Universal player for configured elements of context
     Drupal.behaviors.ThronPlayerEmbedd = {
       attach: function (context, settings) {
