@@ -172,7 +172,7 @@ class THRONApi implements THRONApiInterface {
     }, array_filter($res->app->metadata, function ($obj) {
       return $obj->name == 'pkey';
     }));
-    
+
     if(count($pkey_arr) == 0) {
       throw new NoPkeyException();
     }
@@ -200,7 +200,7 @@ class THRONApi implements THRONApiInterface {
       'tracking_context' => $tracking_context,
       'rootCategoryId' => isset($res->app->rootCategoryId) ? $res->app->rootCategoryId : '',
     ];
-	
+
 	  $templates = array_filter($res->app->metadata, function ($item) {
       return $item->name == 'playerTemplates';
     });
@@ -599,7 +599,7 @@ class THRONApi implements THRONApiInterface {
       $filtered = array_shift($filtered);
       return $filtered["embed_code_id"];
     } catch(\Exception $e) {
-      return FALSE; 
+      return FALSE;
     }
   }
 
@@ -634,7 +634,7 @@ class THRONApi implements THRONApiInterface {
           // look into it
         }
       }
-      
+
     }
 
     $newTemplates=[];
@@ -673,7 +673,7 @@ class THRONApi implements THRONApiInterface {
       } else
         array_push($newTemplates, $template);
     }
-	
+
     if(!$templateFound) {
       array_push($newTemplates, ["node_id"=>$node_id, "template_id"=>$templateId, "embed_code_id"=>$embedCodeId]);
       $willUpdate = TRUE;
@@ -686,7 +686,7 @@ class THRONApi implements THRONApiInterface {
         return TRUE;
       } catch (EntityStorageException $e) {
         return FALSE;
-      }  
+      }
     } else
       return TRUE;
   }
@@ -724,12 +724,12 @@ class THRONApi implements THRONApiInterface {
         if(isset($login_data['default_player_templates']['default']))
           if(array_key_exists($login_data['default_player_templates']['default'], $ret['templates']))
             $ret['default_templates']['default'] = $login_data['default_player_templates']['default'];
-        
+
         if(isset($login_data['default_player_templates']['noSkin']))
           if(array_key_exists($login_data['default_player_templates']['noSkin'], $ret['templates']))
             $ret['default_templates']['noSkin'] = $login_data['default_player_templates']['noSkin'];
       }
-  
+
       $this->cache->set($cid, $ret, $this->time->getRequestTime() + $this->getCacheInterval());
       return $ret;
     }
@@ -933,6 +933,13 @@ class THRONApi implements THRONApiInterface {
       if(strpos($upper_language, "_") != false) {
         $upper_language = explode("_", $upper_language)[0];
       }
+      if(isset($properties['keyword'])){
+        if(strpos($properties['keyword'], 'id:') !== false){
+          $keywords = explode('id:',$properties['keyword']);
+          $id = $keywords[1];
+          $id = str_replace(' ', '',$id);
+        }
+      }
 
       // Call the API endpoint.
       $data = Thronintegration_Api::contentSearch(
@@ -946,12 +953,26 @@ class THRONApi implements THRONApiInterface {
         isset($properties['keyword']) ? $properties['keyword'] : FALSE,
         isset($properties['orderBy']) ? $properties['orderBy'] : FALSE,
         TRUE,
-        isset($properties['langcode']) ? $properties['langcode'] : $upper_language
+        isset($properties['langcode']) ? $properties['langcode'] : $upper_language,
+        isset($id) ? $id : NULL
       );
       if ($data['resultCode'] !== 'OK') {
         throw new \Exception($data['errorDescription']);
       }
       //$this->cache->set($cid, $data, $this->time->getRequestTime() + $this->getCacheInterval());
+
+      $tagsWithName = $this->getTagsWithName($data, $login_data['token']);
+      if (!empty($tagsWithName)) {
+        foreach ($data["contents"] as $cIndex => $content) {
+          if (isset($content->details)) {
+            foreach ($content->details->itags as $tIndex => $tags) {
+              $locale = $tagsWithName[$tags->classificationId][$tags->id];
+              $data["contents"][$cIndex]->details->itags[$tIndex]->locale = $locale;
+
+            }
+          }
+        }
+      }
       return $data;
     }
     catch (AppTokenExpiredException $ex) {
@@ -1089,7 +1110,7 @@ class THRONApi implements THRONApiInterface {
           THRON_CACHE_MAX_AGE;
     }
   }
-  
+
   /**
    * Get the breakpoint tags (if present)
    */
@@ -1136,5 +1157,53 @@ class THRONApi implements THRONApiInterface {
    */
   public function getValueOrDefault($el, $default) {
     return empty($el) ? $default : $el;
+  }
+
+  /**
+   * @param $data
+   * @param $token
+   * @throws AppTokenExpiredException
+   */
+  public function getTagsWithName(array $data, string $token)
+  {
+    $tagsList = [];
+    foreach ($data['contents'] as $content) {
+      if (isset($content->details)) {
+        foreach ($content->details->itags as $tags) {
+          $tagsList[$tags->classificationId][] = $tags->id;
+        }
+      }
+    }
+    $tagsWithName = [];
+    foreach ($tagsList as $classificationId => $tagsId) {
+      $tagsIdString = implode(array_unique($tagsId, SORT_STRING));
+      $cid = 'xintelligence_itagdefinition__' . $this->config->get('client_id') . "§" . $classificationId . $tagsIdString;
+      if ($cache = $this->cache->get($cid)) {
+        $tagsWithName = array_merge($tagsWithName, $cache->data);
+      } else {
+        try {
+          $tag = Thronintegration_Api::tagDefinitionList(
+            $this->config->get('client_id'),
+            $token,
+            $classificationId,
+            $tagsId,
+            TRUE,
+            TRUE
+          );
+        } catch (AppTokenExpiredException $ex) {
+          throw $ex;
+        }
+
+        if ($tag['status'] == 'OK') {
+          foreach ($tag["tags"] as $id => $value) {
+            $tagsWithName[$classificationId][$id] = $value['names'];
+          }
+          if (!$this->cache->get($cid)) {
+            $this->cache->set($cid, $tagsWithName, $this->time->getRequestTime() + $this->getCacheInterval());
+          }
+        }
+      }
+    }
+    return $tagsWithName;
   }
 }

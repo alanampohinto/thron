@@ -183,6 +183,8 @@ class EntityEmbedDialogOverride extends EntityEmbedDialog {
       ];
     }
 
+
+
     // When Drupal core's filter_caption is being used, the text editor may
     // offer the ability to add a caption.
     if ($editor->getFilterFormat()->filters('filter_caption')->status) {

@@ -674,6 +674,7 @@ class THRONSearch extends THRONWidgetBase {
           '#created' => $showCreated ? $media['created'] : NULL,
           '#updated' => $showLastUpdated ? $media['lastUpdate'] : NULL,
           '#owner' => $media['owner'],
+          '#category' => $media['category'],
         ];
 
         if (in_array(strtoupper($media['type']), ['IMAGE', 'VIDEO', 'OTHER', 'AUDIO'])) {
@@ -791,6 +792,7 @@ class THRONSearch extends THRONWidgetBase {
 
         $thumbnail_url = "//$clientId-cdn.thron.com/delivery/public/thumbnail/$clientId/{$item->id}/$pkey/std/320x0/";
         $thumbnail_url .= "preview.jpg";
+        $categoryLocalized = $this->getCategoryLocalized($item);
 
         $results['items'][] = [
           'id' => $item->id,
@@ -803,6 +805,7 @@ class THRONSearch extends THRONWidgetBase {
           'lastUpdate' => $item->details->lastUpdate,
           'extension' => isset($item->details->source->extension) ? $item->details->source->extension : '',
           'availableChannels' => $item->details->availableChannels,
+          'category' =>  $categoryLocalized,
         ];
       }
 
@@ -945,6 +948,21 @@ class THRONSearch extends THRONWidgetBase {
     $form_state->setValues([]);
     $form_state->setUserInput([]);
     $form_state->setRebuild();
+  }
+
+  /**
+   * @param $item
+   * @return array
+   */
+  private function getCategoryLocalized($item)
+  {
+    $category = [];
+    foreach ($item->details->itags as $element) {
+      $locale = (isset($element->locale)) ? $element->locale : [];
+      $val = $this->THRONApi->getSingleLocaleData($locale,null,'lang');
+      $category[] = $val['label'];
+    }
+    return $category;
   }
 
 }

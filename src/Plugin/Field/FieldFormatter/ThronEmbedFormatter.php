@@ -44,6 +44,8 @@ class ThronEmbedFormatter extends ThronFormatterBase {
       'embed_resizing_fixed_height' => NULL,
       'embed_resizing_fixed_link' => 1,
       'embed_resizing_responsive_width' => 100,
+      'embed_advanced_option' => NULL,
+
     ] + parent::defaultSettings();
   }
 
@@ -110,7 +112,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
             $options[$data['default_templates']['noSkin']] = $this->t('noSkin');
             $defaultAdded = TRUE;
           }
-		  
+
 		  $sepAdded = FALSE;
           foreach ($templates as $template) {
             if(
@@ -122,7 +124,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                   $options['---------'] = []; // separator
                   $sepAdded=TRUE;
                 }
-    
+
                 $options[$template['id']] .= '  ('.$template['name'].')';
               }
               else {
@@ -133,7 +135,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                 $options[$template['id']] = $template['name'];
               }
             } else {
-              $options[$template['id']] = $template['name']; 
+              $options[$template['id']] = $template['name'];
             }
           }
         }
@@ -249,12 +251,146 @@ class ThronEmbedFormatter extends ThronFormatterBase {
           ],
         ];
 
+
+
+
         // Change default values accordingly to previous selected settings.
         if ($responsive_data = $this->privateTempStore->get('embed_resizing_responsive')) {
           if ($responsive_data['width']) {
             $elements['embed_resizing_responsive_width']['#default_value'] = $responsive_data['width'];
           }
         }
+        if ($metadata['contentType'] == 'IMAGE') {
+          $advancedSetting = $this->getSetting('embed_advanced_option');
+          if(isset($advancedSetting)){
+            $this->privateTempStore->set($metadata['id'] . '-embed_resizing_responsive', $advancedSetting);
+          }else{
+            $advancedSetting = $this->privateTempStore->get($metadata['id'] . '-embed_resizing_responsive');
+          }
+          $elements['embed_advanced_option']['advanced'] = array(
+            '#type' => 'details',
+            '#title' => $this->t('Advanced settings'),
+            '#open' => TRUE,
+          );
+
+          $elements['embed_advanced_option']['advanced']['crop_mode'] = [
+            '#type' => 'select',
+            '#title' => $this->t('Crop mode'),
+            '#default_value' => (isset($advancedSetting["advanced"]["crop_mode"])) ? $advancedSetting["advanced"]["crop_mode"] : 'no crop',
+            '#required' => FALSE,
+            '#options' => [
+              'no crop' => $this->t('No crop'),
+              'auto' => $this->t('Auto'),
+              'centered' => $this->t('Centered'),
+              'product' => $this->t('Product'),
+              'manual' => $this->t('Manual'),
+            ],
+            '#prefix'  => '<div class="wrapper-advanced">'
+          ];
+
+          $elements['embed_advanced_option']['advanced']['button_manual'] = [
+            '#type' => 'button',
+            '#value' => $this->t('Done'),
+            '#button_type' => 'primary',
+            '#attributes' => array('id' => 'crop-done'),
+            '#suffix'  => '</div>'
+          ];
+
+          $elements['embed_advanced_option']['advanced']['player'] = [
+            '#type' => 'markup',
+            '#markup' => '<div id="rtisg"></div>',
+          ];
+
+          $elements['embed_advanced_option']['advanced']['player_params'] = [
+            '#type' => 'hidden',
+            '#default_value' => (isset($advancedSetting["advanced"]["player_params"])) ? $advancedSetting["advanced"]["player_params"] : '',
+          ];
+
+          $elements['embed_advanced_option']['advanced']['brightness'] = array(
+            '#type' => 'range',
+            '#title' => $this->t('Brightness'),
+            '#default_value' => (isset($advancedSetting["advanced"]["brightness"])) ? $advancedSetting["advanced"]["brightness"] : 100,
+            '#min' => 0,
+            '#max' => 200,
+            '#prefix'  => '<div class="wrapper-range">'
+          );
+          $elements['embed_advanced_option']['advanced']['brightness_input'] = [
+            '#type' => 'textfield',
+            '#size' => 3,
+            '#default_value' => (isset($advancedSetting["advanced"]["brightness_input"])) ? $advancedSetting["advanced"]["brightness_input"] : 100,
+            '#suffix'  => '</div>'
+          ];
+
+          $elements['embed_advanced_option']['advanced']['contrast'] = array(
+            '#type' => 'range',
+            '#title' => $this->t('Contrast'),
+            '#default_value' => (isset($advancedSetting["advanced"]["contrast"])) ? $advancedSetting["advanced"]["contrast"] : 100,
+            '#min' => 0,
+            '#max' => 200,
+            '#prefix'  => '<div class="wrapper-range">'
+          );
+
+          $elements['embed_advanced_option']['advanced']['contrast_input'] = [
+            '#type' => 'textfield',
+            '#size' => 3,
+            '#default_value' => (isset($advancedSetting["advanced"]["contrast_input"])) ? $advancedSetting["advanced"]["contrast_input"] : 100,
+            '#suffix'  => '</div>'
+          ];
+
+          $elements['embed_advanced_option']['advanced']['sharpness'] = array(
+            '#type' => 'range',
+            '#title' => $this->t('Sharpness'),
+            '#default_value' => (isset($advancedSetting["advanced"]["sharpness"])) ? $advancedSetting["advanced"]["sharpness"] : 100,
+            '#min' => 0,
+            '#max' => 200,
+            '#prefix'  => '<div class="wrapper-range">'
+          );
+
+          $elements['embed_advanced_option']['advanced']['sharpness_input'] = [
+            '#type' => 'textfield',
+            '#size' => 3,
+            '#default_value' => (isset($advancedSetting["advanced"]["sharpness_input"])) ? $advancedSetting["advanced"]["sharpness_input"] : 100,
+            '#suffix'  => '</div>'
+          ];
+
+          $elements['embed_advanced_option']['advanced']['color'] = array(
+            '#type' => 'range',
+            '#title' => $this->t('Color'),
+            '#default_value' => (isset($advancedSetting["advanced"]["color"])) ? $advancedSetting["advanced"]["color"] : 100,
+            '#min' => 0,
+            '#max' => 200,
+            '#prefix'  => '<div class="wrapper-range">'
+          );
+
+          $elements['embed_advanced_option']['advanced']['color_input'] = [
+            '#type' => 'textfield',
+            '#size' => 3,
+            '#default_value' => (isset($advancedSetting["advanced"]["color_input"])) ? $advancedSetting["advanced"]["color_input"] : 100,
+            '#suffix'  => '</div>'
+          ];
+
+          $elements['embed_advanced_option']['advanced']['quality'] = array(
+            '#type' => 'range',
+            '#title' => $this->t('Quality'),
+            '#default_value' => (isset($advancedSetting["advanced"]["quality"])) ? $advancedSetting["advanced"]["quality"] : 90,
+            '#prefix'  => '<div class="wrapper-range">'
+          );
+
+          $elements['embed_advanced_option']['advanced']['quality_input'] = [
+            '#type' => 'textfield',
+            '#size' => 3,
+            '#default_value' => (isset($advancedSetting["advanced"]["quality_input"])) ? $advancedSetting["advanced"]["quality_input"] : 90,
+            '#suffix'  => '</div>'
+          ];
+        }
+
+        $login_data = $this->THRON->getLoginData();
+        $elements['#attached']['library'][] = 'thron/crop';
+        $elements['#attached']['drupalSettings']['thron']['crop'] = [
+          'clientId' => $this->config->get('client_id'),
+          'xcontentId' => $metadata['id'],
+          'sessId' => $login_data['pkey'],
+        ];
       }
       else {
         $elements['media_info_error'] = [
@@ -309,24 +445,24 @@ class ThronEmbedFormatter extends ThronFormatterBase {
 
                   // is there already an embed code for this content?
                   $node = \Drupal::routeMatch()->getParameter('node');
-                  if($node) {
+                  if ($node) {
                     try {
                       $nid = $node->id();
-                    } catch(\Exception $ex) {
+                    } catch (\Exception $ex) {
                       $nid = FALSE;
                     }
                   } else $nid = FALSE;
-				  
-                  if($nid) {
+
+                  if ($nid) {
                     $embedCodeId = $this->THRON->getThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template']);
-                    if(!$embedCodeId) {
+                    if (!$embedCodeId) {
                       // find the label for this template
                       $template_settings = $this->THRON->getVideoPlayerTemplateData($formatter_settings['embed_template']);
                       $templateLabel = "unknown";
-                      if($template_settings)
-                        if(isset($template_settings["item"]["name"]))
+                      if ($template_settings)
+                        if (isset($template_settings["item"]["name"]))
                           $templateLabel = $template_settings["item"]["name"];
-                        elseif(isset($template_settings["name"]))
+                        elseif (isset($template_settings["name"]))
                           $templateLabel = $template_settings["name"];
                       $context = $login_data['tracking_context'];
                       $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $context, $metadata['id'], $login_data['token']);
@@ -335,20 +471,33 @@ class ThronEmbedFormatter extends ThronFormatterBase {
                       $this->THRON->setThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template'], $embedCodeId);
                     }
                   } else $embedCodeId = FALSE;
-                          
+
                   // get the folder pkey from the application's settings
                   $pkey = $login_data['pkey'];
-          
-                  $attached['library'][] = 'thron/universal_player';
+                  $params = [];
+                  $enhance = [];
                   $attached['library'][] = 'thron/formatter';
+                  if(isset($formatter_settings["embed_advanced_option"])) {
+                    if($formatter_settings["embed_advanced_option"]["advanced"]["crop_mode"] == 'manual') {
+                      $params = json_decode($formatter_settings["embed_advanced_option"]["advanced"]["player_params"]);
+                    }else{
+                      $params['scalemode'] = $formatter_settings["embed_advanced_option"]["advanced"]["crop_mode"];
+                      $params['enhance'] = 'brightness:' .$formatter_settings["embed_advanced_option"]["advanced"]["brightness"];
+                      $params['enhance'] .= ',contrast:' .$formatter_settings["embed_advanced_option"]["advanced"]["contrast"];
+                      $params['enhance'] .= ',sharpness:' .$formatter_settings["embed_advanced_option"]["advanced"]["sharpness"];
+                      $params['enhance'] .= ',color:' .$formatter_settings["embed_advanced_option"]["advanced"]["color"];
+                      $params['quality'] = $formatter_settings["embed_advanced_option"]["advanced"]["quality"];
+                    }
+                  }
                   $attached['drupalSettings']['thron']['players'][$uniqueDiv] = [
                     'clientId' => $this->config->get('client_id'),
                     'xcontentId' => $metadata['id'],
-                    'sessId' => $pkey, 
+                    'sessId' => $pkey,
                     'language' => $language,
+                    'rtie' => $params,
                   ];
-				  
-                  if($nid && $embedCodeId) 
+
+                  if($nid && $embedCodeId)
                     $attached['drupalSettings']['thron']['players'][$uniqueDiv]['embedCodeId'] = $embedCodeId;
 
                   $wrapper_attributes['class'] = ['player-wrap'];

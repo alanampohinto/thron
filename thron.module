@@ -69,6 +69,7 @@ function thron_theme($existing, $type, $theme, $path) {
         'extension' => '',
         'created' => NULL,
         'updated' => NULL,
+        'category' => NULL,
       ],
     ],
     'thron_content_embedded' => [
@@ -143,6 +144,7 @@ function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   // fix THRON editor icon
   if(preg_match('/node_([^_]+)_edit_form/', $form_id) || preg_match('/node_([^_]+)_form/', $form_id)) {
     $form['#attached']['library'][] = 'thron/embed_button';
+    $form['#attached']['library'][] = 'thron/universal_player';
   } else {
     switch ($form_id) {
       case 'views_exposed_form':
@@ -189,6 +191,7 @@ function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
           // Custom validation to avoid align data to be saved when not needed.
           $form['#validate'][] = 'thron_entity_embed_dialog_validate';
+          $form['#attached']['library'][] = 'thron/universal_player';
         }
         break;
 

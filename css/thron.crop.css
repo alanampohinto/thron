@@ -1,0 +1,21 @@
+#rtisg
+{
+  width: 800px;
+  height: 400px;
+}
+
+.wrapper-advanced{
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 15px;
+}
+
+#crop-done{
+  margin: 15px;
+}
+
+.wrapper-range {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 5px;
+}
