@@ -13,7 +13,6 @@
     background-image: url("../images/loading-thron.gif");
     background-size: 13px;
     background-position: 99.5% center;
-    /* LTR */
 }
 
 .js[dir="rtl"] input.form-autocomplete-thron.ui-autocomplete-loading {
