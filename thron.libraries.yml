@@ -113,3 +113,4 @@ crop:
     - core/jquery
     - core/jquery.once
     - core/drupal
+    - thron/universal_player
