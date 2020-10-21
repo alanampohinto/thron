@@ -13,20 +13,15 @@
     });
   }
 
-  function playerLoad(clientId, xcontentId, sessId, scalemode) {
+  function playerLoad(clientId, xcontentId, sessId, scalemode, noSkin = true) {
     var cropParams = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-player-params"]');
-    var rtieParams = {
-      scalemode: scalemode,
-    };
-    if (scalemode === 'manual') {
-      rtieParams.cropmode = "pixel";
-    }
-    if (typeof scalemode == "object" && !scalemode.hasOwnProperty('enhance')) {
+    var rtieParams = {};
+    if (typeof scalemode == "object") {
       rtieParams = scalemode;
       cropParams.val(JSON.stringify(scalemode));
     }
-    if (typeof scalemode == "object" && scalemode.hasOwnProperty('enhance')) {
-      rtieParams = scalemode;
+    if (scalemode.scalemode === 'manual' && !scalemode.hasOwnProperty('cropmode')) {
+      scalemode.cropmode = "pixel";
     }
     if (scalemode != 'manual' && typeof scalemode != "object") {
       cropParams.val('');
@@ -37,6 +32,10 @@
       sessId: sessId,
       rtie: rtieParams
     };
+    if (noSkin === true) {
+      options.noSkin = true;
+      options.mouseWheelZoom = false;
+    }
 
     var cropPlayer = THRONContentExperience("rtisg", options);
     return cropPlayer;
@@ -94,9 +93,12 @@
         croph = croph * originalHeight / imageSize.height;
 
         // compose query string
+        var {quality, enhance} = getInputValues();
         params = {
           scalemode: "manual",
           cropmode: "pixel",
+          quality: quality,
+          enhance: enhance,
           cropx: cropx,
           cropy: cropy,
           cropw: cropw,
@@ -106,7 +108,6 @@
           player.destroy();
         }
         player = playerLoad(clientId, xcontentId, sessId, params);
-
       });
   }
 
@@ -118,13 +119,18 @@
     }
   }
 
-  function renderInputValue(settings, mode) {
+  function getInputValues() {
     var brightness = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-brightness"]').val();
     var contrast = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-contrast"]').val();
     var sharpness = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-sharpness"]').val();
     var color = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-color"]').val();
     var quality = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-quality"]').val();
     var enhance = 'brightness:' + brightness + ',contrast:' + contrast + ',sharpness:' + sharpness + ',color:' + color;
+    return {quality, enhance};
+  }
+
+  function renderInputValue(settings, mode, noSkin = true) {
+    var {quality, enhance} = getInputValues();
     var p = {
       scalemode: mode,
       quality: quality,
@@ -137,11 +143,30 @@
       settings.thron.crop.clientId,
       settings.thron.crop.xcontentId,
       settings.thron.crop.sessId,
-      p
+      p,
+      noSkin
     );
   }
 
+  function getCropParams(p) {
+    var cropParams = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-player-params"]');
+    if (cropParams) {
+      var params = JSON.parse(cropParams.val());
+      if (params.hasOwnProperty('cropx') &&
+        params.hasOwnProperty('cropy') &&
+        params.hasOwnProperty('cropw') &&
+        params.hasOwnProperty('croph')) {
+        p.cropx = params.cropx;
+        p.cropy = params.cropy;
+        p.cropw = params.cropw;
+        p.croph = params.croph;
+      }
+    }
+    return p;
+  }
+
   function renderInputChange(settings, mode, inputType) {
+
     switch (inputType) {
       case 'brightness':
         $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-brightness"]').once('thron').on('change', function (mode) {
@@ -150,12 +175,13 @@
           var color = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-color"]').val();
           var quality = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-quality"]').val();
           var enhance = 'brightness:' + this.value + ',contrast:' + contrast + ',sharpness:' + sharpness + ',color:' + color;
-
+          mode = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode"]').val();
           var p = {
             scalemode: mode,
             quality: quality,
             enhance: enhance
           };
+          p = getCropParams(p);
           if (player) {
             player.destroy();
           }
@@ -174,12 +200,13 @@
           var color = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-color"]').val();
           var quality = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-quality"]').val();
           var enhance = 'brightness:' + brightness + ',contrast:' + this.value + ',sharpness:' + sharpness + ',color:' + color;
-
+          mode = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode"]').val();
           var p = {
             scalemode: mode,
             quality: quality,
             enhance: enhance
           };
+          p = getCropParams(p);
           if (player) {
             player.destroy();
           }
@@ -198,12 +225,13 @@
           var color = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-color"]').val();
           var quality = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-quality"]').val();
           var enhance = 'brightness:' + brightness + ',contrast:' + contrast + ',sharpness:' + this.value + ',color:' + color;
-
+          mode = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode"]').val();
           var p = {
             scalemode: mode,
             quality: quality,
             enhance: enhance
           };
+          p = getCropParams(p);
           if (player) {
             player.destroy();
           }
@@ -222,12 +250,13 @@
           var sharpness = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-sharpness"]').val();
           var quality = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-quality"]').val();
           var enhance = 'brightness:' + brightness + ',contrast:' + contrast + ',sharpness:' + sharpness + ',color:' + this.value;
-
+          mode = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode"]').val();
           var p = {
             scalemode: mode,
             quality: quality,
             enhance: enhance
           };
+          p = getCropParams(p);
           if (player) {
             player.destroy();
           }
@@ -246,12 +275,13 @@
           var sharpness = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-sharpness"]').val();
           var color = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-color"]').val();
           var enhance = 'brightness:' + brightness + ',contrast:' + contrast + ',sharpness:' + sharpness + ',color:' + color;
-
+          mode = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode"]').val();
           var p = {
             scalemode: mode,
             quality: this.value,
             enhance: enhance
           };
+          p = getCropParams(p);
           if (player) {
             player.destroy();
           }
@@ -263,6 +293,25 @@
           );
         });
         break;
+    }
+  }
+
+  function setFormFactor() {
+    var resize = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing"]').val();
+    var defaultWidth = 600;
+    var defaultHeight = 400;
+    if (resize == 'fixed') {
+      var ratio = 1;
+      var width = $('input[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing-fixed-width"]').val();
+      var height = $('input[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing-fixed-height"]').val();
+      ratio = defaultWidth / width;
+      width = defaultWidth;
+      height = height * ratio;
+      $('#rtisg').css("width", width);
+      $('#rtisg').css("height", height);
+    } else {
+      $('#rtisg').css("width", defaultWidth);
+      $('#rtisg').css("height", defaultHeight);
     }
   }
 
@@ -291,15 +340,8 @@
                 settings.thron.crop.sessId,
                 this.value
               );
-              element.forEach(function (item) {
-                paramsDisableEnable(item, true)
-              });
             } else {
               renderInputValue(settings, this.value);
-
-              element.forEach(function (item) {
-                paramsDisableEnable(item, false)
-              });
             }
             var mode = this.value;
             renderInputChange(settings, mode, 'brightness');
@@ -310,11 +352,10 @@
           });
           var cropModeLoad = $(context).find('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode"]').once('js_mod');
           if (cropModeLoad.length) {
-
             var cropValues = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-player-params"]').val();
-            if(cropValues === ''){
+            if (cropValues === '') {
               renderInputValue(settings, cropMode.val());
-            }else{
+            } else {
               if (player) {
                 player.destroy();
               }
@@ -329,11 +370,7 @@
             buttonManualType(cropModeLoad.val());
           }
           element.forEach(getRangeValue);
-          if (cropMode.val() === 'manual') {
-            element.forEach(function (item) {
-              paramsDisableEnable(item, true)
-            });
-          } else {
+          if (cropMode.val()) {
             renderInputChange(settings, cropMode.val(), 'brightness');
             renderInputChange(settings, cropMode.val(), 'contrast');
             renderInputChange(settings, cropMode.val(), 'sharpness')
@@ -343,13 +380,40 @@
 
           $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-button-manual"]').once('thron').on('click', function (e) {
             e.preventDefault();
-            getRtieParams(
-              settings.thron.crop.clientId,
-              settings.thron.crop.xcontentId,
-              settings.thron.crop.sessId
-            );
+            if ($(this).hasClass('cropMode')) {
+              if ($(this).attr('value') === 'Done') {
+                getRtieParams(
+                  settings.thron.crop.clientId,
+                  settings.thron.crop.xcontentId,
+                  settings.thron.crop.sessId
+                );
+              }
+              $(this).attr('value', 'Crop');
+              $(this).removeClass('cropMode');
+              element.forEach(function (item) {
+                paramsDisableEnable(item, false)
+              });
+            } else {
+              $(this).attr('value', 'Done');
+              $(this).addClass('cropMode');
+              element.forEach(function (item) {
+                paramsDisableEnable(item, true)
+              });
+              renderInputValue(settings, 'manual', false);
+            }
           });
         }
+
+        setFormFactor();
+        $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing"]').once('thron').on('change', function () {
+          setFormFactor();
+        });
+        $('input[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing-fixed-width"]').once('thron').change(function () {
+          setFormFactor();
+        });
+        $('input[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing-fixed-height"]').once('thron').change(function () {
+          setFormFactor();
+        });
       }
     }
   }

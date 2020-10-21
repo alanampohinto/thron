@@ -263,9 +263,9 @@ class ThronEmbedFormatter extends ThronFormatterBase {
         if ($metadata['contentType'] == 'IMAGE') {
           $advancedSetting = $this->getSetting('embed_advanced_option');
           if(isset($advancedSetting)){
-            $this->privateTempStore->set($metadata['id'] . '-embed_resizing_responsive', $advancedSetting);
+            $this->privateTempStore->set($media->id() . '-embed_crop', $advancedSetting);
           }else{
-            $advancedSetting = $this->privateTempStore->get($metadata['id'] . '-embed_resizing_responsive');
+            $advancedSetting = $this->privateTempStore->get($metadata['id'] . '-embed_crop');
           }
           $elements['embed_advanced_option']['advanced'] = array(
             '#type' => 'details',
@@ -290,7 +290,7 @@ class ThronEmbedFormatter extends ThronFormatterBase {
 
           $elements['embed_advanced_option']['advanced']['button_manual'] = [
             '#type' => 'button',
-            '#value' => $this->t('Done'),
+            '#value' => $this->t('Crop'),
             '#button_type' => 'primary',
             '#attributes' => array('id' => 'crop-done'),
             '#suffix'  => '</div>'
