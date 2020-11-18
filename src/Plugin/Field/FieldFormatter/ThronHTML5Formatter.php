@@ -251,14 +251,15 @@ class ThronHTML5Formatter extends ThronFormatterBase {
           $advancedSetting = $this->getSetting('embed_advanced_option');
           if(isset($advancedSetting)){
             $this->privateTempStore->set($media->id() . '-embed_crop', $advancedSetting);
-          }else{
-            $advancedSetting = $this->privateTempStore->get($metadata['id'] . '-embed_crop');
           }
-          $elements['embed_advanced_option']['advanced'] = array(
-            '#type' => 'details',
-            '#title' => $this->t('Advanced settings'),
-            '#open' => TRUE,
-          );
+          $elements['embed_advanced_option']['advanced'] =[
+            '#type' => 'container',
+            '#attributes' => [
+              'id' => [
+                'advanced-settings',
+              ],
+            ],
+          ];
 
           $elements['embed_advanced_option']['advanced']['crop_mode'] = [
             '#type' => 'select',
@@ -283,6 +284,11 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#suffix'  => '</div>'
           ];
 
+          $elements['embed_advanced_option']['advanced']['crop_description'] = [
+            '#type' => 'markup',
+            '#markup' => '<p id="rtisg-crop-description">'.$this->t('Zoom and move the image to frame the area you want to crop').'</p>',
+          ];
+
           $elements['embed_advanced_option']['advanced']['player'] = [
             '#type' => 'markup',
             '#markup' => '<div id="rtisg"></div>',
@@ -305,7 +311,8 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#type' => 'textfield',
             '#size' => 3,
             '#default_value' => (isset($advancedSetting["advanced"]["brightness_input"])) ? $advancedSetting["advanced"]["brightness_input"] : 100,
-            '#suffix'  => '</div>'
+            '#suffix'  => '</div>',
+            '#disabled' => TRUE
           ];
 
           $elements['embed_advanced_option']['advanced']['contrast'] = array(
@@ -321,7 +328,8 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#type' => 'textfield',
             '#size' => 3,
             '#default_value' => (isset($advancedSetting["advanced"]["contrast_input"])) ? $advancedSetting["advanced"]["contrast_input"] : 100,
-            '#suffix'  => '</div>'
+            '#suffix'  => '</div>',
+            '#disabled' => TRUE
           ];
 
           $elements['embed_advanced_option']['advanced']['sharpness'] = array(
@@ -337,7 +345,8 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#type' => 'textfield',
             '#size' => 3,
             '#default_value' => (isset($advancedSetting["advanced"]["sharpness_input"])) ? $advancedSetting["advanced"]["sharpness_input"] : 100,
-            '#suffix'  => '</div>'
+            '#suffix'  => '</div>',
+            '#disabled' => TRUE
           ];
 
           $elements['embed_advanced_option']['advanced']['color'] = array(
@@ -353,7 +362,8 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#type' => 'textfield',
             '#size' => 3,
             '#default_value' => (isset($advancedSetting["advanced"]["color_input"])) ? $advancedSetting["advanced"]["color_input"] : 100,
-            '#suffix'  => '</div>'
+            '#suffix'  => '</div>',
+            '#disabled' => TRUE
           ];
 
           $elements['embed_advanced_option']['advanced']['quality'] = array(
@@ -367,7 +377,8 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#type' => 'textfield',
             '#size' => 3,
             '#default_value' => (isset($advancedSetting["advanced"]["quality_input"])) ? $advancedSetting["advanced"]["quality_input"] : 90,
-            '#suffix'  => '</div>'
+            '#suffix'  => '</div>',
+            '#disabled' => TRUE
           ];
         }
         $login_data = $this->THRON->getLoginData();

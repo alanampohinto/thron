@@ -1,7 +1,21 @@
+#advanced-settings {
+  padding: 13px;
+  overflow: scroll;
+  max-height: 750px!important;
+}
+
+p#rtisg-crop-description {
+  display: none;
+}
+
+p#rtisg-crop-description.cropMode {
+  display: block;
+}
+
 #rtisg
 {
-  width: 600px;
-  height: 400px;
+  width: 500px;
+  height: 350px;
 }
 
 .wrapper-advanced{
@@ -11,13 +25,30 @@
 }
 
 #crop-done{
-  margin: 15px;
+  margin: 15px 0 15px 15px;
+
 }
 
 .wrapper-range {
   display: flex;
   justify-content: space-between;
   padding-top: 5px;
+  max-width: 600px;
+}
+
+.wrapper-range div:first-child{
+  display: flex;
+  justify-content: space-between;
+  flex: 2;
+}
+
+.wrapper-range div:first-child input{
+  width: 100%;
+  margin: 0 2.5rem 0 2.5rem;
+}
+
+.wrapper-range div:first-child label{
+  min-width: 100px;
 }
 
 

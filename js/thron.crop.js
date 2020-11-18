@@ -38,12 +38,41 @@
     }
 
     var cropPlayer = THRONContentExperience("rtisg", options);
+
+    // clear unnecessary texts
+    cropPlayer.on("beforeInit",
+        function (playerInstance) {
+          var schema = window.THRONSchemaHelper.getSchema();
+          var elements = window.THRONSchemaHelper.removeElementsById(schema,"IMAGE", "captionText", "shareButton","downloadableButton","zoomText", "fullscreenButton");
+          var params = playerInstance.params()
+          params["bars"]=schema
+          //add params
+          playerInstance.params(params);
+        }
+    );
+    if(noSkin === false){
+    // on player ready
+      cropPlayer.on("ready",function(playerInstance){
+        //create div grid
+        var mediaContainer = playerInstance.mediaContainer();
+        var newNode = document.createElement('div');
+        newNode.className = 'th-wrapper-grid';
+        //generate box
+        for (var i =0;i<9;i++){
+          var newNodeGrid = document.createElement('div');
+          newNodeGrid.className = 'th-wrapper-grid-box';
+          newNode.appendChild(newNodeGrid)
+        }
+        //add div grid
+        mediaContainer.appendChild(newNode)
+      })
+    }
+
     return cropPlayer;
   }
 
   function paramsDisableEnable(id, prop) {
     $('[data-drupal-selector=' + id + ']').prop("disabled", prop);
-    $('[data-drupal-selector=' + id + '-input]').prop("disabled", prop);
   }
 
   function getRtieParams(clientId, xcontentId, sessId, params) {
@@ -298,8 +327,8 @@
 
   function setFormFactor() {
     var resize = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing"]').val();
-    var defaultWidth = 600;
-    var defaultHeight = 400;
+    var defaultWidth = 500;
+    var defaultHeight = 350;
     if (resize == 'fixed') {
       var ratio = 1;
       var width = $('input[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing-fixed-width"]').val();
@@ -313,6 +342,37 @@
       $('#rtisg').css("width", defaultWidth);
       $('#rtisg').css("height", defaultHeight);
     }
+  }
+
+  function advancedSettings() {
+    var dialog = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced"]').once('thron').dialog({
+      autoOpen: false,
+      modal: true,
+      appendTo: "#data-entity-embed-display-settings-wrapper",
+      dialogClass: 'advancedSettings',
+      resizable: false,
+      width: 526,
+      title: "Advanced Settings",
+      buttons: {
+        "Back": function () {
+          $(this).dialog("close");
+        },
+        "Embed": function () {
+          $(this).dialog("close");
+          $('.embed').click();
+        }
+      }
+    });
+    $('.advanced-mode').on('click', function (e) {
+      e.preventDefault();
+      $("div.advancedSettings div button:nth-child(2)").addClass("button--primary");
+      $('div.ui-dialog.ui-corner-all.ui-widget')
+          .css("left", "50%")
+          .css("top", "50%")
+          .css("transform", "translate(-50%, -50%)");
+      $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced"]').dialog('open');
+    });
+
   }
 
   Drupal.behaviors.ThronCrop = {
@@ -379,6 +439,9 @@
           }
 
           $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-button-manual"]').once('thron').on('click', function (e) {
+            if(cropMode.val() !== 'manual'){
+              return false;
+            }
             e.preventDefault();
             if ($(this).hasClass('cropMode')) {
               if ($(this).attr('value') === 'Done') {
@@ -390,12 +453,16 @@
               }
               $(this).attr('value', 'Crop');
               $(this).removeClass('cropMode');
+              $('#rtisg-crop-description').removeClass('cropMode');
+              paramsDisableEnable('edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode',false)
               element.forEach(function (item) {
                 paramsDisableEnable(item, false)
               });
             } else {
               $(this).attr('value', 'Done');
               $(this).addClass('cropMode');
+              $('#rtisg-crop-description').addClass('cropMode');
+              paramsDisableEnable('edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode',true)
               element.forEach(function (item) {
                 paramsDisableEnable(item, true)
               });
@@ -404,14 +471,23 @@
           });
         }
 
+
+        advancedSettings();
+
         setFormFactor();
         $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing"]').once('thron').on('change', function () {
+          $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-player-params"]').val('');
+          renderInputValue(settings, cropModeLoad.val());
           setFormFactor();
         });
         $('input[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing-fixed-width"]').once('thron').change(function () {
+          $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-player-params"]').val('');
+          renderInputValue(settings, cropModeLoad.val());
           setFormFactor();
         });
         $('input[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing-fixed-height"]').once('thron').change(function () {
+          $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-player-params"]').val('');
+          renderInputValue(settings, cropModeLoad.val());
           setFormFactor();
         });
       }

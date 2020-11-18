@@ -210,9 +210,25 @@ class EntityEmbedDialogOverride extends EntityEmbedDialog {
         'event' => 'click',
       ],
     ];
+
+    $form['actions']['advanced'] = [
+      '#type' => 'button',
+      '#value' => $this->t('Advanced'),
+      '#attributes' => [
+        'class' => [
+          'advanced-mode',
+        ],
+      ],
+    ];
+
     $form['actions']['save_modal'] = [
       '#type' => 'submit',
       '#value' => $this->t('Embed'),
+      '#attributes' => [
+        'class' => [
+          'embed',
+        ],
+      ],
       '#button_type' => 'primary',
       // No regular submit-handler. This form only works via JavaScript.
       '#submit' => [],
