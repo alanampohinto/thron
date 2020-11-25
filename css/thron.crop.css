@@ -1,15 +1,46 @@
+/* Hide scrollbar for Chrome, Safari, Opera and Edge */
+#advanced-settings::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE and Firefox*/
+#advanced-settings {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 #advanced-settings {
   padding: 13px;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
   max-height: 750px!important;
 }
 
-p#rtisg-crop-description {
+#advanced-settings { overflow: -moz-scrollbars-none; }
+
+#advanced-settings { -ms-overflow-style: none; }
+
+#rtisg-crop-description{
+ min-height: 25px;
+}
+
+div#rtisg-crop-description p {
+  margin: 0;
+}
+
+div#advanced-settings div#rtisg-crop-description p {
   display: none;
 }
 
-p#rtisg-crop-description.cropMode {
+div#advanced-settings.manual div#rtisg-crop-description p {
   display: block;
+}
+
+div#advanced-settings.manual div#rtisg-crop-description p span {
+  display: inline;
+}
+
+div#advanced-settings.manual div#rtisg-crop-description p span.hidden {
+  display: none;
 }
 
 #rtisg
@@ -21,7 +52,6 @@ p#rtisg-crop-description.cropMode {
 .wrapper-advanced{
   display: flex;
   justify-content: space-between;
-  padding-bottom: 15px;
 }
 
 #crop-done{

@@ -142,8 +142,14 @@
 
   function buttonManualType(val) {
     if (val === 'manual') {
+      //used for manual mode description
+      $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced"]').addClass('manual');
+      //used for manual mode button
       $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-button-manual"]').show();
     } else {
+      //used for manual mode description
+      $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced"]').removeClass('manual');
+      //used for manual mode button
       $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-button-manual"]').hide();
     }
   }
@@ -329,23 +335,22 @@
     var resize = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing"]').val();
     var defaultWidth = 500;
     var defaultHeight = 350;
+    var ratio = defaultHeight / defaultWidth;
     if (resize == 'fixed') {
-      var ratio = 1;
       var width = $('input[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing-fixed-width"]').val();
       var height = $('input[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing-fixed-height"]').val();
-      ratio = defaultWidth / width;
-      width = defaultWidth;
-      height = height * ratio;
-      $('#rtisg').css("width", width);
-      $('#rtisg').css("height", height);
-    } else {
-      $('#rtisg').css("width", defaultWidth);
-      $('#rtisg').css("height", defaultHeight);
+      ratio = height / width;
     }
+    if (resize == 'responsive'){
+      var aspect_ratio = $('input[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-resizing-responsive-width"]').attr('aspect_ratio').split(':');
+      ratio = aspect_ratio[1] / aspect_ratio[0];
+    }
+    $('#rtisg').css("width", defaultWidth);
+    $('#rtisg').css("height", defaultWidth * ratio);
   }
 
   function advancedSettings() {
-    var dialog = $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced"]').once('thron').dialog({
+    $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced"]').once('thron').dialog({
       autoOpen: false,
       modal: true,
       appendTo: "#data-entity-embed-display-settings-wrapper",
@@ -353,16 +358,24 @@
       resizable: false,
       width: 526,
       title: "Advanced Settings",
-      buttons: {
-        "Back": function () {
-          $(this).dialog("close");
+      buttons: [
+        {
+          text: "Back",
+          click: function () {
+            $(this).dialog("close");
+          }
         },
-        "Embed": function () {
-          $(this).dialog("close");
-          $('.embed').click();
-        }
-      }
+        {
+          text: "Embed",
+          id: "advanced-settings-embed-button",
+          click: function () {
+            $(this).dialog("close");
+            $('.embed').click();
+          }
+        },
+      ]
     });
+
     $('.advanced-mode').on('click', function (e) {
       e.preventDefault();
       $("div.advancedSettings div button:nth-child(2)").addClass("button--primary");
@@ -390,25 +403,14 @@
         if (cropMode) {
           $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode"]').once('thron').on('change', function () {
             buttonManualType(this.value);
-            if (this.value === 'manual') {
-              if (player) {
-                player.destroy();
-              }
-              player = playerLoad(
-                settings.thron.crop.clientId,
-                settings.thron.crop.xcontentId,
-                settings.thron.crop.sessId,
-                this.value
-              );
-            } else {
-              renderInputValue(settings, this.value);
-            }
             var mode = this.value;
+            buttonManualType(mode);
+            renderInputValue(settings, mode);
             renderInputChange(settings, mode, 'brightness');
             renderInputChange(settings, mode, 'contrast');
-            renderInputChange(settings, mode, 'sharpness')
-            renderInputChange(settings, mode, 'color')
-            renderInputChange(settings, mode, 'quality')
+            renderInputChange(settings, mode, 'sharpness');
+            renderInputChange(settings, mode, 'color');
+            renderInputChange(settings, mode, 'quality');
           });
           var cropModeLoad = $(context).find('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode"]').once('js_mod');
           if (cropModeLoad.length) {
@@ -426,16 +428,15 @@
                 JSON.parse(cropValues)
               );
             }
-
             buttonManualType(cropModeLoad.val());
           }
           element.forEach(getRangeValue);
           if (cropMode.val()) {
             renderInputChange(settings, cropMode.val(), 'brightness');
             renderInputChange(settings, cropMode.val(), 'contrast');
-            renderInputChange(settings, cropMode.val(), 'sharpness')
-            renderInputChange(settings, cropMode.val(), 'color')
-            renderInputChange(settings, cropMode.val(), 'quality')
+            renderInputChange(settings, cropMode.val(), 'sharpness');
+            renderInputChange(settings, cropMode.val(), 'color');
+            renderInputChange(settings, cropMode.val(), 'quality');
           }
 
           $('[data-drupal-selector="edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-button-manual"]').once('thron').on('click', function (e) {
@@ -453,16 +454,20 @@
               }
               $(this).attr('value', 'Crop');
               $(this).removeClass('cropMode');
-              $('#rtisg-crop-description').removeClass('cropMode');
-              paramsDisableEnable('edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode',false)
+              $('#rtisg-crop-description span.cropping').addClass('hidden');
+              $('#rtisg-crop-description span.no-cropping').removeClass('hidden');
+              $('#advanced-settings-embed-button').prop('disabled', false);
+              paramsDisableEnable('edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode',false);
               element.forEach(function (item) {
                 paramsDisableEnable(item, false)
               });
             } else {
               $(this).attr('value', 'Done');
               $(this).addClass('cropMode');
-              $('#rtisg-crop-description').addClass('cropMode');
-              paramsDisableEnable('edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode',true)
+              $('#rtisg-crop-description span.cropping').removeClass('hidden');
+              $('#rtisg-crop-description span.no-cropping').addClass('hidden');
+              $('#advanced-settings-embed-button').prop('disabled', true);
+              paramsDisableEnable('edit-attributes-data-entity-embed-display-settings-embed-advanced-option-advanced-crop-mode',true);
               element.forEach(function (item) {
                 paramsDisableEnable(item, true)
               });

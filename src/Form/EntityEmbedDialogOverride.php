@@ -211,15 +211,17 @@ class EntityEmbedDialogOverride extends EntityEmbedDialog {
       ],
     ];
 
-    $form['actions']['advanced'] = [
-      '#type' => 'button',
-      '#value' => $this->t('Advanced'),
-      '#attributes' => [
-        'class' => [
-          'advanced-mode',
+    if($metadata['contentType'] == 'IMAGE'){
+      $form['actions']['advanced'] = [
+        '#type' => 'button',
+        '#value' => $this->t('Advanced'),
+        '#attributes' => [
+          'class' => [
+            'advanced-mode',
+          ],
         ],
-      ],
-    ];
+      ];
+    }
 
     $form['actions']['save_modal'] = [
       '#type' => 'submit',

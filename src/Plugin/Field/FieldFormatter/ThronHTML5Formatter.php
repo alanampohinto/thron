@@ -3,13 +3,12 @@
 namespace Drupal\thron\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Render\FormattableMarkup;
-
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Template\Attribute;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\thron\Plugin\media\Source\ThronMediaSource;
+use Drupal\Core\Template\Attribute;
 use Drupal\thron\Integration\Thronintegration_Utils;
+use Drupal\thron\Plugin\media\Source\ThronMediaSource;
 
 /**
  * Plugin implementation of the 'THRON Embedded' formatter.
@@ -21,29 +20,32 @@ use Drupal\thron\Integration\Thronintegration_Utils;
  *   weight = 2
  * )
  */
-class ThronHTML5Formatter extends ThronFormatterBase {
+class ThronHTML5Formatter extends ThronFormatterBase
+{
 
   /**
    * {@inheritdoc}
    */
-  public static function defaultSettings() {
+  public static function defaultSettings()
+  {
     return [
-      'embed_image_as_webp' => 0,
-      'embed_imageset' => 0,
-      'embed_channel' => NULL,
-      'embed_resizing' => 'fixed',
-      'embed_resizing_fixed_width' => NULL,
-      'embed_resizing_fixed_height' => NULL,
-      'embed_resizing_fixed_link' => 1,
-      'embed_resizing_responsive_width' => 100,
-      'embed_advanced_option' => NULL,
-    ] + parent::defaultSettings();
+        'embed_image_as_webp' => 0,
+        'embed_imageset' => 0,
+        'embed_channel' => NULL,
+        'embed_resizing' => 'fixed',
+        'embed_resizing_fixed_width' => NULL,
+        'embed_resizing_fixed_height' => NULL,
+        'embed_resizing_fixed_link' => 1,
+        'embed_resizing_responsive_width' => 100,
+        'embed_advanced_option' => NULL,
+      ] + parent::defaultSettings();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
+  public function settingsForm(array $form, FormStateInterface $form_state)
+  {
     $elements = parent::settingsForm($form, $form_state);
 
     /** @var \Drupal\media\Entity\Media $entity */
@@ -56,23 +58,21 @@ class ThronHTML5Formatter extends ThronFormatterBase {
 
         $elements['#attached']['library'][] = 'thron/formatter_resizing_config';
 
-        $default_width = 600;
-        $default_height = 400;
+        $default_width = 500;
+        $default_height = 350;
 
-        $ar_label = $metadata['aspect_ratio'] ?: '600:400';
+        $ar_label = $metadata['aspect_ratio'] ?: $default_width . ':' . $default_height;
         if ($metadata['contentType'] == 'IMAGE') {
           $ar = $metadata['width'] / $metadata['height'];
           $default_width = $metadata['width'];
           $default_height = $metadata['height'];
-        }
-        elseif($metadata['contentType'] == 'VIDEO') {
+        } elseif ($metadata['contentType'] == 'VIDEO') {
           list($w, $h) = explode(":", $metadata['aspect_ratio']);
           $ar = $w / $h;
           $default_height = ceil($default_width / $ar);
-        }
-        else {
+        } else {
           list($w, $h) = explode(":", $metadata['aspect_ratio']);
-          $ar =  ($w / $h);
+          $ar = ($w / $h);
           if ($w >= $default_width) {
             $w = $default_width;
           }
@@ -86,7 +86,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
         ];
 
         $is_imageset = $this->getSetting('embed_imageset');
-        $skid = 'media:'.$media->id().':sessionOptions';  // session Key ID
+        $skid = 'media:' . $media->id() . ':sessionOptions';  // session Key ID
         $opts = \Drupal::request()->getSession()->get($skid);
         $treat_as_imageset = !empty($opts) && isset($opts['treat_as_imageset']) && $opts['treat_as_imageset'];
         if (!$is_imageset && $treat_as_imageset) {
@@ -111,7 +111,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
               '#value' => '1',
             ];
           }
-        } elseif($metadata['contentType'] == 'VIDEO') {
+        } elseif ($metadata['contentType'] == 'VIDEO') {
           // get the channels for this content
           $elements['embed_channel'] = [
             '#type' => 'select',
@@ -226,6 +226,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
           '#size' => 10,
           '#min' => 0,
           '#max' => 100,
+          '#attributes' => array('aspect_ratio' => $ar_label),
           '#default_value' => $this->getSetting('embed_resizing_responsive_width'),
           '#states' => [
             'visible' => [
@@ -249,10 +250,10 @@ class ThronHTML5Formatter extends ThronFormatterBase {
 
         if ($metadata['contentType'] == 'IMAGE') {
           $advancedSetting = $this->getSetting('embed_advanced_option');
-          if(isset($advancedSetting)){
+          if (isset($advancedSetting)) {
             $this->privateTempStore->set($media->id() . '-embed_crop', $advancedSetting);
           }
-          $elements['embed_advanced_option']['advanced'] =[
+          $elements['embed_advanced_option']['advanced'] = [
             '#type' => 'container',
             '#attributes' => [
               'id' => [
@@ -273,7 +274,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
               'product' => $this->t('Product'),
               'manual' => $this->t('Manual'),
             ],
-            '#prefix'  => '<div class="wrapper-advanced">'
+            '#prefix' => '<div class="wrapper-advanced">'
           ];
 
           $elements['embed_advanced_option']['advanced']['button_manual'] = [
@@ -281,12 +282,15 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#value' => $this->t('Crop'),
             '#button_type' => 'primary',
             '#attributes' => array('id' => 'crop-done'),
-            '#suffix'  => '</div>'
+            '#suffix' => '</div>'
           ];
 
           $elements['embed_advanced_option']['advanced']['crop_description'] = [
             '#type' => 'markup',
-            '#markup' => '<p id="rtisg-crop-description">'.$this->t('Zoom and move the image to frame the area you want to crop').'</p>',
+            '#markup' => '<div id="rtisg-crop-description"><p>'.
+              '<span class="no-cropping">'. $this->t('Click the "Crop" button to frame a specific area.') . '</span>'.
+              '<span class="cropping hidden">'. $this->t('Zoom and move the image to frame the area you want to crop.') . '</span>'.
+              '</p></div>',
           ];
 
           $elements['embed_advanced_option']['advanced']['player'] = [
@@ -305,13 +309,13 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#default_value' => (isset($advancedSetting["advanced"]["brightness"])) ? $advancedSetting["advanced"]["brightness"] : 100,
             '#min' => 0,
             '#max' => 200,
-            '#prefix'  => '<div class="wrapper-range">'
+            '#prefix' => '<div class="wrapper-range">'
           );
           $elements['embed_advanced_option']['advanced']['brightness_input'] = [
             '#type' => 'textfield',
             '#size' => 3,
             '#default_value' => (isset($advancedSetting["advanced"]["brightness_input"])) ? $advancedSetting["advanced"]["brightness_input"] : 100,
-            '#suffix'  => '</div>',
+            '#suffix' => '</div>',
             '#disabled' => TRUE
           ];
 
@@ -321,14 +325,14 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#default_value' => (isset($advancedSetting["advanced"]["contrast"])) ? $advancedSetting["advanced"]["contrast"] : 100,
             '#min' => 0,
             '#max' => 200,
-            '#prefix'  => '<div class="wrapper-range">'
+            '#prefix' => '<div class="wrapper-range">'
           );
 
           $elements['embed_advanced_option']['advanced']['contrast_input'] = [
             '#type' => 'textfield',
             '#size' => 3,
             '#default_value' => (isset($advancedSetting["advanced"]["contrast_input"])) ? $advancedSetting["advanced"]["contrast_input"] : 100,
-            '#suffix'  => '</div>',
+            '#suffix' => '</div>',
             '#disabled' => TRUE
           ];
 
@@ -338,14 +342,14 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#default_value' => (isset($advancedSetting["advanced"]["sharpness"])) ? $advancedSetting["advanced"]["sharpness"] : 100,
             '#min' => 0,
             '#max' => 200,
-            '#prefix'  => '<div class="wrapper-range">'
+            '#prefix' => '<div class="wrapper-range">'
           );
 
           $elements['embed_advanced_option']['advanced']['sharpness_input'] = [
             '#type' => 'textfield',
             '#size' => 3,
             '#default_value' => (isset($advancedSetting["advanced"]["sharpness_input"])) ? $advancedSetting["advanced"]["sharpness_input"] : 100,
-            '#suffix'  => '</div>',
+            '#suffix' => '</div>',
             '#disabled' => TRUE
           ];
 
@@ -355,14 +359,14 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#default_value' => (isset($advancedSetting["advanced"]["color"])) ? $advancedSetting["advanced"]["color"] : 100,
             '#min' => 0,
             '#max' => 200,
-            '#prefix'  => '<div class="wrapper-range">'
+            '#prefix' => '<div class="wrapper-range">'
           );
 
           $elements['embed_advanced_option']['advanced']['color_input'] = [
             '#type' => 'textfield',
             '#size' => 3,
             '#default_value' => (isset($advancedSetting["advanced"]["color_input"])) ? $advancedSetting["advanced"]["color_input"] : 100,
-            '#suffix'  => '</div>',
+            '#suffix' => '</div>',
             '#disabled' => TRUE
           ];
 
@@ -370,14 +374,14 @@ class ThronHTML5Formatter extends ThronFormatterBase {
             '#type' => 'range',
             '#title' => $this->t('Quality'),
             '#default_value' => (isset($advancedSetting["advanced"]["quality"])) ? $advancedSetting["advanced"]["quality"] : 90,
-            '#prefix'  => '<div class="wrapper-range">'
+            '#prefix' => '<div class="wrapper-range">'
           );
 
           $elements['embed_advanced_option']['advanced']['quality_input'] = [
             '#type' => 'textfield',
             '#size' => 3,
             '#default_value' => (isset($advancedSetting["advanced"]["quality_input"])) ? $advancedSetting["advanced"]["quality_input"] : 90,
-            '#suffix'  => '</div>',
+            '#suffix' => '</div>',
             '#disabled' => TRUE
           ];
         }
@@ -399,8 +403,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
 
         $form_state->set('metadata', $metadata);
 
-      }
-      else {
+      } else {
         $elements['media_info_error'] = [
           '#type' => 'item',
           '#markup' => $this->t('Can\'t access the media info. Something\'s gone wrong'),
@@ -414,7 +417,8 @@ class ThronHTML5Formatter extends ThronFormatterBase {
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldItemListInterface $items, $langcode) {
+  public function viewElements(FieldItemListInterface $items, $langcode)
+  {
     $field_type = $this->fieldDefinition->getType();
     $elements = [];
     /** @var \Drupal\Core\Field\Plugin\Field\FieldType\StringItem $item */
@@ -441,6 +445,8 @@ class ThronHTML5Formatter extends ThronFormatterBase {
 
               $view_mode = $this->viewMode;
               $ckeditor_preview_mode = FALSE;
+
+              //IF VIEW_MODE = _entity_embed
               if ($view_mode == '_entity_embed') {
                 $route_match = \Drupal::routeMatch();
                 if (strpos($route_match->getRouteName(), 'entity.node.') === 0) {
@@ -457,8 +463,9 @@ class ThronHTML5Formatter extends ThronFormatterBase {
 
                   $inner_attributes['id'] = $uniqueDiv;
                   $inner_attributes['class'] = ['content-tag'];
-                  $inner_attributes['style'] = 'position:absolute;top:0;left:0;width:100%;height:100%;';
+                  $inner_attributes['style'] = 'position:absolute;width:100%;height:auto;top:50%;left:50%;transform:translate(-50%,-50%);';
                 }
+                //ckeditor preview
                 else {
                   $ckeditor_preview_mode = TRUE;
                   $wrapper_attributes['class'] = ['teaser-content'];
@@ -468,6 +475,7 @@ class ThronHTML5Formatter extends ThronFormatterBase {
                 }
               }
 
+              //IF RESIZE FIXED
               if ($formatter_settings['embed_resizing'] == 'fixed') {
                 $sizes = [
                   'width' => $formatter_settings['embed_resizing_fixed_width'],
@@ -485,34 +493,36 @@ class ThronHTML5Formatter extends ThronFormatterBase {
                 ]);
 
                 if (isset($metadata['content_url_pattern'])) {
-                  $metadata['content_url'] = (string) (new FormattableMarkup($metadata['content_url_pattern'], [
+                  $metadata['content_url'] = (string)(new FormattableMarkup($metadata['content_url_pattern'], [
                     '@divArea' => $w . "x" . $h,
                   ]));
                 }
 
                 if (isset($metadata['thumbnail_url_pattern'])) {
-                  $metadata['thumbnail_url'] = (string) (new FormattableMarkup($metadata['thumbnail_url_pattern'], [
+                  $metadata['thumbnail_url'] = (string)(new FormattableMarkup($metadata['thumbnail_url_pattern'], [
                     '@divArea' => $w . "x" . $h,
                   ]));
                 }
               }
+              //ELSE RELATIVE
               else {
                 $this->privateTempStore->set('embed_resizing_responsive', [
                   'width' => $formatter_settings['embed_resizing_responsive_width'],
                 ]);
 
-                $paddingTopBase = '15';
-                if(isset($metadata['height']) && isset($metadata['width'])) {
-                  $paddingTopBase = $metadata['height'] / $metadata['width'] * 100;
-                }
-                elseif (isset($metadata['aspect_ratio'])) {
+                $default_width = 500;
+                $default_height = 350;
+                $ratio = $default_height / $default_width;
+                if (isset($metadata['height']) && isset($metadata['width'])) {
+                  $ratio = $metadata['height'] / $metadata['width'];
+                } elseif (isset($metadata['aspect_ratio'])) {
                   list($w, $h) = explode(":", $metadata['aspect_ratio']);
-                  $paddingTopBase = $h / $w * 100;
+                  $ratio = $h / $w;
                 }
 
                 $wrapper_attributes['style'] .= new FormattableMarkup('width:@width;padding-top:@paddingTop;', [
-                  '@width' => $formatter_settings['embed_resizing_responsive_width'].'%',
-                  '@paddingTop' => ($paddingTopBase * $formatter_settings['embed_resizing_responsive_width'] / 100) . '%',
+                  '@width' => $formatter_settings['embed_resizing_responsive_width'] . '%',
+                  '@paddingTop' => ($ratio * $formatter_settings['embed_resizing_responsive_width']) . '%',
                 ]);
 
                 // Hack for CK editor to show a width-less element as wide as possible.
@@ -521,26 +531,28 @@ class ThronHTML5Formatter extends ThronFormatterBase {
                   $fake_width = $base * $formatter_settings['embed_resizing_responsive_width'] / 100;
                   $wrapper_attributes['style'] .= new FormattableMarkup('width:@width;padding-top:@paddingTop;', [
                     '@width' => $fake_width . 'px',
-                    '@paddingTop' => ($paddingTopBase * $formatter_settings['embed_resizing_responsive_width'] / 100) . '%',
+                    '@paddingTop' => ($ratio * $fake_width) . 'px',
                   ]);
                 }
               }
 
+              //MEDIA IMAGE
               if ($metadata['contentType'] == 'IMAGE') {
+                $queryParams = '';
                 $this->privateTempStore->set('embed_image_as_webp', $formatter_settings['embed_image_as_webp']);
                 $ext = $metadata["extension"];
                 if ($ext == 'webp' && $formatter_settings['embed_image_as_webp']) {
-                  $metadata['content_url'] .= '?format=webp';
+                  $queryParams .= '&format=webp';
                 }
 
                 if ($formatter_settings['embed_imageset']) {
                   $metadata['use_picture'] = TRUE;
                   $metadata['content_url'] .= '.' . $ext;
                   $responsiveness = $this->config->get('responsive_pictures_breakpoints');
-                  if(empty($responsiveness))
-                    $responsiveness=$this->THRON->getBreakpointTags(TRUE);
+                  if (empty($responsiveness))
+                    $responsiveness = $this->THRON->getBreakpointTags(TRUE);
 
-				          $new_imageset = [];
+                  $new_imageset = [];
                   if (!empty($metadata['imageset']) && $responsiveness) {
                     foreach ($metadata['imageset'] as $media_key => $url) {
                       $new_imageset[$media_key] = [
@@ -564,25 +576,29 @@ class ThronHTML5Formatter extends ThronFormatterBase {
                     $params['enhance'] .= ',color:' . $formatter_settings["embed_advanced_option"]["advanced"]["color"];
                     $params['quality'] = $formatter_settings["embed_advanced_option"]["advanced"]["quality"];
                   }
-                  $metadata['content_url'] .= (!empty($params['scalemode'])) ? '?scalemode=' . $params['scalemode'] : '';
-                  $metadata['content_url'] .= (!empty($params['scalemode']) && $params['scalemode'] == 'manual') ? '&cropmode=pixel' : '';
-                  $metadata['content_url'] .= (!empty($params['cropx'])) ? '&cropx=' . $params['cropx'] : '';
-                  $metadata['content_url'] .= (!empty($params['cropy'])) ? '&cropy=' . $params['cropy'] : '';
-                  $metadata['content_url'] .= (!empty($params['cropw'])) ? '&cropw=' . $params['cropw'] : '';
-                  $metadata['content_url'] .= (!empty($params['croph'])) ? '&croph=' . $params['croph'] : '';
-                  $metadata['content_url'] .= (!empty($params['enhance'])) ? '&enhance=' . $params['enhance'] : '';
-                  $metadata['content_url'] .= (!empty($params['quality'])) ? '&quality=' . $params['quality'] : '';
-                  if (strpos($metadata['content_url'], '?format')) {
-                    $metadata['content_url'] = str_replace('?scalemode', '&scalemode', $metadata['content_url']);
-                  }
+                  $queryParams .= (!empty($params['scalemode'])) ? '&scalemode=' . $params['scalemode'] : '';
+                  $queryParams .= (!empty($params['scalemode']) && $params['scalemode'] == 'manual') ? '&cropmode=pixel' : '';
+                  $queryParams .= (!empty($params['cropx'])) ? '&cropx=' . $params['cropx'] : '';
+                  $queryParams .= (!empty($params['cropy'])) ? '&cropy=' . $params['cropy'] : '';
+                  $queryParams .= (!empty($params['cropw'])) ? '&cropw=' . $params['cropw'] : '';
+                  $queryParams .= (!empty($params['croph'])) ? '&croph=' . $params['croph'] : '';
+                  $queryParams .= (!empty($params['enhance'])) ? '&enhance=' . $params['enhance'] : '';
+                  $queryParams .= (!empty($params['quality'])) ? '&quality=' . $params['quality'] : '';
                 }
 
-              } elseif($metadata['contentType'] == 'VIDEO') {
+                if(strlen ( $queryParams ) > 0 ){
+                  $metadata['content_url'] .= '?'.substr($queryParams, 1);
+                  $metadata['thumbnail_url'] .= '?'.substr($queryParams, 1);
+                }
+
+              }
+              //MEDIA VIDEO
+              elseif ($metadata['contentType'] == 'VIDEO') {
                 $this->privateTempStore->set('embed_channel', $formatter_settings['embed_channel']);
-                if($formatter_settings['embed_channel'] && trim($formatter_settings['embed_channel']) != "" && $formatter_settings['embed_channel'] != "all") {
+                if ($formatter_settings['embed_channel'] && trim($formatter_settings['embed_channel']) != "" && $formatter_settings['embed_channel'] != "all") {
                   $sources = [];
-                  foreach($metadata["sources"] as $ch=>$source) {
-                    if($ch == $formatter_settings['embed_channel']) {
+                  foreach ($metadata["sources"] as $ch => $source) {
+                    if ($ch == $formatter_settings['embed_channel']) {
                       $sources[$ch] = $source;
                       break;
                     }
@@ -614,8 +630,9 @@ class ThronHTML5Formatter extends ThronFormatterBase {
     return $elements;
   }
 
-  private function getImageSetValueByMediaName($responsiveness, $name) {
-    foreach($responsiveness as $key => $item) {
+  private function getImageSetValueByMediaName($responsiveness, $name)
+  {
+    foreach ($responsiveness as $key => $item) {
       if ($key == 'default') {
         continue;
       }
