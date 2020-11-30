@@ -350,9 +350,9 @@ class Thronintegration_Api {
 
       array_push($body->responseOptions->thumbsOptions, $thumbsOptsObj);
 
-      if ($locale && !Thronintegration_Utils::IsNullOrEmptyString($locale)) {
+      /*if ($locale && !Thronintegration_Utils::IsNullOrEmptyString($locale)) {
         $body->criteria->lang = strtoupper($locale);
-      }
+      }*/
       if (!Thronintegration_Utils::IsNullOrEmptyString($id)) {
         $body->criteria->ids = $id;
       }
