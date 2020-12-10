@@ -3,6 +3,7 @@
 namespace Drupal\thron\Integration;
 
 use Drupal\thron\Exception\AppTokenExpiredException;
+use Drupal\thron\Exception\THRONException;
 use function GuzzleHttp\Psr7\build_query;
 
 define('THRON_RESULTS_PER_PAGE', 50);
@@ -350,9 +351,9 @@ class Thronintegration_Api {
 
       array_push($body->responseOptions->thumbsOptions, $thumbsOptsObj);
 
-      /*if ($locale && !Thronintegration_Utils::IsNullOrEmptyString($locale)) {
+      if ($locale && !Thronintegration_Utils::IsNullOrEmptyString($locale)) {
         $body->criteria->lang = strtoupper($locale);
-      }*/
+      }
       if (!Thronintegration_Utils::IsNullOrEmptyString($id)) {
         $body->criteria->ids = $id;
       }
@@ -1761,6 +1762,35 @@ class Thronintegration_Api {
       $res["status"] = "ERROR";
       $res["errorDescription"] = $ex->getMessage();
     }
+    return $res;
+  }
+
+  public static function categoriesList($clientId, $token, $ids = [], $excludeLevelHigherThan = FALSE) {
+    $res = [];
+    $url = Thronintegration_Api::getThronEndpoint($clientId, "xcontents") . "category/findByProperties2";
+
+    $params = [
+      'client' => [
+        'clientId' => $clientId,
+      ],
+      'properties' => [
+        'categoryIds' => (array)$ids,
+        'categoryTypes' => ["PRIVATE", "PUBLIC"],
+      ]
+    ];
+
+    if ($excludeLevelHigherThan) {
+      $params['properties']['excludeLevelHigherThan'] = $excludeLevelHigherThan;
+    }
+
+    try {
+      $result = Thronintegration_HTTP::doHTTP('JSON_POST', $url, $params, ['X-TOKENID' => $token]);
+      $res = json_decode($result, TRUE);
+    } catch (THRONException $exception) {
+      $res["status"] = "ERROR";
+      $res["errorDescription"] = $exception->getMessage();
+    }
+
     return $res;
   }
 

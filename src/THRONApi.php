@@ -523,6 +523,46 @@ class THRONApi implements THRONApiInterface {
   }
 
   /**
+   * @param array $ids
+   *
+   * @param bool $excludeLevelHigherThan
+   *
+   * @return false|mixed
+   */
+  public function getCategories($ids = [], $excludeLevelHigherThan = FALSE) {
+    $cid = 'categories_list_' . (empty($ids) ? 'all' : md5(implode($ids)));
+
+    if ($cache = $this->cache->get($cid)) {
+      return $cache->data;
+    }
+    try {
+      if (!$login_data = $this->getLoginData()) {
+        throw new \Exception('LoginApp error');
+      }
+
+      $data = Thronintegration_Api::categoriesList($this->config->get('client_id'), $login_data['token'], $ids, $excludeLevelHigherThan);
+      // Check status.
+      //if ($data['status'] !== 'OK') {
+      //  throw new \Exception($data['errorDescription']);
+      //}
+
+      foreach ($data['categories'] as $category) {
+        $categories[$category['category']['id']] = $category['category'];
+      }
+
+      $this->cache->set($cid, $categories, $this->time->getRequestTime() + $this->getCacheInterval());
+      return $categories;
+    }
+    catch (AppTokenExpiredException $ex) {
+      return $this->refreshAndRecall('categoriesList', FALSE, $ex);
+    }
+    catch (\Exception $ex) {
+      $this->logger->error($ex->getMessage());
+      return FALSE;
+    }
+  }
+
+  /**
    * @param $classificationId
    *
    * @return array|bool
@@ -945,7 +985,7 @@ class THRONApi implements THRONApiInterface {
       $data = Thronintegration_Api::contentSearch(
         $this->config->get('client_id'),
         $login_data['token'],
-        $login_data['rootCategoryId'],
+        isset($properties['linkedCategories']) ? $properties['linkedCategories'] : $login_data['rootCategoryId'],
         isset($properties['nextPage']) ? $properties['nextPage'] : NULL,
         !empty($properties['contentType']) ? $properties['contentType'] : FALSE,
         isset($properties['divArea']) ? $properties['divArea'] : FALSE,

@@ -8,6 +8,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\Language;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -41,6 +42,11 @@ class THRONSearch extends THRONWidgetBase {
    * Limits the amount of tags returned in the Media browser filter.
    */
   const TAG_LIST_LIMIT = 25;
+
+  /**
+   * Constant symbol used for indenting sub-categories.
+   */
+  const SUB_CATEGORY_INDENT = '&nbsp;&nbsp;';
 
   /**
    * Account proxy.
@@ -195,6 +201,9 @@ class THRONSearch extends THRONWidgetBase {
         'search_autocomplete_classifications' => [],
         'search_autocomplete_depth' => 1,
       ],
+      'folders' => [
+        'filter_by_folder' => 'list',
+      ]
     ] + parent::defaultConfiguration();
   }
 
@@ -216,9 +225,15 @@ class THRONSearch extends THRONWidgetBase {
     $form['#attached']['library'][] = 'thron/search_config';
 
     $form['tags'] = [
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => $this->t('Tags filtering'),
-      '#tree' => TRUE,
+      '#open' => TRUE,
+    ];
+
+    $form['folders'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Folders filtering'),
+      '#open' => TRUE,
     ];
 
     $form['tags']['enabled'] = [
@@ -321,6 +336,17 @@ class THRONSearch extends THRONWidgetBase {
           ':input[name="table[' . $widget_uuid . '][form][tags][search_type]"]' => ['value' => 'default'],
         ],
       ],
+    ];
+
+
+    $form['folders']['filter_by_folder'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Choose folder filtering mode'),
+      '#options' => [
+        'list' => $this->t('Select'),
+        'auto' => $this->t('Autocomplete')
+      ],
+      '#default_value' => $this->configuration['folders']['filter_by_folder']
     ];
 
     $form['items_per_page'] = [
@@ -506,6 +532,36 @@ class THRONSearch extends THRONWidgetBase {
       }
     }
 
+    // Show categories filter select
+    $categoriesTree  = $this->buildCategoryTree();
+    $optionsCategories = null;
+
+    $currentInterfaceLang = \Drupal::languageManager()->getCurrentLanguage();
+    $langCode = strtoupper($currentInterfaceLang->getId());
+
+    $this->buildRenderableSelect($optionsCategories, $categoriesTree['children'], $langCode);
+
+    if ($this->configuration['folders']['filter_by_folder'] == 'list') {
+      $form['filters']['categories'] = [
+        '#title' => $this->t('Folder'),
+        '#type' => 'select',
+        '#options' => $optionsCategories,
+        '#multiple' => FALSE,
+        '#weight' => $max_option_weight + 5,
+      ];
+    } else {
+      $form['filters']['categories_autocomplete'] = [
+        '#type' => 'thron_autocomplete',
+        '#title' => $this->t('Search by folder'),
+        '#size' => 30,
+        '#autocomplete_route_name' => 'thron.autocomplete_categories',
+        '#autocomplete_route_parameters' => [
+          'categories' => json_encode($optionsCategories),
+        ],
+        '#weight' => $max_option_weight + 5,
+      ];
+    }
+
     $form['filters']['ordering'] = [
       '#title' => $this->t('Order by'),
       '#type' => 'select',
@@ -599,6 +655,15 @@ class THRONSearch extends THRONWidgetBase {
         ];
       }
       $show_reset_button = TRUE;
+    }
+
+    if ($selected_category = $form_state->getValue(['filters', 'categories'])) {
+      $query['linkedCategories'] = $selected_category;
+    }
+
+    if ($selected_category = $form_state->getValue(['filters', 'categories_autocomplete'])) {
+      $decodedCategory = json_decode($selected_category, TRUE);
+      $query['linkedCategories'] = $decodedCategory[0]['id'];
     }
 
     // or even other TAGS from autocomplete
@@ -951,17 +1016,60 @@ class THRONSearch extends THRONWidgetBase {
   }
 
   /**
+   * @param array $startFromId
+   */
+  private function buildCategoryTree($startFromId = []) {
+    $allCategories = $this->THRONApi->getCategories($startFromId);
+
+    $tree = [];
+    foreach(array_reverse($allCategories) as $categoryId => $category) {
+      $item = ['id' => $categoryId, 'category' => $category['locales'], 'depth' => count($category['ancestorIds'])];
+      $temp = &$tree;
+      $ancestors = array_merge((!empty($category['ancestorIds']) ? $category['ancestorIds'] : []), [$categoryId]);
+
+      foreach($ancestors as $key) {
+        $temp =& $temp['children'];
+        $temp =& $temp[$key];
+      }
+
+      $temp = $item;
+    }
+
+    return $tree;
+  }
+
+  public function buildRenderableSelect(&$flat, $tree, $lang) {
+    foreach ($tree as $key => $item) {
+      $nameLocalized = isset($item['category'][$lang]) ? $item['category'][$lang]['name'] : $item['category'][0]['name'];
+      $arrayRenderable = ['#markup' => str_repeat(self::SUB_CATEGORY_INDENT, $item['depth']) . $nameLocalized];
+      $flat[$item['id']] = \Drupal::service('renderer')->render($arrayRenderable);
+
+      if (isset($item['children'])) {
+        $this->buildRenderableSelect($flat, $item['children'], $lang);
+      }
+    }
+  }
+
+  /**
    * @param $item
    * @return array
    */
   private function getCategoryLocalized($item)
   {
-    $category = [];
-    foreach ($item->details->itags as $element) {
-      $locale = (isset($element->locale)) ? $element->locale : [];
-      $val = $this->THRONApi->getSingleLocaleData($locale,null,'lang');
-      $category[] = $val['label'];
+    $currentInterfaceLang = \Drupal::languageManager()->getCurrentLanguage();
+
+    $category = null;
+    $categories = $this->THRONApi->getCategories($item->details->linkedCategoryIds);
+    $categories = reset($categories);
+    $name = false;
+
+    foreach ($categories['locales'] as $locale) {
+      if ($locale['locale'] === strtoupper($currentInterfaceLang->getId())) {
+        $name = $locale['name'];
+      }
     }
+
+    $category = [$name ? $name : $categories['locales'][0]['name']];
     return $category;
   }
 

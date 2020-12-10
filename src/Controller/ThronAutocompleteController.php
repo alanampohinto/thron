@@ -2,8 +2,10 @@
 
 namespace Drupal\thron\Controller;
 
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
+use Drupal\thron\Plugin\EntityBrowser\Widget\THRONSearch;
 use Drupal\thron\THRONApiInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -71,6 +73,40 @@ class ThronAutocompleteController extends ControllerBase {
       }
     }
     return new JsonResponse($matches);
+  }
+
+  /**
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   * @param $categories
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   */
+  public function handleCategoriesAutocomplete(Request $request, $categories) {
+    $results = [];
+    $input = $request->query->get('q');
+    $categories = json_decode($categories);
+
+    if (!$input) {
+      return new JsonResponse($results);
+    }
+
+    $input = Xss::filter($input);
+
+    foreach ($categories as $categoryId => $category) {
+      if (preg_match("/(" . $input . ")/i", $category) === 1) {
+        $parsedName = str_replace(THRONSearch::SUB_CATEGORY_INDENT, '', $category);
+
+        $results[] = [
+          'value' => [
+            'id' => $categoryId,
+            'name' => $parsedName,
+          ],
+          'label' => $parsedName
+        ];
+      }
+    }
+
+    return new JsonResponse($results);
   }
 
 }

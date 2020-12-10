@@ -12,3 +12,10 @@ thron.autocomplete_tags:
     _controller: '\Drupal\thron\Controller\ThronAutocompleteController::handleTagsAutocomplete'
   requirements:
     _permission: 'thron search media'
+
+thron.autocomplete_categories:
+  path: '/thron_autocomplete/categories/{categories}'
+  defaults:
+    _controller: '\Drupal\thron\Controller\ThronAutocompleteController::handleCategoriesAutocomplete'
+  requirements:
+    _permission: 'thron search media'
