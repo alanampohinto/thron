@@ -800,7 +800,8 @@ class THRONSearch extends THRONWidgetBase {
   private function doSearch($query) {
     // Check type.
     $filterType = [];
-    // TYpe is a multi select input?
+    $requested_type = "";
+	// TYpe is a multi select input?
     if (!empty($query['type']) && is_array($query['type'])) {
       $query['contentType'] = [];
       foreach ($query['type'] as $type) {
@@ -813,6 +814,8 @@ class THRONSearch extends THRONWidgetBase {
           $query['contentType'][] = $type;
         }
       }
+	  
+	  $requested_type=$query['type'];
     }
     // Type is a normal select input?
     elseif (isset($query['type'])) {
@@ -824,6 +827,7 @@ class THRONSearch extends THRONWidgetBase {
       else {
         $query['contentType'][] = $query['type'];
       }
+	  $requested_type=$query['type'];
     }
     $data = $this->THRONApi->contentSearch($query);
 
@@ -848,8 +852,14 @@ class THRONSearch extends THRONWidgetBase {
             $removed++;
             continue;
           }
-        }
-
+        } 
+		else if($requested_type != "") {
+			if ($query['type'] == "PLAYLIST" && in_array($real_type, ["GALLERY","360"])) {
+				$removed++;
+				continue;
+			}
+		}
+		
         $localized_data = $this->THRONApi->getSingleLocaleData($item->details->locales, NULL, 'locale');
 
         $clientId = $this->config->get('client_id');

@@ -886,9 +886,9 @@ class THRONApi implements THRONApiInterface {
       'VIDEO' => $this->t('Video')->__toString(),
       'OTHER' => $this->t('Document')->__toString(),
       'AUDIO' => $this->t('Audio')->__toString(),
-      'PLAYLIST_GALLERY' => $this->t('Gallery')->__toString(),
+      'PLAYLIST_GALLERY' => $this->t('Image Gallery')->__toString(),
       'PLAYLIST_360' => $this->t('360° Gallery')->__toString(),
-	    'PLAYLIST' => $this->t('Gallery')->__toString(),
+      'PLAYLIST' => $this->t('Playlist')->__toString(),
       'URL' => $this->t('Url')->__toString(),
       'PAGELET' => $this->t('Pagelet')->__toString(),
     ];
