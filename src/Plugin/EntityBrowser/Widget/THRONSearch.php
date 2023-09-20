@@ -716,7 +716,7 @@ class THRONSearch extends THRONWidgetBase {
     }
 
     // Determines the date to show in media list
-    $showCreated = strpos($query['orderBy'], 'creationDate') !== FALSE;
+    $showCreated = str_contains($query['orderBy'] ?? '', 'creationDate');
     $showLastUpdated = !$showCreated;
 
     if (!empty($media_list['items'])) {
@@ -805,7 +805,7 @@ class THRONSearch extends THRONWidgetBase {
     if (!empty($query['type']) && is_array($query['type'])) {
       $query['contentType'] = [];
       foreach ($query['type'] as $type) {
-        if (strpos($type, '_') !== FALSE) {
+        if (strpos($type ?? '', '_') !== FALSE) {
           list($type, $real) = preg_split('/_/', $type);
           $query['contentType'][] = $type;
           $filterType[$type][] = $real;
@@ -818,7 +818,7 @@ class THRONSearch extends THRONWidgetBase {
 	  $requested_type=$query['type'];
     }
     // Type is a normal select input?
-    elseif (isset($query['type'])) {
+    elseif (!empty($query['type'])) {
       if (strpos($query['type'], '_') !== FALSE) {
         list($type, $real) = preg_split('/_/', $query['type']);
         $query['contentType'][] = $type;
@@ -1006,12 +1006,11 @@ class THRONSearch extends THRONWidgetBase {
     $selected_entities = array_merge($selected_entities, $entities);
 
     $this->eventDispatcher->dispatch(
-      Events::SELECTED,
       new EntitySelectionEvent(
         $this->configuration['entity_browser_id'],
         $form_state->get(['entity_browser', 'instance_uuid']),
         $entities
-      ));
+      ), Events::SELECTED);
   }
 
   /**
