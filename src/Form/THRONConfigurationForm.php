@@ -415,16 +415,18 @@ class THRONConfigurationForm extends ConfigFormBase {
     }
 
     $responsive_pictures_enable = $form_state->getValue('responsive_pictures_enable');
-    if ($responsive_pictures_enable) {
-      $responsive_pictures_breakpoints = array_map(function($item){
+    $breakpoints = $form_state->getValue('breakpoints');
+    if ($responsive_pictures_enable && is_array($breakpoints)) {
+      $responsive_pictures_breakpoints = array_map(function($item) {
         if (is_array($item) && isset($item['default'])) {
           unset($item['default']);
         }
         return $item;
-      }, $form_state->getValue('breakpoints'));
+      }, $breakpoints);
     }
     else {
       $responsive_pictures_breakpoints = [];
+      $responsive_pictures_enable = FALSE;
     }
 
     // Save configdata.

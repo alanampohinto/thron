@@ -4,7 +4,7 @@ namespace Drupal\thron\Integration;
 
 use Drupal\thron\Exception\AppTokenExpiredException;
 use Drupal\thron\Exception\THRONException;
-use function GuzzleHttp\Psr7\build_query;
+use GuzzleHttp\Psr7\Query;
 
 define('THRON_RESULTS_PER_PAGE', 50);
 
@@ -734,7 +734,7 @@ class Thronintegration_Api {
       $detailTagResponse = Thronintegration_HTTP::doHTTP("GET", $url, FALSE, ["X-TOKENID" => $token]);
       if (!$detailTagResponse) {
         // error while updating app... TODO notify!
-        throw new \Exception(sprintf("Could not get the tag detail for tag %s, classification $s on %s", $tagId, $classificationId, $clientId));
+        throw new \Exception(sprintf("Could not get the tag detail for tag %s, classification %s on %s", $tagId, $classificationId, $clientId));
       }
       $detailTagObj = json_decode($detailTagResponse, TRUE);
       if (!isset($detailTagObj["resultCode"]) || $detailTagObj["resultCode"] != "OK") {
@@ -798,7 +798,7 @@ class Thronintegration_Api {
       }
 
       while (!$ended) {
-        $url = Thronintegration_Api::getThronEndpoint($clientId, "xintelligence") . "imetadatadefinition/listGet/$clientId/$classificationId?" .build_query($query_params);
+        $url = Thronintegration_Api::getThronEndpoint($clientId, "xintelligence") . "imetadatadefinition/listGet/$clientId/$classificationId?" . Query::build($query_params);
 
         $metaResponse = Thronintegration_HTTP::doHTTP("GET", $url, NULL, ["X-TOKENID" => $token]);
         if (!$metaResponse) {

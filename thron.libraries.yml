@@ -20,7 +20,7 @@ search_view:
       css/thron.throbber.css: {}
   dependencies:
     - core/jquery
-    - core/jquery.once
+    - core/once
     - core/drupal
     - core/drupalSettings
     - core/drupal.ajax
@@ -35,7 +35,7 @@ config_form:
       css/thron.config_form.css: {}
   dependencies:
     - core/jquery
-    - core/jquery.once
+    - core/once
     - core/drupal
 
 imagesloaded:
@@ -79,7 +79,7 @@ search_config:
       css/thron.search_config.css: {}
   dependencies:
     - core/jquery
-    - core/jquery.once
+    - core/once
     - core/sortable
     - core/drupal
 
@@ -95,7 +95,7 @@ autocomplete:
     - core/drupal
     - core/drupalSettings
     - core/drupal.ajax
-    - core/jquery.ui.autocomplete
+    - jquery_ui_autocomplete/autocomplete
 
 embed_button:
   css:
@@ -111,6 +111,6 @@ crop:
       css/thron.crop.css: {}
   dependencies:
     - core/jquery
-    - core/jquery.once
+    - core/once
     - core/drupal
     - thron/universal_player

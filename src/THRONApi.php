@@ -159,11 +159,11 @@ class THRONApi implements THRONApiInterface {
 
     // Check app type.
     if (!isset($res->app->appType) || $res->app->appType != self::THRON_PERMITTED_APP_TYPE) {
-      throw new InvalidCredentialException('appType');
+      throw new InvalidCredentialException('appType', $res->app->appType ?? '');
     }
 
     if (!isset($res->app->appSubType) || $res->app->appSubType != self::THRON_PERMITTED_APP_SUBTYPE) {
-      throw new InvalidCredentialException('appSubType');
+      throw new InvalidCredentialException('appSubType', $res->app->appSubType ?? '');
     }
 
     // Retrieve pKey.
@@ -605,6 +605,7 @@ class THRONApi implements THRONApiInterface {
    */
   public function getThronMediaEmbedId($content_id, $node_id, $templateId) {
     $query = $this->mediaStorage->getQuery()
+      ->accessCheck(TRUE)
       ->condition('bundle', 'thron_with_media_source')
       ->condition('field_thron_id', $content_id);
     $res = $query->execute();
@@ -648,6 +649,7 @@ class THRONApi implements THRONApiInterface {
    */
   public function setThronMediaEmbedId($content_id, $node_id, $templateId, $embedCodeId) {
     $query = $this->mediaStorage->getQuery()
+      ->accessCheck(TRUE)
       ->condition('bundle', 'thron_with_media_source')
       ->condition('field_thron_id', $content_id);
     $res = $query->execute();

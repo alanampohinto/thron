@@ -814,7 +814,7 @@ class THRONSearch extends THRONWidgetBase {
           $query['contentType'][] = $type;
         }
       }
-	  
+
 	  $requested_type=$query['type'];
     }
     // Type is a normal select input?
@@ -852,14 +852,14 @@ class THRONSearch extends THRONWidgetBase {
             $removed++;
             continue;
           }
-        } 
+        }
 		else if($requested_type != "") {
 			if ($query['type'] == "PLAYLIST" && in_array($real_type, ["GALLERY","360"])) {
 				$removed++;
 				continue;
 			}
 		}
-		
+
         $localized_data = $this->THRONApi->getSingleLocaleData($item->details->locales, NULL, 'locale');
 
         $clientId = $this->config->get('client_id');
@@ -970,6 +970,7 @@ class THRONSearch extends THRONWidgetBase {
     $source_field = $plugin->getConfiguration()['source_field'];
     foreach ($selected_ids as $thron_id) {
       $mid = $this->mediaStorage->getQuery()
+        ->accessCheck(TRUE)
         ->condition($source_field, $thron_id)
         ->range(0, 1)
         ->execute();

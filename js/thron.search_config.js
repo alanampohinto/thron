@@ -1,7 +1,7 @@
 /**
  * @file
  */
-(function ($, Drupal) {
+(function ($, Drupal, once) {
 
   'use strict';
 
@@ -12,8 +12,7 @@
     attach: function (context, settings) {
 
       // Sortable tags widget must be visible only with tag filter enabled.
-      $('.form-type-thron-tags-sortable', context)
-        .once('thron-search-config-sortable')
+      $(once('thron-search-config-sortable', '.form-type-thron-tags-sortable', context))
         .each(function () {
           let $sortableWidget = $(this).find('.sortable-widget'),
               $available = $sortableWidget.find('.available ul')[0],
@@ -43,4 +42,4 @@
     }
   };
 
-}(jQuery, Drupal));
+}(jQuery, Drupal, once));

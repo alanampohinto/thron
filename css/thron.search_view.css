@@ -49,6 +49,7 @@
 #thumbnails {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
     margin: 2em 0 1em;
 }
 
@@ -68,7 +69,6 @@
     font-size: 12px;
     margin-bottom: 1rem;
     background-color: black;
-    margin-left: 1rem;
 }
 
 .grid-item:after {
@@ -87,7 +87,7 @@
     margin-left: 0;
 }
 
-.grid-item .form-type-checkbox {
+.grid-item .form-type--boolean {
     display: none;
     position: absolute;
     bottom: 0.5em;

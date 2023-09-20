@@ -17,6 +17,7 @@ function thron_uninstall() {
   // Delete Medias.
   $media_storage = \Drupal::entityTypeManager()->getStorage('media');
   $thron_medias = $media_storage->getQuery()
+    ->accessCheck(TRUE)
     ->condition('bundle', 'thron_with_media_source')
     ->execute();
 

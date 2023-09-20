@@ -1,7 +1,7 @@
 /**
  * @file
  */
-(function ($, D) {
+(function ($, D, once) {
 
   'use strict';
 
@@ -20,8 +20,7 @@
         $('.grid-item').addClass('item-style');
       });
 
-      $('.grid-item')
-          .once('thron-bind-click-event')
+      $(once('thron-bind-click-event', '.grid-item', context))
           .on('click', function () {
             // Get current input
             var $input = $(this).find('.item-selector');
@@ -43,12 +42,11 @@
           });
 
       // Display throbber overlay when search is submitted.
-      $('.entity-browser-form')
-          .once('thron-bind-submit-event')
+      $(once('thron-bind-submit-event', '.entity-browser-form', context))
           .on('submit', function () {
             $('body').prepend('<div class="overlay-throbber"><div class="throbber-spinner"></div></div></div>');
           });
     }
   };
 
-}(jQuery, Drupal));
+}(jQuery, Drupal, once));
