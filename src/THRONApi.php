@@ -672,7 +672,7 @@ class THRONApi implements THRONApiInterface {
         $obj->set('field_thron_embed_ids', json_encode($templateIds));
         try {
           $obj->save();
-        } catch (EntityStorageException $e) {
+        } catch (\Drupal\Core\Entity\EntityStorageException $e) {
           // look into it
         }
       }
@@ -726,7 +726,7 @@ class THRONApi implements THRONApiInterface {
       try {
         $obj->save();
         return TRUE;
-      } catch (EntityStorageException $e) {
+      } catch (\Drupal\Core\Entity\EntityStorageException $e) {
         return FALSE;
       }
     } else
