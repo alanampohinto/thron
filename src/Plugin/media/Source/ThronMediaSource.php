@@ -7,17 +7,18 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\media\MediaInterface;
 use Drupal\media\MediaSourceBase;
 use Drupal\thron\Exception\THRONException;
 use Drupal\thron\THRONApiInterface;
-use Drupal\thron\Utils\THRONApiUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\thron\Integration\Thronintegration_Utils;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Provides media source plugin for THRON.
@@ -186,10 +187,22 @@ class ThronMediaSource extends MediaSourceBase {
 
     switch ($name) {
       case 'thumbnail_uri':
-        if ($file = system_retrieve_file($this->apiResponseContentDetail->dynThumbService, NULL, TRUE)) {
-          return $file->getFileUri();
+        $url = $this->apiResponseContentDetail['dynThumbService'];
+        $filename = basename($url);
+        $destination = 'public://' . $filename;
+      
+        try {
+          $data = (string) \Drupal::httpClient()->get($url)->getBody();
+          $uri = \Drupal::service('file_system')->saveData($data, $destination, FileExists::Replace);
+          return $uri;
         }
-        return parent::getMetadata($media, 'thumbnail_uri');
+        catch (RequestException $e) {
+          \Drupal::logger('thron')->error('There was an error trying to download the file from %url: %message', [
+            '%url' => $url,
+            '%message' => $e->getMessage(),
+          ]);
+          return NULL;
+        }
 
       case 'created':
         return isset($this->apiResponse["creationDate"]) ? $this->apiResponse["creationDate"] : FALSE;

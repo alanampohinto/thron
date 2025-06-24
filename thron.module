@@ -11,7 +11,7 @@ use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\cache\CachePluginBase;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Component\Render\FormattableMarkup;
 
 
@@ -127,7 +127,7 @@ function thron_preprocess_thron_select_sortable_widget(&$variables) {
   ]);
 
   Element::setAttributes($element, ['id', 'name', 'size']);
-  RenderElement::setAttributes($element, ['form-select']);
+  RenderElementBase::setAttributes($element, ['form-select']);
   $variables['attributes'] = $element['#attributes'];
   $variables['options'] = form_select_options($element);
 }

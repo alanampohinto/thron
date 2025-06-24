@@ -572,7 +572,7 @@ class THRONApi implements THRONApiInterface {
       return [];
     }
 
-    $cid = 'classification_' .$this->config->get('client_id')."_${classificationId}_tags";
+    $cid = 'classification_' .$this->config->get('client_id')."_{$classificationId}_tags";
     if ($cache = $this->cache->get($cid)) {
       $data = $cache->data;
       return $data['tags'];
@@ -828,7 +828,7 @@ class THRONApi implements THRONApiInterface {
    * @throws \Exception
    */
   public function insertPlayerEmbedCode($templateId, $templateLabel, $context, $xcontentId) {
-    $cid = 'player_embedcode__'.$this->config->get('client_id')."_${templateId}__" . preg_replace('/-/', '_', $xcontentId);
+    $cid = 'player_embedcode__'.$this->config->get('client_id')."_{$templateId}__" . preg_replace('/-/', '_', $xcontentId);
     if ($cache = $this->cache->get($cid)) {
       return $cache->data;
     }
