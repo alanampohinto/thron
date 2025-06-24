@@ -2,7 +2,7 @@ name: THRON
 description: 'THRON digital asset management system integration.'
 type: module
 package: Media
-core_version_requirement: ^9 || ^10
+core_version_requirement: ^9 || ^10 || ^11
 configure: thron.configuration_form
 
 dependencies:
