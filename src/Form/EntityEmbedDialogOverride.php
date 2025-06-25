@@ -3,31 +3,11 @@
 namespace Drupal\thron\Form;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\CloseModalDialogCommand;
-use Drupal\Core\Ajax\HtmlCommand;
-use Drupal\Core\Ajax\SetDialogTitleCommand;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\FieldableEntityInterface;
-use Drupal\Core\Entity\TranslatableInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Form\FormBase;
-use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\editor\Ajax\EditorDialogSave;
-use Drupal\editor\EditorInterface;
-use Drupal\embed\EmbedButtonInterface;
-use Drupal\entity_browser\Events\Events;
-use Drupal\entity_browser\Events\RegisterJSCallbacks;
-use Drupal\entity_embed\EntityEmbedDisplay\EntityEmbedDisplayManager;
 use Drupal\Component\Serialization\Json;
 use Drupal\entity_embed\Form\EntityEmbedDialog;
 use Drupal\media\Entity\Media;
 use Drupal\thron\Plugin\media\Source\ThronMediaSource;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Overrides the entity embed form from module for THRON needs:
