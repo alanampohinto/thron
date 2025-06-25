@@ -57,7 +57,7 @@ class ThronMediaSource extends MediaSourceBase {
   /**
    * Statically cached API response for a given asset (for delivery/contentDetail invocations).
    *
-   * @var array
+   * @var array|stdClass
    */
   protected $apiResponseContentDetail;
 
@@ -187,7 +187,7 @@ class ThronMediaSource extends MediaSourceBase {
 
     switch ($name) {
       case 'thumbnail_uri':
-        $url = $this->apiResponseContentDetail['dynThumbService'];
+        $url = $this->apiResponseContentDetail->dynThumbService;
         $filename = basename($url);
         $destination = 'public://' . $filename;
       
