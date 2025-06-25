@@ -214,7 +214,7 @@ class ThronMediaSource extends MediaSourceBase {
         return isset($this->apiResponse["details"]["locales"][0]["name"]) ? $this->apiResponse["details"]["locales"][0]["name"] : parent::getMetadata($media, 'default_name');
 
       default:
-        if(trim($name) != "" && isset($this->apiResponse["details"][$name])) {
+        if(trim($name ?? '') != "" && isset($this->apiResponse["details"][$name])) {
           return $this->apiResponse["details"][$name];
         }
     }
