@@ -673,7 +673,7 @@ class THRONApi implements THRONApiInterface {
         try {
           $obj->save();
         } catch (\Drupal\Core\Entity\EntityStorageException $e) {
-          // look into it
+          \Drupal::logger('thron')->error($e->getMessage());
         }
       }
 
