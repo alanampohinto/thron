@@ -10,6 +10,7 @@ use Drupal\Core\State\StateInterface;
 use Drupal\thron\Exception\THRONException;
 use Drupal\thron\THRONApiInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 
 /**
  * Configure THRON to enable application access.
@@ -38,7 +39,14 @@ class THRONConfigurationForm extends ConfigFormBase {
    *
    * @var \Drupal\Core\StateInterface
    */
+  
   protected $state;
+   /**
+   * The Typed Config Manager Interface
+   *
+   * @var \Drupal\Core\StateInterface
+   */
+  protected TypedConfigManagerInterface $typed_config_manager;
 
   /**
    * Constructs a THRONConfigurationForm object.
@@ -49,13 +57,15 @@ class THRONConfigurationForm extends ConfigFormBase {
    *   The renderer service.
    * @param \Drupal\thron\THRONApiInterface $thron_api
    *   The THRON API service.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager;
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RendererInterface $renderer, StateInterface $state, THRONApiInterface $thron_api) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, RendererInterface $renderer, StateInterface $state, THRONApiInterface $thron_api, TypedConfigManagerInterface $typed_config_manager) {
+    parent::__construct($config_factory, $typed_config_manager);
 
     $this->renderer = $renderer;
     $this->THRONApi = $thron_api;
     $this->state = $state;
+    $this->typedConfigManager = $typed_config_manager;
   }
 
   /**
@@ -66,7 +76,8 @@ class THRONConfigurationForm extends ConfigFormBase {
       $container->get('config.factory'),
       $container->get('renderer'),
       $container->get('state'),
-      $container->get('thron_api')
+      $container->get('thron_api'),
+      $container->get('config.typed')
     );
   }
 
