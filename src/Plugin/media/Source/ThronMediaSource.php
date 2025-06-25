@@ -57,7 +57,7 @@ class ThronMediaSource extends MediaSourceBase {
   /**
    * Statically cached API response for a given asset (for delivery/contentDetail invocations).
    *
-   * @var array|stdClass
+   * @var array|\stdClass
    */
   protected $apiResponseContentDetail;
 
