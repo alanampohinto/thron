@@ -148,21 +148,12 @@ class THRONConfigurationForm extends ConfigFormBase {
       '#title' => $this->t('Global Settings'),
     ];
 
-    $options = [
-      'EN' => $this->t('English'),
-      'ES' => $this->t('Spanish'),
-      'FR' => $this->t('French'),
-      'IT' => $this->t('Italian'),
-      'DE' => $this->t('German'),
-      'SL' => $this->t('Slovenian'),
-      'PT' => $this->t('Portuguese'),
-      'ZH' => $this->t('Chinese'),
-    ];
     $form['global']['preview_language'] = [
-      '#type' => 'select',
+      '#type' => 'textfield',
       '#title' => $this->t('Preview Language'),
-      '#options' => $options,
-      '#default_value' => $this->THRONApi->getPreviewLanguage(),
+      '#default_value' => $this->THRONApi->getFullPreviewLanguage(),
+      '#autocomplete_route_name' => 'thron.autocomplete_languages',
+      '#description' => $this->t('Start typing to search for a language (ISO 639 code or name).'),
     ];
 
     $form['cache'] = [

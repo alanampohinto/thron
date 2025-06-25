@@ -165,6 +165,11 @@ interface THRONApiInterface {
   public function getPreviewLanguage();
 
   /**
+   * @return string
+   */
+  public function getFullPreviewLanguage();
+
+  /**
    * Returns the details about media.
    *
    * @param int $content_id

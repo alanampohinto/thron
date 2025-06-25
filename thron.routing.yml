@@ -19,3 +19,11 @@ thron.autocomplete_categories:
     _controller: '\Drupal\thron\Controller\ThronAutocompleteController::handleCategoriesAutocomplete'
   requirements:
     _permission: 'thron search media'
+
+thron.autocomplete_languages:
+  path: '/thron_autocomplete/languages'
+  defaults:
+    _controller: '\Drupal\thron\Controller\ThronAutocompleteController::handleLanguagesAutocomplete'
+    _title: 'Language autocomplete'
+  requirements:
+    _permission: 'thron search media'

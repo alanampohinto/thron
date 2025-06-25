@@ -971,7 +971,7 @@ class THRONApi implements THRONApiInterface {
         throw new \Exception('LoginApp error');
       }
 
-      $upper_language = strtoupper($this->languageManager->getCurrentLanguage()->getId());
+      $upper_language = strtoupper($this->getPreviewLanguage());
       if(strpos($upper_language, "_") != false) {
         $upper_language = explode("_", $upper_language)[0];
       }
@@ -1070,8 +1070,26 @@ class THRONApi implements THRONApiInterface {
   /**
    * {@inheritDoc}
    */
-  public function getPreviewLanguage() {
-    return $this->config->get('preview_language') ?: 'EN';
+  public function getPreviewLanguage(){
+    $value = $this->config->get('preview_language') ?: 'EN';
+    $value = trim($value);
+
+    if (strlen($value) === 2) {
+        return strtoupper($value);
+    }
+
+    if (preg_match('/\((.*?)\)/', $value, $matches)) {
+        return strtoupper($matches[1]);
+    }
+
+    return strtoupper($value);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function getFullPreviewLanguage(){
+    return $this->config->get('preview_language') ?: 'English (en)';
   }
 
   /**
