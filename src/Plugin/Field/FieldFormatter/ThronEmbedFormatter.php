@@ -49,355 +49,375 @@ class ThronEmbedFormatter extends ThronFormatterBase
 
     /** @var \Drupal\media\Entity\Media $entity */
     $media = $form_state->get('entity');
-    $source_plugin = $media->getSource();
-    if ($source_plugin instanceof ThronMediaSource) {
-      // Retrieve THRON content Metadata.
-      if ($metadata = $source_plugin->getMetadata($media, NULL, $this->THRON->getPreviewLanguage())) {
-        $form_state->set('metadata', $metadata);
-        $form_state->set('formatter', 'thron_embedded');
+  
+    $settings = $this->fieldDefinition->getSettings();
+    $target_type = $settings['target_type'] ?? NULL;
 
-        $elements['#attached']['library'][] = 'thron/formatter_resizing_config';
+    if ($target_type === 'media') {
+      $handler_settings = $settings['handler_settings'] ?? [];
 
-        $default_width = 500;
-        $default_height = 350;
+      if (!empty($handler_settings['target_bundles'])) {
+        $allowed_bundles = $handler_settings['target_bundles'];
 
-        $ar_label = $metadata['aspect_ratio'] ?: $default_width . ':' . $default_height;
-        if ($metadata['contentType'] == 'IMAGE') {
-          $ar = $metadata['width'] / $metadata['height'];
-          $default_width = $metadata['width'];
-          $default_height = $metadata['height'];
-        } elseif ($metadata['contentType'] == 'VIDEO') {
-          list($w, $h) = explode(":", $metadata['aspect_ratio']);
-          $ar = $w / $h;
-          $default_height = ceil($default_width / $ar);
-        } else {
-          list($w, $h) = explode(":", $metadata['aspect_ratio']);
-          $ar = ($w / $h);
-          if ($w >= $default_width) {
-            $w = $default_width;
-          }
-          $h = $w / $ar;
+        $media_storage = \Drupal::entityTypeManager()->getStorage('media');
 
-          $default_height = ceil($default_width / $ar);
-        }
+        $media_entities = $media_storage->loadByProperties(['bundle' => reset($allowed_bundles)]);
+        $media = reset($media_entities);
 
-        $elements['#attached']['drupalSettings']['thron_embed_form'] = [
-          'aspectRatio' => $ar,
-        ];
+        if ($media && $media instanceof \Drupal\media\Entity\Media) {
+          $source_plugin = $media->getSource(); 
 
-        $options = [];
-        $data = $this->THRON->getVideoPlayerTemplatesList();
-        if (!empty($data)) {
-          $templates = $data['templates'];
-          $defaultAdded = FALSE;
+          if ($source_plugin instanceof \Drupal\thron\Plugin\media\Source\ThronMediaSource) {
+            // Retrieve THRON content Metadata.
+            if ($metadata = $source_plugin->getMetadata($media, NULL, $this->THRON->getPreviewLanguage())) {
+              $form_state->set('metadata', $metadata);
+              $form_state->set('formatter', 'thron_embedded');
 
-          $options = [];
+              $elements['#attached']['library'][] = 'thron/formatter_resizing_config';
 
-          if (isset($data['default_templates']['default'])) {
-            $options[$data['default_templates']['default']] = $this->t('Default');
-            $defaultAdded = TRUE;
-          }
+              $default_width = 500;
+              $default_height = 350;
 
-          if (isset($data['default_templates']['noSkin'])) {
-            $options[$data['default_templates']['noSkin']] = $this->t('noSkin');
-            $defaultAdded = TRUE;
-          }
-
-          $sepAdded = FALSE;
-          foreach ($templates as $template) {
-            if (
-              (isset($data['default_templates']['default']) && $template['id'] != $data['default_templates']['default']) &&
-              (isset($data['default_templates']['noSkin']) && $template['id'] != $data['default_templates']['noSkin'])
-            ) {
-              if (isset($options[$template['id']])) {
-                if ($defaultAdded && !$sepAdded) {
-                  $options['---------'] = []; // separator
-                  $sepAdded = TRUE;
-                }
-
-                $options[$template['id']] .= '  (' . $template['name'] . ')';
+              $ar_label = $metadata['aspect_ratio'] ?: $default_width . ':' . $default_height;
+              if ($metadata['contentType'] == 'IMAGE') {
+                $ar = $metadata['width'] / $metadata['height'];
+                $default_width = $metadata['width'];
+                $default_height = $metadata['height'];
+              } elseif ($metadata['contentType'] == 'VIDEO') {
+                list($w, $h) = explode(":", $metadata['aspect_ratio']);
+                $ar = $w / $h;
+                $default_height = ceil($default_width / $ar);
               } else {
-                if ($defaultAdded && !$sepAdded) {
-                  $options['---------'] = []; // separator
-                  $sepAdded = TRUE;
+                list($w, $h) = explode(":", $metadata['aspect_ratio']);
+                $ar = ($w / $h);
+                if ($w >= $default_width) {
+                  $w = $default_width;
                 }
-                $options[$template['id']] = $template['name'];
+                $h = $w / $ar;
+
+                $default_height = ceil($default_width / $ar);
               }
+
+              $elements['#attached']['drupalSettings']['thron_embed_form'] = [
+                'aspectRatio' => $ar,
+              ];
+
+              $options = [];
+              $data = $this->THRON->getVideoPlayerTemplatesList();
+              if (!empty($data)) {
+                $templates = $data['templates'];
+                $defaultAdded = FALSE;
+
+                $options = [];
+
+                if (isset($data['default_templates']['default'])) {
+                  $options[$data['default_templates']['default']] = $this->t('Default');
+                  $defaultAdded = TRUE;
+                }
+
+                if (isset($data['default_templates']['noSkin'])) {
+                  $options[$data['default_templates']['noSkin']] = $this->t('noSkin');
+                  $defaultAdded = TRUE;
+                }
+
+                $sepAdded = FALSE;
+                foreach ($templates as $template) {
+                  if (
+                    (isset($data['default_templates']['default']) && $template['id'] != $data['default_templates']['default']) &&
+                    (isset($data['default_templates']['noSkin']) && $template['id'] != $data['default_templates']['noSkin'])
+                  ) {
+                    if (isset($options[$template['id']])) {
+                      if ($defaultAdded && !$sepAdded) {
+                        $options['---------'] = []; // separator
+                        $sepAdded = TRUE;
+                      }
+
+                      $options[$template['id']] .= '  (' . $template['name'] . ')';
+                    } else {
+                      if ($defaultAdded && !$sepAdded) {
+                        $options['---------'] = []; // separator
+                        $sepAdded = TRUE;
+                      }
+                      $options[$template['id']] = $template['name'];
+                    }
+                  } else {
+                    $options[$template['id']] = $template['name'];
+                  }
+                }
+              }
+
+              $elements['embed_template'] = [
+                '#type' => 'select',
+                '#title' => $this->t('Player Template'),
+                '#description' => $this->t('Choose the template to be applied onto the player'),
+                '#default_value' => $this->getSetting('embed_template') ?: $data['default_player_templates']['default'],
+                '#options' => $options,
+              ];
+
+              // Change default values accordingly to previous selected settings.
+              if ($user_defined_template = $this->privateTempStore->get('embed_template')) {
+                $elements['embed_template']['#default_value'] = $user_defined_template;
+              }
+
+              $elements['embed_resizing'] = [
+                '#type' => 'select',
+                '#title' => $this->t('Resizing'),
+                '#required' => TRUE,
+                '#default_value' => $this->getSetting('embed_resizing'),
+                '#options' => [
+                  'fixed' => $this->t('Fixed (with aspect/ratio)'),
+                  'responsive' => $this->t('Responsive'),
+                ],
+              ];
+
+              $elements['embed_resizing_fixed_width'] = [
+                '#type' => 'number',
+                '#title' => $this->t('Width'),
+                '#size' => 10,
+                '#min' => 0,
+                '#default_value' => $this->getSetting('embed_resizing_fixed_width') ?: $default_width,
+                '#states' => [
+                  'visible' => [
+                    'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'fixed'],
+                  ],
+                ],
+              ];
+
+              $elements['embed_resizing_fixed_height'] = [
+                '#type' => 'number',
+                '#title' => $this->t('Height'),
+                '#size' => 10,
+                '#min' => 0,
+                '#default_value' => $this->getSetting('embed_resizing_fixed_height') ?: $default_height,
+                '#states' => [
+                  'visible' => [
+                    'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'fixed'],
+                  ],
+                ],
+              ];
+
+              $elements['embed_resizing_fixed_link'] = [
+                '#type' => 'checkbox',
+                '#default_value' => $this->getSetting('embed_resizing_fixed_link') ?: NULL,
+                '#states' => [
+                  'visible' => [
+                    'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'fixed'],
+                  ],
+                ],
+              ];
+
+              $elements['embed_resizing_fixed_ar_info'] = [
+                '#prefix' => '<small>',
+                '#markup' => $this->t('Aspect Ratio - @ratio ≈ @value', [
+                  '@ratio' => $ar_label,
+                  '@value' => round($ar, 2),
+                ]),
+                '#suffix' => '</small>',
+                '#states' => [
+                  'visible' => [
+                    'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'fixed'],
+                  ],
+                ],
+              ];
+
+              // Change default values accordingly to previous selected settings.
+              if ($fixed_data = $this->privateTempStore->get('embed_resizing_fixed')) {
+                if ($fixed_data['width'] && $fixed_data['height']) {
+                  $elements['embed_resizing_fixed_width']['#default_value'] = $fixed_data['width'];
+                  $elements['embed_resizing_fixed_height']['#default_value'] = $fixed_data['height'];
+                }
+
+                $elements['embed_resizing_fixed_link']['#default_value'] = $fixed_data['link'];
+              }
+
+              $elements['embed_resizing_responsive_width'] = [
+                '#type' => 'number',
+                '#title' => $this->t('Width'),
+                '#size' => 10,
+                '#min' => 0,
+                '#max' => 100,
+                '#attributes' => array('aspect_ratio' => $ar_label),
+                '#default_value' => $this->getSetting('embed_resizing_responsive_width'),
+                '#states' => [
+                  'visible' => [
+                    'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'responsive'],
+                  ],
+                ],
+              ];
+
+              $elements['embed_resizing_responsive_height'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Height'),
+                '#default_value' => 'auto',
+                '#disabled' => TRUE,
+                '#size' => 10,
+                '#states' => [
+                  'visible' => [
+                    'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'responsive'],
+                  ],
+                ],
+              ];
+
+
+              // Change default values accordingly to previous selected settings.
+              if ($responsive_data = $this->privateTempStore->get('embed_resizing_responsive')) {
+                if ($responsive_data['width']) {
+                  $elements['embed_resizing_responsive_width']['#default_value'] = $responsive_data['width'];
+                }
+              }
+              if ($metadata['contentType'] == 'IMAGE') {
+                $advancedSetting = $this->getSetting('embed_advanced_option');
+                if (isset($advancedSetting)) {
+                  $this->privateTempStore->set($media->id() . '-embed_crop', $advancedSetting);
+                }
+                $elements['embed_advanced_option']['advanced'] = [
+                  '#type' => 'container',
+                  '#attributes' => [
+                    'id' => [
+                      'advanced-settings',
+                    ],
+                  ],
+                ];
+
+                $elements['embed_advanced_option']['advanced']['crop_mode'] = [
+                  '#type' => 'select',
+                  '#title' => $this->t('Crop mode'),
+                  '#default_value' => (isset($advancedSetting["advanced"]["crop_mode"])) ? $advancedSetting["advanced"]["crop_mode"] : 'no crop',
+                  '#required' => FALSE,
+                  '#options' => [
+                    'no crop' => $this->t('No crop'),
+                    'auto' => $this->t('Auto'),
+                    'centered' => $this->t('Centered'),
+                    'product' => $this->t('Product'),
+                    'manual' => $this->t('Manual'),
+                  ],
+                  '#prefix' => '<div class="wrapper-advanced">'
+                ];
+
+                $elements['embed_advanced_option']['advanced']['button_manual'] = [
+                  '#type' => 'button',
+                  '#value' => $this->t('Crop'),
+                  '#button_type' => 'primary',
+                  '#attributes' => array('id' => 'crop-done'),
+                  '#suffix' => '</div>'
+                ];
+
+                $elements['embed_advanced_option']['advanced']['crop_description'] = [
+                  '#type' => 'markup',
+                  '#markup' => '<div id="rtisg-crop-description"><p>'.
+                    '<span class="no-cropping">'. $this->t('Click the "Crop" button to frame a specific area.') . '</span>'.
+                    '<span class="cropping hidden">'. $this->t('Zoom and move the image to frame the area you want to crop.') . '</span>'.
+                    '</p></div>',
+                ];
+
+                $elements['embed_advanced_option']['advanced']['player'] = [
+                  '#type' => 'markup',
+                  '#markup' => '<div id="rtisg"></div>',
+                ];
+
+                $elements['embed_advanced_option']['advanced']['player_params'] = [
+                  '#type' => 'hidden',
+                  '#default_value' => (isset($advancedSetting["advanced"]["player_params"])) ? $advancedSetting["advanced"]["player_params"] : '',
+                ];
+
+                $elements['embed_advanced_option']['advanced']['brightness'] = array(
+                  '#type' => 'range',
+                  '#title' => $this->t('Brightness'),
+                  '#default_value' => (isset($advancedSetting["advanced"]["brightness"])) ? $advancedSetting["advanced"]["brightness"] : 100,
+                  '#min' => 0,
+                  '#max' => 200,
+                  '#prefix' => '<div class="wrapper-range">'
+                );
+                $elements['embed_advanced_option']['advanced']['brightness_input'] = [
+                  '#type' => 'textfield',
+                  '#size' => 3,
+                  '#default_value' => (isset($advancedSetting["advanced"]["brightness_input"])) ? $advancedSetting["advanced"]["brightness_input"] : 100,
+                  '#suffix' => '</div>',
+                  '#disabled' => TRUE
+                ];
+
+                $elements['embed_advanced_option']['advanced']['contrast'] = array(
+                  '#type' => 'range',
+                  '#title' => $this->t('Contrast'),
+                  '#default_value' => (isset($advancedSetting["advanced"]["contrast"])) ? $advancedSetting["advanced"]["contrast"] : 100,
+                  '#min' => 0,
+                  '#max' => 200,
+                  '#prefix' => '<div class="wrapper-range">'
+                );
+
+                $elements['embed_advanced_option']['advanced']['contrast_input'] = [
+                  '#type' => 'textfield',
+                  '#size' => 3,
+                  '#default_value' => (isset($advancedSetting["advanced"]["contrast_input"])) ? $advancedSetting["advanced"]["contrast_input"] : 100,
+                  '#suffix' => '</div>',
+                  '#disabled' => TRUE
+                ];
+
+                $elements['embed_advanced_option']['advanced']['sharpness'] = array(
+                  '#type' => 'range',
+                  '#title' => $this->t('Sharpness'),
+                  '#default_value' => (isset($advancedSetting["advanced"]["sharpness"])) ? $advancedSetting["advanced"]["sharpness"] : 100,
+                  '#min' => 0,
+                  '#max' => 200,
+                  '#prefix' => '<div class="wrapper-range">'
+                );
+
+                $elements['embed_advanced_option']['advanced']['sharpness_input'] = [
+                  '#type' => 'textfield',
+                  '#size' => 3,
+                  '#default_value' => (isset($advancedSetting["advanced"]["sharpness_input"])) ? $advancedSetting["advanced"]["sharpness_input"] : 100,
+                  '#suffix' => '</div>',
+                  '#disabled' => TRUE
+                ];
+
+                $elements['embed_advanced_option']['advanced']['color'] = array(
+                  '#type' => 'range',
+                  '#title' => $this->t('Color'),
+                  '#default_value' => (isset($advancedSetting["advanced"]["color"])) ? $advancedSetting["advanced"]["color"] : 100,
+                  '#min' => 0,
+                  '#max' => 200,
+                  '#prefix' => '<div class="wrapper-range">'
+                );
+
+                $elements['embed_advanced_option']['advanced']['color_input'] = [
+                  '#type' => 'textfield',
+                  '#size' => 3,
+                  '#default_value' => (isset($advancedSetting["advanced"]["color_input"])) ? $advancedSetting["advanced"]["color_input"] : 100,
+                  '#suffix' => '</div>',
+                  '#disabled' => TRUE
+                ];
+
+                $elements['embed_advanced_option']['advanced']['quality'] = array(
+                  '#type' => 'range',
+                  '#title' => $this->t('Quality'),
+                  '#default_value' => (isset($advancedSetting["advanced"]["quality"])) ? $advancedSetting["advanced"]["quality"] : 90,
+                  '#prefix' => '<div class="wrapper-range">'
+                );
+
+                $elements['embed_advanced_option']['advanced']['quality_input'] = [
+                  '#type' => 'textfield',
+                  '#size' => 3,
+                  '#default_value' => (isset($advancedSetting["advanced"]["quality_input"])) ? $advancedSetting["advanced"]["quality_input"] : 90,
+                  '#suffix' => '</div>',
+                  '#disabled' => TRUE
+                ];
+              }
+
+              $login_data = $this->THRON->getLoginData();
+              $elements['#attached']['library'][] = 'thron/crop';
+              $elements['#attached']['drupalSettings']['thron']['crop'] = [
+                'clientId' => $this->config->get('client_id'),
+                'xcontentId' => $metadata['id'],
+                'sessId' => $login_data['pkey'],
+              ];
             } else {
-              $options[$template['id']] = $template['name'];
+              $elements['media_info_error'] = [
+                '#type' => 'item',
+                '#markup' => $this->t('Can\'t access the media info. Something\'s gone wrong'),
+              ];
             }
           }
         }
-
-        $elements['embed_template'] = [
-          '#type' => 'select',
-          '#title' => $this->t('Player Template'),
-          '#description' => $this->t('Choose the template to be applied onto the player'),
-          '#default_value' => $this->getSetting('embed_template') ?: $data['default_player_templates']['default'],
-          '#options' => $options,
-        ];
-
-        // Change default values accordingly to previous selected settings.
-        if ($user_defined_template = $this->privateTempStore->get('embed_template')) {
-          $elements['embed_template']['#default_value'] = $user_defined_template;
-        }
-
-        $elements['embed_resizing'] = [
-          '#type' => 'select',
-          '#title' => $this->t('Resizing'),
-          '#required' => TRUE,
-          '#default_value' => $this->getSetting('embed_resizing'),
-          '#options' => [
-            'fixed' => $this->t('Fixed (with aspect/ratio)'),
-            'responsive' => $this->t('Responsive'),
-          ],
-        ];
-
-        $elements['embed_resizing_fixed_width'] = [
-          '#type' => 'number',
-          '#title' => $this->t('Width'),
-          '#size' => 10,
-          '#min' => 0,
-          '#default_value' => $this->getSetting('embed_resizing_fixed_width') ?: $default_width,
-          '#states' => [
-            'visible' => [
-              'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'fixed'],
-            ],
-          ],
-        ];
-
-        $elements['embed_resizing_fixed_height'] = [
-          '#type' => 'number',
-          '#title' => $this->t('Height'),
-          '#size' => 10,
-          '#min' => 0,
-          '#default_value' => $this->getSetting('embed_resizing_fixed_height') ?: $default_height,
-          '#states' => [
-            'visible' => [
-              'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'fixed'],
-            ],
-          ],
-        ];
-
-        $elements['embed_resizing_fixed_link'] = [
-          '#type' => 'checkbox',
-          '#default_value' => $this->getSetting('embed_resizing_fixed_link') ?: NULL,
-          '#states' => [
-            'visible' => [
-              'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'fixed'],
-            ],
-          ],
-        ];
-
-        $elements['embed_resizing_fixed_ar_info'] = [
-          '#prefix' => '<small>',
-          '#markup' => $this->t('Aspect Ratio - @ratio ≈ @value', [
-            '@ratio' => $ar_label,
-            '@value' => round($ar, 2),
-          ]),
-          '#suffix' => '</small>',
-          '#states' => [
-            'visible' => [
-              'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'fixed'],
-            ],
-          ],
-        ];
-
-        // Change default values accordingly to previous selected settings.
-        if ($fixed_data = $this->privateTempStore->get('embed_resizing_fixed')) {
-          if ($fixed_data['width'] && $fixed_data['height']) {
-            $elements['embed_resizing_fixed_width']['#default_value'] = $fixed_data['width'];
-            $elements['embed_resizing_fixed_height']['#default_value'] = $fixed_data['height'];
-          }
-
-          $elements['embed_resizing_fixed_link']['#default_value'] = $fixed_data['link'];
-        }
-
-        $elements['embed_resizing_responsive_width'] = [
-          '#type' => 'number',
-          '#title' => $this->t('Width'),
-          '#size' => 10,
-          '#min' => 0,
-          '#max' => 100,
-          '#attributes' => array('aspect_ratio' => $ar_label),
-          '#default_value' => $this->getSetting('embed_resizing_responsive_width'),
-          '#states' => [
-            'visible' => [
-              'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'responsive'],
-            ],
-          ],
-        ];
-
-        $elements['embed_resizing_responsive_height'] = [
-          '#type' => 'textfield',
-          '#title' => $this->t('Height'),
-          '#default_value' => 'auto',
-          '#disabled' => TRUE,
-          '#size' => 10,
-          '#states' => [
-            'visible' => [
-              'select[name="attributes[data-entity-embed-display-settings][embed_resizing]"]' => ['value' => 'responsive'],
-            ],
-          ],
-        ];
-
-
-        // Change default values accordingly to previous selected settings.
-        if ($responsive_data = $this->privateTempStore->get('embed_resizing_responsive')) {
-          if ($responsive_data['width']) {
-            $elements['embed_resizing_responsive_width']['#default_value'] = $responsive_data['width'];
-          }
-        }
-        if ($metadata['contentType'] == 'IMAGE') {
-          $advancedSetting = $this->getSetting('embed_advanced_option');
-          if (isset($advancedSetting)) {
-            $this->privateTempStore->set($media->id() . '-embed_crop', $advancedSetting);
-          }
-          $elements['embed_advanced_option']['advanced'] = [
-            '#type' => 'container',
-            '#attributes' => [
-              'id' => [
-                'advanced-settings',
-              ],
-            ],
-          ];
-
-          $elements['embed_advanced_option']['advanced']['crop_mode'] = [
-            '#type' => 'select',
-            '#title' => $this->t('Crop mode'),
-            '#default_value' => (isset($advancedSetting["advanced"]["crop_mode"])) ? $advancedSetting["advanced"]["crop_mode"] : 'no crop',
-            '#required' => FALSE,
-            '#options' => [
-              'no crop' => $this->t('No crop'),
-              'auto' => $this->t('Auto'),
-              'centered' => $this->t('Centered'),
-              'product' => $this->t('Product'),
-              'manual' => $this->t('Manual'),
-            ],
-            '#prefix' => '<div class="wrapper-advanced">'
-          ];
-
-          $elements['embed_advanced_option']['advanced']['button_manual'] = [
-            '#type' => 'button',
-            '#value' => $this->t('Crop'),
-            '#button_type' => 'primary',
-            '#attributes' => array('id' => 'crop-done'),
-            '#suffix' => '</div>'
-          ];
-
-          $elements['embed_advanced_option']['advanced']['crop_description'] = [
-            '#type' => 'markup',
-            '#markup' => '<div id="rtisg-crop-description"><p>'.
-              '<span class="no-cropping">'. $this->t('Click the "Crop" button to frame a specific area.') . '</span>'.
-              '<span class="cropping hidden">'. $this->t('Zoom and move the image to frame the area you want to crop.') . '</span>'.
-              '</p></div>',
-          ];
-
-          $elements['embed_advanced_option']['advanced']['player'] = [
-            '#type' => 'markup',
-            '#markup' => '<div id="rtisg"></div>',
-          ];
-
-          $elements['embed_advanced_option']['advanced']['player_params'] = [
-            '#type' => 'hidden',
-            '#default_value' => (isset($advancedSetting["advanced"]["player_params"])) ? $advancedSetting["advanced"]["player_params"] : '',
-          ];
-
-          $elements['embed_advanced_option']['advanced']['brightness'] = array(
-            '#type' => 'range',
-            '#title' => $this->t('Brightness'),
-            '#default_value' => (isset($advancedSetting["advanced"]["brightness"])) ? $advancedSetting["advanced"]["brightness"] : 100,
-            '#min' => 0,
-            '#max' => 200,
-            '#prefix' => '<div class="wrapper-range">'
-          );
-          $elements['embed_advanced_option']['advanced']['brightness_input'] = [
-            '#type' => 'textfield',
-            '#size' => 3,
-            '#default_value' => (isset($advancedSetting["advanced"]["brightness_input"])) ? $advancedSetting["advanced"]["brightness_input"] : 100,
-            '#suffix' => '</div>',
-            '#disabled' => TRUE
-          ];
-
-          $elements['embed_advanced_option']['advanced']['contrast'] = array(
-            '#type' => 'range',
-            '#title' => $this->t('Contrast'),
-            '#default_value' => (isset($advancedSetting["advanced"]["contrast"])) ? $advancedSetting["advanced"]["contrast"] : 100,
-            '#min' => 0,
-            '#max' => 200,
-            '#prefix' => '<div class="wrapper-range">'
-          );
-
-          $elements['embed_advanced_option']['advanced']['contrast_input'] = [
-            '#type' => 'textfield',
-            '#size' => 3,
-            '#default_value' => (isset($advancedSetting["advanced"]["contrast_input"])) ? $advancedSetting["advanced"]["contrast_input"] : 100,
-            '#suffix' => '</div>',
-            '#disabled' => TRUE
-          ];
-
-          $elements['embed_advanced_option']['advanced']['sharpness'] = array(
-            '#type' => 'range',
-            '#title' => $this->t('Sharpness'),
-            '#default_value' => (isset($advancedSetting["advanced"]["sharpness"])) ? $advancedSetting["advanced"]["sharpness"] : 100,
-            '#min' => 0,
-            '#max' => 200,
-            '#prefix' => '<div class="wrapper-range">'
-          );
-
-          $elements['embed_advanced_option']['advanced']['sharpness_input'] = [
-            '#type' => 'textfield',
-            '#size' => 3,
-            '#default_value' => (isset($advancedSetting["advanced"]["sharpness_input"])) ? $advancedSetting["advanced"]["sharpness_input"] : 100,
-            '#suffix' => '</div>',
-            '#disabled' => TRUE
-          ];
-
-          $elements['embed_advanced_option']['advanced']['color'] = array(
-            '#type' => 'range',
-            '#title' => $this->t('Color'),
-            '#default_value' => (isset($advancedSetting["advanced"]["color"])) ? $advancedSetting["advanced"]["color"] : 100,
-            '#min' => 0,
-            '#max' => 200,
-            '#prefix' => '<div class="wrapper-range">'
-          );
-
-          $elements['embed_advanced_option']['advanced']['color_input'] = [
-            '#type' => 'textfield',
-            '#size' => 3,
-            '#default_value' => (isset($advancedSetting["advanced"]["color_input"])) ? $advancedSetting["advanced"]["color_input"] : 100,
-            '#suffix' => '</div>',
-            '#disabled' => TRUE
-          ];
-
-          $elements['embed_advanced_option']['advanced']['quality'] = array(
-            '#type' => 'range',
-            '#title' => $this->t('Quality'),
-            '#default_value' => (isset($advancedSetting["advanced"]["quality"])) ? $advancedSetting["advanced"]["quality"] : 90,
-            '#prefix' => '<div class="wrapper-range">'
-          );
-
-          $elements['embed_advanced_option']['advanced']['quality_input'] = [
-            '#type' => 'textfield',
-            '#size' => 3,
-            '#default_value' => (isset($advancedSetting["advanced"]["quality_input"])) ? $advancedSetting["advanced"]["quality_input"] : 90,
-            '#suffix' => '</div>',
-            '#disabled' => TRUE
-          ];
-        }
-
-        $login_data = $this->THRON->getLoginData();
-        $elements['#attached']['library'][] = 'thron/crop';
-        $elements['#attached']['drupalSettings']['thron']['crop'] = [
-          'clientId' => $this->config->get('client_id'),
-          'xcontentId' => $metadata['id'],
-          'sessId' => $login_data['pkey'],
-        ];
-      } else {
-        $elements['media_info_error'] = [
-          '#type' => 'item',
-          '#markup' => $this->t('Can\'t access the media info. Something\'s gone wrong'),
-        ];
       }
     }
 
