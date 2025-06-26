@@ -477,7 +477,7 @@ class ThronHTML5Formatter extends ThronFormatterBase
 
                   $inner_attributes['id'] = $uniqueDiv;
                   $inner_attributes['class'] = ['content-tag'];
-                  $inner_attributes['style'] = 'position:absolute;width:100%;height:auto;top:50%;left:50%;transform:translate(-50%,-50%);';
+                  //$inner_attributes['style'] = 'position:absolute;width:100%;height:auto;top:50%;left:50%;transform:translate(-50%,-50%);';
                 }
                 //ckeditor preview
                 else {
@@ -485,7 +485,7 @@ class ThronHTML5Formatter extends ThronFormatterBase
                   $wrapper_attributes['class'] = ['teaser-content'];
                   $wrapper_attributes['style'] = 'position:relative;border:1px solid grey;overflow:hidden;';
                   $inner_attributes['class'] = ['thron-thumbnail'];
-                  $inner_attributes['style'] = 'position:absolute;width:100%;height:auto;top:50%;left:50%;transform:translate(-50%,-50%);';
+                  //$inner_attributes['style'] = 'position:absolute;width:100%;height:auto;top:50%;left:50%;transform:translate(-50%,-50%);';
                 }
               }
 
@@ -501,6 +501,10 @@ class ThronHTML5Formatter extends ThronFormatterBase
                 $w = !empty($sizes['width']) && $sizes['width'] != "0" ? $sizes['width'] : 0;
                 $h = !empty($sizes['height']) && $sizes['height'] != "0" ? $sizes['height'] : 0;
 
+                if (!isset($wrapper_attributes['style'])) {
+                  $wrapper_attributes['style'] = '';
+                }
+                
                 $wrapper_attributes['style'] .= new FormattableMarkup('width:@width;height:@height;', [
                   '@width' => $w == 0 ? 'auto' : $w . 'px',
                   '@height' => $h == 0 ? 'auto' : $h . 'px',

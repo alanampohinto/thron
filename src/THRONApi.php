@@ -802,7 +802,7 @@ class THRONApi implements THRONApiInterface {
 
       $data = Thronintegration_Api::getPlayerCustomTemplateData($this->config->get('client_id'), $login_data['token'], $templateId);
 
-      if ($data['resultCode'] !== 'OK') {
+      if (!isset($data['resultCode']) || $data['resultCode'] !== 'OK') {
         throw new \Exception($data['errorDescription']);
       }
 
@@ -852,7 +852,7 @@ class THRONApi implements THRONApiInterface {
         $embedName = "Drupal embed (template $templateLabel)";
 
       $data = Thronintegration_Api::insertEmbedCode($this->config->get('client_id'), $login_data['token'], $embedName, $source, $context, $templateId, 'CUSTOM', $values, $skipPkeyCreation);
-      if ($data['resultCode'] !== 'OK') {
+      if (!isset($data['resultCode']) || $data['resultCode'] !== 'OK') {
         throw new \Exception($data['errorDescription']);
       }
 

@@ -491,8 +491,9 @@ class ThronEmbedFormatter extends ThronFormatterBase
                           $templateLabel = $template_settings["name"];
                       $context = $login_data['tracking_context'];
                       $embed_player_code = $this->THRON->insertPlayerEmbedCode($formatter_settings['embed_template'], $templateLabel, $context, $metadata['id'], $login_data['token']);
-                      $displaySettings['embed_player_code'] = $embed_player_code['item'];
-                      $embedCodeId = $embed_player_code['item']['id'];
+                      $displaySettings['embed_player_code'] = $embed_player_code['item'] ?? NULL;
+                      $embedCodeId = isset($embed_player_code['item']) && isset($embed_player_code['item']['id']) ? $embed_player_code['item']['id'] : NULL;
+                      
                       $this->THRON->setThronMediaEmbedId($metadata['id'], $nid, $formatter_settings['embed_template'], $embedCodeId);
                     }
                   } else $embedCodeId = FALSE;
@@ -605,13 +606,13 @@ class ThronEmbedFormatter extends ThronFormatterBase
                 //MEDIA IMAGE
                 if ($metadata['contentType'] == 'IMAGE') {
                   $queryParams = '';
-                  $this->privateTempStore->set('embed_image_as_webp', $formatter_settings['embed_image_as_webp']);
+                  $this->privateTempStore->set('embed_image_as_webp', $formatter_settings['embed_image_as_webp'] ?? NULL);
                   $ext = $metadata["extension"];
-                  if ($ext == 'webp' && $formatter_settings['embed_image_as_webp']) {
+                  if ($ext == 'webp' && isset($formatter_settings['embed_image_as_webp'])) {
                     $queryParams .= '&format=webp';
                   }
 
-                  if ($formatter_settings['embed_imageset']) {
+                  if (isset($formatter_settings['embed_imageset'])) {
                     $metadata['use_picture'] = TRUE;
                     $metadata['content_url'] .= '.' . $ext;
                     $responsiveness = $this->config->get('responsive_pictures_breakpoints');
