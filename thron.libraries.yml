@@ -57,6 +57,8 @@ formatter_resizing_config:
   css:
     base:
       css/thron.formatter-resizing.css: {}
+  dependencies:
+    - core/once
 
 formatter:
   version: VERSION

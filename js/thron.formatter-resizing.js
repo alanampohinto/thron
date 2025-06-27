@@ -50,5 +50,18 @@
       }
     }
   };
+  
+  Drupal.behaviors.cropSliderSync = {
+    attach: function (context, settings) {
+      $(once("crop-slider-sync", ".wrapper-range", context)).each(function () {
+        var $wrapper = $(this);
+        var $range = $wrapper.find('input[type="range"]');
+        var $text = $wrapper.find('input[type="text"]');
 
-}(jQuery, Drupal, window));
+        $range.on("input", function () {
+          $text.val($(this).val());
+        });
+      });
+    },
+  };
+})(jQuery, Drupal, window, once);
