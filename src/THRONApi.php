@@ -614,7 +614,7 @@ class THRONApi implements THRONApiInterface {
     }
     $obj = $this->mediaStorage->load(reset($res));
   	try {
-      $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, TRUE);
+      $templateIds=json_decode($obj->get('field_thron_embed_ids')->value ?? '', TRUE);
 
       // detect the save format for this field and update it if needed
       if(empty($templateIds)) return FALSE;
@@ -657,7 +657,7 @@ class THRONApi implements THRONApiInterface {
       return FALSE;
     }
     $obj = $this->mediaStorage->load(reset($res));
-    $templateIds=json_decode($obj->get('field_thron_embed_ids')->value, TRUE);
+    $templateIds=json_decode($obj->get('field_thron_embed_ids')->value ?? '', TRUE);
     if(empty($templateIds)) $templateIds=[];
 
     // detect the save format for this field and update it if needed
