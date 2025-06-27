@@ -49,6 +49,13 @@ class ThronEmbedFormatter extends ThronFormatterBase
 
     /** @var \Drupal\media\Entity\Media $entity */
     $media = $form_state->get('entity');
+    if ($media instanceof \Drupal\media\Entity\Media === FALSE) { 
+      $elements['notice'] = [
+        '#markup' => $this->t('Settings available only when editing a Media entity.'),
+      ];
+      return $elements;
+    }
+
     $source_plugin = $media->getSource();
     if ($source_plugin instanceof ThronMediaSource) {
       // Retrieve THRON content Metadata.
@@ -542,7 +549,10 @@ class ThronEmbedFormatter extends ThronFormatterBase
                     $width = $height * $ar;
                   }
                 }
-
+                if (!isset($wrapper_attributes['style'])) {
+                  $wrapper_attributes['style'] = '';
+                }
+                
                 $wrapper_attributes['style'] .= new FormattableMarkup('width:@width;height:@height;', [
                   '@width' => $width . 'px',
                   '@height' => $height . 'px',
