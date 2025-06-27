@@ -162,14 +162,14 @@ function thron_form_alter(&$form, FormStateInterface $form_state, $form_id) {
           /** @var \Drupal\thron\THRONApiInterface $thron_api */
           $thron_api = \Drupal::service('thron_api');
           $metadata = $form_state->get('metadata');
-          $extStr = $metadata["contentType"];
+          $extStr = $metadata["contentType"] ?? NULL;
 
           if(isset($metadata["extension"]) && trim($metadata["extension"]) != '')
             $extStr = ' / ' . strtoupper($metadata["extension"]);
 
           $content_types_labels = $thron_api->getContentTypes();
-          $type = $metadata['contentType'];
-          $real_type = $metadata['contentTypeFull'];
+          $type = $metadata['contentType'] ?? NULL;
+          $real_type = $metadata['contentTypeFull'] ?? NULL;
           $final_type = $type != $real_type ? $type . '_' . $real_type : $type;
 
           $type_label = $content_types_labels[$final_type] ?? '';
