@@ -45,6 +45,7 @@ div#advanced-settings.manual div#rtisg-crop-description p span.hidden {
 
 #rtisg
 {
+  display: none;
   width: 500px;
   height: 350px;
 }
