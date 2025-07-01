@@ -27,3 +27,4 @@ thron.autocomplete_languages:
     _title: 'Language autocomplete'
   requirements:
     _permission: 'thron search media'
+    
