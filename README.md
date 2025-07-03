@@ -94,3 +94,20 @@ window in the desired text format.
 For more detail please check [the Drupal Connector's page](https://marketplace.thron.com/EN/apps/drupal-connector)
 in the [THRON Marketplace](https://marketplace.thron.com).
 
+
+## Note: This module requires some dependencies that are only available as release candidates (RC). To install them via Composer, you must explicitly allow RC stability, for example:
+
+on the composer.json file you should have these settings:
+"minimum-stability": "RC",
+"prefer-stable": true
+
+And then you can install the package by doing:
+
+composer require drupal/inline_entity_form:^3.0@RC
+
+Additionally, in order to install the required dependencies for the Thron module in Drupal 11, it is necessary to use the `composer-drupal-lenient` plugin. This is because some dependencies have strict version constraints that are not fully compatible with Drupal 11 by default.
+
+To proceed, run the following commands:
+
+composer require mglaman/composer-drupal-lenient
+composer config --merge --json extra.drupal-lenient.allowed-list '["drupal/thron", "drupal/media_entity_browser", "drupal/ckeditor", "drupal/media_entity_browser_media_library"]'
